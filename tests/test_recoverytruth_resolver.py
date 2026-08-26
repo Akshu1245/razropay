@@ -130,5 +130,5 @@ def test_model_view_contains_selected_semantics_but_not_raw_payload_body():
     view = bundle.model_view()
 
     assert view["evidence"][0]["attributes"]["error_code"] == "91"
-    assert view["evidence"][0]["raw_hash"] if "raw_hash" in view["evidence"][0] else True
+    assert "raw_hash" not in view["evidence"][0]
     assert "raw_payload" not in view["evidence"][0]

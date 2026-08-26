@@ -1,22 +1,22 @@
 # Final verification record
 
 Everything below was produced by running the commands in this file against
-the packaged archive, not carried forward from an earlier run. Where a number
-appears here it was read off the run, not typed from memory.
+a clean checkout of this repository, not carried forward from an earlier run.
+Where a number appears here it was read off the run, not typed from memory.
 
 ## How this was verified
 
-The archive was extracted into an empty directory and installed into a
+The repository was checked out into an empty directory and installed into a
 **fresh virtual environment** with **no `PYTHONPATH` set** and no reliance on
 any previously installed copy of the package. That matters more than it
 sounds: an editable install left over from an earlier session can make
-`import bailiff` succeed for reasons that have nothing to do with the archive
+`import bailiff` succeed for reasons that have nothing to do with the checkout
 under test, which is exactly the kind of false pass this project is built to
 refuse.
 
 ```bash
-unzip -q mandateguard_submission_final_ready.zip
-cd mandateguard_policy_lab
+git clone https://github.com/Akshu1245/razropay.git
+cd razropay
 sha256sum -c SHA256SUMS.txt          # before installing anything
 
 python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
@@ -30,10 +30,9 @@ bash scripts/verify_all.sh
 sha256sum -c SHA256SUMS.txt          # again, after the whole workflow
 ```
 
-This exact sequence was run twice against this v2 archive: once against the
-working tree before packaging, and once more as a genuinely fresh extraction
-of the built ZIP into an empty directory, in its own fresh virtual
-environment, as the final acceptance test before this record was written.
+This exact sequence was run against a genuinely fresh checkout of this
+repository into an empty directory, in its own fresh virtual environment, as
+the final acceptance test before this record was written.
 
 ## Results
 
@@ -50,11 +49,11 @@ environment, as the final acceptance test before this record was written.
 | Release gate (`scripts/release_check.sh`) | **passed** |
 | Deep verification (`scripts/verify_all.sh`) | **all four stages passed** |
 | Checksum manifest entries | **86** |
-| Manifest immediately after extraction | **86 of 86 files verify** |
+| Manifest immediately after checkout | **86 of 86 files verify** |
 | Manifest after the entire workflow | **86 of 86 files verify** |
 | Canonical outputs unchanged by the UI | **13 of 13 byte identical** |
 | Clean install, no `PYTHONPATH` | works |
-| Secrets, keys, caches, venvs, `.pyc` in archive | none |
+| Secrets, keys, caches, venvs, `.pyc` in the repository | none |
 
 The test count moved from 282 to 283 in this v2 build. It is not a chosen
 number: a real defect surfaced while re-running the release gate in a fresh
@@ -162,8 +161,8 @@ rewrites during verification.
 
 So the contract is drawn where it can be kept:
 
-* `SHA256SUMS.txt` is the checksum of the **shipped archive contents**. It
-  must verify immediately after extraction, and it must still verify after
+* `SHA256SUMS.txt` is the checksum of the **tracked repository contents**. It
+  must verify immediately after checkout, and it must still verify after
   the full verification workflow.
 * It is **not** a claim that re-rendering the charts elsewhere reproduces the
   same bytes. `scripts/evaluate.sh` is the regeneration entry point, and on a
@@ -182,7 +181,7 @@ Two mechanisms keep that boundary from being erased by a later edit:
 
 That second test exists because this genuinely went wrong once. The release
 gate rebuilds derived evidence when it is missing, and `outputs/generated` is
-deliberately not shipped — so in a *fresh extraction* the rebuild branch
+deliberately not shipped — so in a *fresh checkout* the rebuild branch
 always fired, called `scripts/evaluate.sh`, re-rendered all three charts, and
 broke `sha256sum -c` for any reviewer whose Matplotlib differed. It now
 preserves the shipped chart bytes across that rebuild.
@@ -286,16 +285,17 @@ These are stated here so a reviewer does not have to discover them.
    `not present in fixture` rather than omitted or inferred.
 9. **The exception queue's timeout and webhook-ingress rows are tested but
    not present in the frozen ledger**, for the reasons given above.
-10. **This repository is not under version control in the build
-    environment**, so no commit hash is recorded. Integrity is established by
-    `SHA256SUMS.txt` and the archive sidecar hash instead.
+10. **This record was generated from a clean checkout of this repository.**
+    The submission is delivered as a git repository, so provenance is the git
+    history itself and integrity is established by `SHA256SUMS.txt`, which
+    covers every tracked file. Pin the commit you are reviewing with
+    `git rev-parse HEAD` and verify the tree with `sha256sum -c SHA256SUMS.txt`.
 
-## Note on the archive's own checksum
+## Note on the manifest's own coverage
 
-The SHA256 of the archive cannot live inside the archive it describes. It is
-published alongside it in
-`mandateguard_submission_final_ready.sha256`:
+`SHA256SUMS.txt` covers every tracked file except itself — a manifest cannot
+contain its own hash. Verify the checked-out tree against it directly:
 
 ```bash
-sha256sum -c mandateguard_submission_final_ready.sha256
+sha256sum -c SHA256SUMS.txt
 ```

@@ -12,7 +12,10 @@ class EvidenceSource(str, Enum):
     WEBHOOK = "webhook"
     PAYMENT_API = "payment_api"
     SUBSCRIPTION_API = "subscription_api"
-    MANDATE_API = "mandate_api"
+    MANDATE_STATE = "mandate_state"
+    # Temporary source-compatible alias while the v2 branch migrates callers.
+    # It serializes as ``mandate_state`` and therefore does not claim an API.
+    MANDATE_API = "mandate_state"
     MERCHANT_ENTITLEMENT = "merchant_entitlement"
     RECOVERY_HISTORY = "recovery_history"
     CUSTOMER_REPORT = "customer_report"

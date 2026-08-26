@@ -302,10 +302,10 @@ python3 scripts/mutation_check.py   # does the suite actually catch the bugs it 
 
 ### What `SHA256SUMS.txt` promises, and what it does not
 
-`SHA256SUMS.txt` covers every shipped file. It is the hash of the **archive contents**, and it is expected to verify in two places:
+`SHA256SUMS.txt` covers every tracked file. It is the hash of the **checked-out repository contents**, and it is expected to verify in two places:
 
 ```bash
-sha256sum -c SHA256SUMS.txt    # immediately after extracting the archive
+sha256sum -c SHA256SUMS.txt    # immediately after cloning or checking out
 ./scripts/verify_all.sh        # and again after the full verification workflow
 ```
 

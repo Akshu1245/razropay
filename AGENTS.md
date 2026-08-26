@@ -19,3 +19,27 @@ Never report a single recommended arm without the swept price curve beside it. A
 Every external rule must carry provenance. If a primary source is not pinned and hashed, describe the rule as reported or project policy, not as an official regulation.
 
 Before submitting, run `scripts/test.sh`, `scripts/demo.sh`, and `scripts/evaluate.sh` from a clean checkout. README numbers must be generated from `outputs/`, not typed manually.
+
+## RecoveryTruth v2 rules
+
+`main` is the frozen MandateGuard baseline. RecoveryTruth work belongs on the `recoverytruth-v2` branch until its kill gates pass. Do not weaken an existing MandateGuard invariant to make RecoveryTruth easier to implement.
+
+RecoveryTruth is a **Track 03 recovery preflight**, not a general reconciliation or finance-controller product. It may reconcile only the minimum payment/subscription/mandate/merchant evidence necessary to decide whether an at-risk payment may safely enter recovery.
+
+Never trust an older webhook over newer current provider evidence without recording the reason. A webhook event is evidence about an event-time state; it is not automatically current truth at action time.
+
+An AI hypothesis cannot change, omit, or fabricate an observed source fact. Every AI-supported conclusion must cite evidence IDs that exist in the current immutable `EvidenceBundle`; unknown references are an error.
+
+`UNKNOWN_CONFLICT` is a valid and expected output. Conflicting or missing current provider evidence cannot directly authorize money movement. The correct action is `POLL_PROVIDER`, `HUMAN_REVIEW`, or another non-money resolution step.
+
+Current provider evidence that money already moved has precedence over a model's recoverable hypothesis. A max-confidence model must still be unable to reopen recovery after `captured`, `paid`, `succeeded`, or another configured money-moved state.
+
+Provider timeout means `UNKNOWN` until independently resolved. Never infer failure from timeout and immediately retry.
+
+No numeric recovery probability, expected lift, or rupee value may come directly from an LLM. Quantitative action value must come from a separately evaluated statistical/ML model or controlled experimental estimate.
+
+Held-out state families used for the `Unseen State Challenge` must remain inaccessible during prompt/model tuning. Do not move hard evaluation cases into training/reference data after seeing the result.
+
+Every live or test-mode provider observation stored as evidence must include source/entity ID, observed time, fetched time, raw hash, and trust tier. Secrets and full credentials never enter the evidence artifact.
+
+The judge path must always retain an offline deterministic fallback. Live/test-mode integration is additional evidence, not a prerequisite that can make a clean judge checkout fail.

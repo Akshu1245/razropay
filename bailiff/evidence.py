@@ -1,8 +1,9 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
+from typing import Any, Mapping
 
 
 class EvidenceSource(str, Enum):
@@ -36,6 +37,7 @@ class EvidenceItem:
     fetched_at: datetime
     raw_hash: str
     trust_tier: TrustTier
+    attributes: Mapping[str, Any] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         if not self.evidence_id:
@@ -52,6 +54,26 @@ class EvidenceItem:
     @property
     def normalized_state(self) -> str:
         return self.observed_state.strip().lower().replace(" ", "_")
+
+    def model_view(self) -> dict[str, object]:
+        """Return only evidence fields the bounded resolver may inspect.
+
+        The raw provider payload is deliberately not retained here. Callers may
+        put the small, explicitly selected semantic fields needed for reasoning
+        in ``attributes`` while preserving a hash of the full raw object for
+        provenance and later verification.
+        """
+
+        return {
+            "evidence_id": self.evidence_id,
+            "source": self.source.value,
+            "entity_id": self.entity_id,
+            "observed_state": self.observed_state,
+            "observed_at": self.observed_at.isoformat(),
+            "fetched_at": self.fetched_at.isoformat(),
+            "trust_tier": int(self.trust_tier),
+            "attributes": dict(self.attributes),
+        }
 
 
 @dataclass(frozen=True, slots=True)
@@ -84,3 +106,10 @@ class EvidenceBundle:
         unknown = sorted(set(evidence_ids) - set(available))
         if unknown:
             raise ValueError(f"hypothesis references unknown evidence IDs: {', '.join(unknown)}")
+
+    def model_view(self) -> dict[str, object]:
+        return {
+            "recovery_case_id": self.recovery_case_id,
+            "correlation_id": self.correlation_id,
+            "evidence": [item.model_view() for item in self.items],
+        }

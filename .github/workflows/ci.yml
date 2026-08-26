@@ -21,7 +21,24 @@ jobs:
         env:
           MANDATEGUARD_OFFLINE: "1"
       - name: Final benchmark
-        run: ./scripts/evaluate.sh
+        run: |
+          ./scripts/evaluate.sh
+          # evaluate.sh is a GENERATION step: it re-renders the three chart PNGs
+          # (architecture/frontier/sensitivity). Rendered PNGs are the only
+          # shipped artefacts that are not byte reproducible across environments
+          # (Matplotlib/FreeType/font/locale differences), so whatever this
+          # runner's Matplotlib produces may differ from the shipped bytes.
+          #
+          # The next step (release gate) re-runs the full pytest suite, which
+          # includes the shipped-artefact integrity test that hashes these PNGs
+          # against SHA256SUMS.txt. Verification must hash the SHIPPED bytes,
+          # never a fresh render, or CI would fail on any runner whose Matplotlib
+          # differs from the one that built the release. This mirrors the
+          # chart-preservation logic already inside scripts/release_check.sh and
+          # the immutability guard in scripts/verify_all.sh. The regenerated data
+          # artefacts (report.md, JSON, FINDINGS.md) are byte reproducible and
+          # are intentionally kept.
+          git checkout -- outputs/architecture.png outputs/frontier.png outputs/sensitivity.png
         env:
           MANDATEGUARD_OFFLINE: "1"
       - name: Release gate

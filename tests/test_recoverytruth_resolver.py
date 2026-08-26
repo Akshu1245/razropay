@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime, timezone
+import json
 from types import SimpleNamespace
 
 import pytest
@@ -99,6 +100,46 @@ def test_real_resolver_is_schema_bounded_and_has_no_tools():
     assert "tools" not in request
     assert request["response_format"]["type"] == "json_schema"
     assert "authorize a retry" in request["messages"][0]["content"]
+
+
+def test_provider_credentials_never_enter_the_model_request():
+    bundle = make_bundle(
+        evidence("E1", EvidenceSource.PAYMENT_API, "failed", error_reason="unknown"),
+        evidence("E2", EvidenceSource.MANDATE_API, "active"),
+    )
+    client = _Client(
+        '{"state":"unknown_conflict","confidence":0.40,'
+        '"supporting_evidence":["E1","E2"],'
+        '"contradicting_evidence":[],"unknowns":["issuer_semantics"]}'
+    )
+    secret = "rt-secret-never-send"
+    resolver = RealEvidenceStateResolver(
+        client=client,
+        model="provider-model",
+        base_url="https://provider.example/openai/v1",
+        api_key=secret,
+    )
+
+    resolver(bundle)
+
+    request_text = json.dumps(client.completions.calls[0], sort_keys=True)
+    assert secret not in request_text
+    assert "provider.example" not in request_text
+    assert resolver.api_key == secret
+    assert resolver.base_url == "https://provider.example/openai/v1"
+
+
+def test_recoverytruth_specific_env_takes_precedence_over_generic_openai_key(monkeypatch):
+    monkeypatch.setenv("RECOVERYTRUTH_RESOLVER_API_KEY", "rt-key")
+    monkeypatch.setenv("OPENAI_API_KEY", "generic-key")
+    monkeypatch.setenv("RECOVERYTRUTH_RESOLVER_MODEL", "rt-model")
+    monkeypatch.setenv("RECOVERYTRUTH_RESOLVER_BASE_URL", "https://rt.example/v1")
+
+    resolver = RealEvidenceStateResolver(client=_Client('{}'))
+
+    assert resolver.api_key == "rt-key"
+    assert resolver.model == "rt-model"
+    assert resolver.base_url == "https://rt.example/v1"
 
 
 def test_real_resolver_cannot_return_an_evidence_reference_that_does_not_exist():

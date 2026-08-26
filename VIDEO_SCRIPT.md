@@ -4,6 +4,37 @@
 
 Record a focused two to three minute walkthrough. The command line evidence is the source of truth. The optional UI may be shown after the proof sequence if it is already installed and working.
 
+## The first thirty seconds
+
+Do not explain code. Do not open on a number. Open on the problem, in one
+breath:
+
+> Razorpay already has intelligent payment recovery. MandateGuard solves the
+> next problem: before an AI recovery system retries a payment, how do we know
+> the action is permitted, safe, economically useful, and provably compliant?
+
+Then, and only then, show the system. The single sentence to land before any
+demo output appears:
+
+> **AI interprets. Policy authorizes. Provider executes. Evidence proves.**
+
+Say plainly, once, that the evaluation dataset is a synthetic failure ledger
+and the provider is a local simulator. A judge who discovers that themselves
+at 3:00 discounts everything before it; a judge told at 0:30 treats it as
+rigour.
+
+## Five minute structure
+
+| Time | Section | What is on screen |
+|---|---|---|
+| 0:00–0:30 | The problem | The question above. No code |
+| 0:30–1:00 | Why existing retry systems do not remove it | Configurable retry makes strategy a merchant setting; nothing tells the merchant what a setting costs in prohibited debits before it is switched on |
+| 1:00–1:40 | Architecture | `outputs/architecture.png` — authenticate, interpret, decide, execute, prove |
+| 1:40–3:20 | Live demo | `python3 scripts/demo60.py` end to end |
+| 3:20–4:10 | Evaluation and results | `outputs/frontier.png`, then `report.md` / `FINDINGS.md`, then `sensitivity.png` |
+| 4:10–4:40 | The real AI interpreter | Step 8 of the demo: a live model consulted, an ambiguous failure, a real confidence score, and `provider_calls = 0` |
+| 4:40–5:00 | Value to Razorpay | The evaluation layer in front of a recovery engine, not a competitor to it |
+
 ## Opening statement
 
 Answer the competitive question before the judge has to ask it. They know what
@@ -16,9 +47,9 @@ Say:
 
 Then the positioning, and lead with the result rather than the claim:
 
-> Razorpay publishes its subscription retry model: three retries, once a day, then halt. I implemented exactly that as an arm in this benchmark and ran it on the same ledger as everything else. It is Pareto dominated in all three regimes — reading the failure reason recovers more money while moving six times less prohibited value in the terminal regime. That schedule is documented for cards. The UPI retry model is not published. So the finding is not that their card policy is wrong; it is that a scheduled AutoPay policy needs its own model, and evaluating what it should be is what this is.
+> Razorpay documents a fixed retry schedule for cards: three retries, once a day, then halt. I implemented exactly that as a **fixed retry reference policy** and ran it on the same synthetic ledger as everything else. Say this next part in full, do not compress it: **we use Razorpay's documented fixed card retry schedule as a reference policy; it does not reproduce or benchmark Razorpay's current Intelligent UPI Retry Engine, and MandateGuard has not been evaluated against Razorpay's production decision logic.** On this synthetic ledger, under the tested policies, that fixed schedule is Pareto dominated in all three regimes — reading the failure reason recovers more money while moving six times less prohibited value in the terminal regime. Applying a card schedule to a scheduled AutoPay ledger is an explicit benchmark assumption, not a claim about Razorpay's UPI behaviour or production system. The result is only about the tested fixed temporal reference versus the reason-aware policies on this synthetic ledger.
 
-> Razorpay already ships recovery for UPI AutoPay, including a configurable retry engine in beta and, since FTX'26, a Subscription Recovery agent in Agent Studio. I am not proposing a competitor to it. A configurable retry engine makes retry strategy a merchant setting, and nothing published tells a merchant what a given setting will cost them in prohibited debits before they switch it on. MandateGuard is the evaluation harness and bounded runtime that answers that on a frozen ledger, and proves every refusal with a receipt.
+> Razorpay already ships recovery for UPI AutoPay, including a configurable retry engine in beta and, since FTX'26, a Subscription Recovery agent in Agent Studio. I am not proposing a competitor to it. MandateGuard asks a separate evaluation question: before a retry strategy is deployed, what recovery-versus-prohibited-value trade-off does it produce under a declared test model? The harness measures that on a frozen synthetic ledger, while the bounded runtime proves every refusal with a receipt.
 
 Then give the direction of the problem, because it is the opposite of what a
 recovery demo normally claims:

@@ -9,10 +9,10 @@ ablations invented for this project.
 Two qualifications are load bearing and are asserted here so they cannot be
 quietly dropped:
 
-  1. The published schedule is documented for the CARD model. The UPI AutoPay
-     and eMandate retry models are not published. Applying the card model to a
-     scheduled AutoPay ledger is this benchmark's assumption, not a claim about
-     Razorpay's UPI behaviour.
+  1. The published schedule is documented for the CARD model. Applying that
+     card model to a scheduled AutoPay ledger is this benchmark's explicit
+     assumption. It is not a reproduction, benchmark, or claim about Razorpay's
+     current Intelligent UPI Retry Engine or production UPI behaviour.
   2. The published model is a schedule. It is silent on the failure reason, so
      this arm is silent on it too. The arm exists to measure what a purely
      temporal policy costs, not to suggest Razorpay does something wrong.

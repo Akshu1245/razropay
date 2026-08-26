@@ -9,7 +9,7 @@ MandateGuard compares bounded recovery policies on the same deterministic schedu
 There is no single recommended arm, because the ordering depends entirely on what a prohibited action is assumed to cost. Two pricings are reported. The flat pricing charges a fixed sum per detected breach. The harm pricing charges the money the prohibited action actually moved. The crossover between them is reported rather than hidden, so a reader who disagrees with the project assumption can read their own answer off the swept curve in `outputs/report.md`.
 
 Manifest dataset hash: `725a38d6ffdcadf0ea33fdb81d94b7fa9e7f11de296b86a42188f6153dbed0f7`
-Rules hash: `a2bce7b25504583f757a136e802043e1fc640326fc873f0cea8876134cc5c09a`
+Rules hash: `70e2909d26598695f74ae9e4d5c81dabb4c772d1f6d376d6567923cdc8a52506`
 Seeds: `20`
 Cases per seed and regime: `100`
 Configured violation cost: `₹50.00`

@@ -38,11 +38,10 @@ ARM_ORDER = CANONICAL_ARM_ORDER
 #
 # Two honest qualifications, both material:
 #
-#   1. That schedule is documented for the CARD model. The same page carries
-#      `upi retry model` and `emandate retry model` tags but does not publish
-#      the behaviour for either. Applying the card model to a scheduled UPI
-#      AutoPay ledger is therefore an explicit assumption of this benchmark,
-#      not a claim about what Razorpay does on UPI.
+#   1. That schedule is documented for the CARD model. Applying the card model
+#      to a scheduled UPI AutoPay ledger is therefore an explicit assumption
+#      of this benchmark, not a reproduction, benchmark, or claim about
+#      Razorpay's current Intelligent UPI Retry Engine or production behaviour.
 #   2. The published model is a schedule. It says nothing about reading the
 #      failure reason, and this arm does not read it either. That is the point
 #      of including the arm: it shows what a purely temporal retry policy costs

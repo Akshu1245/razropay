@@ -45,19 +45,20 @@ wait for the question, it sounds like an excuse instead of the thesis.
 
 ---
 
-### "You're beating a strawman. Razorpay never published a UPI AutoPay retry model — you implemented the *card* one and called it a win."
+### "You're beating a strawman. You implemented the *card* schedule, not Razorpay's current UPI retry engine."
 
-True, and stated in the README before anyone can accuse you of hiding it.
-The finding isn't "Razorpay's policy is bad." It's "a schedule that can't see
-the failure reason will always be dominated by one that can, and Razorpay's
-only published schedule is exactly that kind of schedule." The card model was
-the only one on the record to test against — that's the point, not a
-workaround. If Razorpay publishes a UPI-specific model tomorrow, this
-benchmark is built to take it as a tenth arm and run the same comparison.
+Correct — and the repository says so before the benchmark result. `RZP` is a
+**fixed temporal reference arm** derived from Razorpay's documented card retry
+schedule. It is not a reproduction or benchmark of Razorpay's current
+Intelligent UPI Retry Engine, and MandateGuard has not been evaluated against
+Razorpay's production decision logic. The result is narrower: on the same
+synthetic scheduled AutoPay ledger, the tested reason-aware policies recover
+more while moving less prohibited value than that fixed temporal reference.
 
-If pushed further: "what would change your mind?" — a documented UPI AutoPay
-retry policy that reads mandate state or failure reason before scheduling.
-Nothing else in this argument is falsifiable by a single fact; that one is.
+If pushed further: "what would change your mind?" — an independently
+reproducible UPI retry policy evaluated on the same frozen ledger and metrics
+that matches or outperforms the reason-aware arms. The harness is designed to
+accept such a policy as another benchmark arm.
 
 ---
 

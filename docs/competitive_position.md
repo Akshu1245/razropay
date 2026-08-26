@@ -70,18 +70,28 @@ temporal schedule.
 Two qualifications, both material, both enforced by tests so they cannot be
 dropped:
 
-1. **That schedule is documented for the card model.** The same page carries
-   `upi retry model` and `emandate retry model` tags but publishes neither.
-   Applying the card model to a scheduled UPI AutoPay ledger is this benchmark's
-   stated assumption, not a claim about Razorpay's UPI behaviour.
+1. **That schedule is documented for the card model.** Applying the card
+   model to a scheduled UPI AutoPay ledger is this benchmark's stated
+   assumption. It is not a reproduction, benchmark, or claim about Razorpay's
+   current Intelligent UPI Retry Engine or production UPI behaviour.
 2. **A schedule cannot see a failure reason, and this arm does not try to.**
    The result is not that Razorpay's card policy is bad at being a card policy.
    It is that a purely temporal model, moved onto a rail where some failures are
    terminal, retries mandates that no longer exist.
 
-Read together those two points make one argument: **the UPI AutoPay retry model
-needs to be different from the card one, and it is not published.** This project
-is a way to evaluate what it should be.
+Read together those two points make one argument: **a scheduled UPI AutoPay
+policy needs its own model.** This project is a way to evaluate what it
+should be.
+
+To be explicit about what the `RZP` arm is and is not: the RZP arm uses
+Razorpay's documented fixed card retry schedule as a **temporal reference
+policy**. It does not reproduce or benchmark Razorpay's current Intelligent
+UPI Retry Engine, and MandateGuard has not been evaluated against Razorpay's
+production decision logic. Razorpay ships Intelligent Revenue-Protect for UPI
+AutoPay, in which merchants configure retry strategies; that production engine
+is not implemented or evaluated here. Any result about `RZP` is a result about
+a fixed temporal schedule on a synthetic ledger, not about Razorpay's
+production recovery.
 
 ## What MandateGuard is instead
 
@@ -133,20 +143,20 @@ charges, not merchants reporting that too little was recovered. A layer whose
 headline metric is `protected_value_by_denial_inr` addresses the documented
 direction of failure.
 
-**3. Configuration surfaces need verification surfaces.** The moment retry
-strategy becomes a merchant-editable template, the compliance question moves
-from the platform to the merchant, and merchants have neither the failure
-taxonomy nor the counterfactual ledger to answer it. A shipped configuration
-surface strengthens the case for an evaluation layer rather than removing it.
+**3. Configuration surfaces create an evaluation question.** When retry
+strategy is configurable, a merchant can compare candidate strategies before
+deployment. MandateGuard supplies one explicit way to do that: a frozen
+synthetic ledger, declared harm/recovery metrics, counterfactual policy arms,
+and auditable runtime receipts.
 
 ## How to say this on camera
 
 > Razorpay already ships recovery for UPI AutoPay, including a configurable
-> retry engine in beta. I am not proposing a competitor to it. A configurable
-> retry engine makes retry strategy a setting, and nothing published tells a
-> merchant what a given setting will cost them in prohibited debits before
-> they turn it on. MandateGuard answers that question on a frozen ledger, and
-> proves every refusal with a receipt. My own benchmark says the strict policy
+> retry engine in beta. I am not proposing a competitor to it. MandateGuard
+> asks a separate evaluation question: before a retry strategy is deployed,
+> what recovery-versus-prohibited-value trade-off does it produce under a
+> declared test model? The harness measures that on a frozen synthetic ledger
+> and proves every refusal with a receipt. My own benchmark says the strict policy
 > is not always the profitable one, and it reports the exact price at which
 > that flips. That is the product: the measurement, not the policy.
 

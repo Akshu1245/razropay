@@ -12,7 +12,22 @@ Razorpay already ships recovery for UPI AutoPay, including a configurable retry 
 
 MandateGuard answers that on a frozen synthetic ledger. It is not a recovery engine competing on recovered rupees alone — it is nine recovery policy arms, decided, executed, and proven side by side, including **Razorpay's own published card retry schedule run as a benchmark arm**, with every allow and every refusal traceable through a hash-chained audit receipt before the provider boundary. See [`docs/competitive_position.md`](docs/competitive_position.md) for the full positioning and for what would weaken it.
 
+> ## **AI interprets. Policy authorizes. Provider executes. Evidence proves.**
+>
+> The bounded interpreter never holds payment authority. It may read an ambiguous failure and propose a reading with a confidence score; it cannot authorize a debit, widen an authority envelope, change consent, or reach the provider. That boundary is enforced in `bailiff/guardrails.py` and attacked directly in `tests/test_adversarial.py`, where a fully compromised interpreter returning maximum confidence on the most permissive reading available still cannot move a revoked mandate past the guardrail.
+
 > **The webhook gate authenticates. The bounded interpreter interprets. The policy engine decides. The provider adapter executes. The audit chain proves.**
+
+## Run it in one command
+
+```bash
+pip install -r requirements.txt
+python3 scripts/demo60.py          # the sixty second proof, no setup beyond this
+```
+
+That is the whole judge path. `scripts/demo60.py` needs no API key, no network, and no Streamlit: it runs the same modules the benchmark uses and prints a forged webhook refused at ingress, a permitted retry making exactly one simulated provider call, an ambiguous case where the bounded interpreter abstains with **zero** provider calls, a timeout routed to human review, and audit tampering failing verification.
+
+Python 3.11 or newer. To run the full benchmark and the verification gates instead, see [Repository commands](#repository-commands) and [Verification](#verification).
 
 ## How it fits together
 
@@ -45,11 +60,17 @@ This is a synthetic benchmark driven through a Razorpay shaped scheduled AutoPay
 
 ## The headline result
 
-Razorpay publishes its subscription retry model: *"In a T+3 days cycle, we will retry the payment thrice. That is, once every day for 3 days, excluding the date of the charge."* MandateGuard implements exactly that as the `RZP` arm and runs it on the same frozen ledger as every other policy.
+**Evaluation dataset: synthetic failure ledger. Provider: local simulator. Not Razorpay merchant transactions.**
 
-**It is Pareto dominated in all three regimes.** Reading the failure reason recovers more money while moving substantially less prohibited value — six times less in the terminal regime. No weighting of the two metrics prefers the temporal schedule.
+The comparison here is **Fixed Retry Reference Policy vs Reason-Aware Policies**, and the reference policy needs stating precisely before any number is read.
 
-Two qualifications, both enforced by tests so they cannot be quietly dropped. That schedule is documented for the **card** model; the same page tags `upi retry model` and `emandate retry model` but publishes neither, so applying it to a scheduled AutoPay ledger is this benchmark's stated assumption, not a claim about Razorpay's UPI behaviour. And a schedule cannot see a failure reason, so this arm does not try to. The finding is not that a card policy is bad at being a card policy — it is that **the UPI AutoPay retry model needs to be different from the card one, and it is not published.** Evaluating what it should be is what this repository does.
+Razorpay documents a fixed retry schedule for its **card** model: *"In a T+3 days cycle, we will retry the payment thrice. That is, once every day for 3 days, excluding the date of the charge."* MandateGuard implements exactly that as the `RZP` arm — a **fixed retry reference policy**, named after where the timing came from, not a model of Razorpay's product.
+
+> **We use Razorpay's documented fixed card retry schedule as a reference policy. It does not reproduce or benchmark Razorpay's current Intelligent UPI Retry Engine, and MandateGuard has not been evaluated against Razorpay's production decision logic.** Razorpay ships Intelligent Revenue-Protect for UPI AutoPay, in which merchants can configure retry strategies; that production engine is outside this benchmark.
+
+**On this synthetic ledger, under the tested policies, the fixed reference schedule is Pareto dominated in all three regimes.** Reading the failure reason recovers more money while moving substantially less prohibited value — six times less in the terminal regime. In our evaluation no weighting of the two metrics prefers the purely temporal schedule. That is a statement about nine policies on one generated ledger. It is not a claim about Razorpay's production system, which this project has never run against and does not measure.
+
+Two qualifications, both enforced by tests so they cannot be quietly dropped. First, the schedule is documented for the **card** model. Applying that card schedule to a scheduled AutoPay ledger is an explicit benchmark assumption, not a statement about Razorpay's UPI retry behaviour or production engine. Second, a fixed temporal schedule cannot see a failure reason, so this reference arm does not try to. The finding is not that Razorpay's production system is wrong; it is that **on this synthetic ledger, reason-aware policies outperform the tested fixed temporal reference under the stated metrics.** Evaluating that policy trade-off is what this repository does.
 
 Full positioning, including Razorpay's Agent Studio "Subscription Recovery" agent and what would weaken this argument, is in [`docs/competitive_position.md`](docs/competitive_position.md).
 
@@ -273,7 +294,7 @@ The sequence below leads with prevention rather than recovery, deliberately. The
 Four gates, in increasing strength. The first two are fast enough to run on every change; the last two are what should be run before submitting.
 
 ```bash
-./scripts/test.sh              # 280 tests: unit, contract, adversarial, property based
+./scripts/test.sh              # 283 tests: unit, contract, adversarial, property based
 python3 scripts/mutation_check.py   # does the suite actually catch the bugs it names
 ./scripts/release_check.sh     # packaging, determinism, generated artefacts
 ./scripts/verify_all.sh        # all of the above plus the fixture assumption sweep

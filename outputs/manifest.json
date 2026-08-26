@@ -25,7 +25,7 @@
   "input_contract": "razorpay_shaped_test_payload_v1",
   "interpreter_mode": "deterministic_offline",
   "n_per_seed": 100,
-  "outputs_sha256": "7c4d276d36ef14c2a6bcdaff4985530ef566ccb513d77d98ba9e1a7e520fa787",
+  "outputs_sha256": "4fbb5b169d32e10650c2dcc9c73e6af6b136fd1062191cae53006c1f57ddff94",
   "policy_contract": "scheduled_upi_autopay_only",
   "provider_adapter": "bailiff.razorpay_adapter.normalize_razorpay_autopay_payload",
   "regimes": [
@@ -34,7 +34,7 @@
     "R3_AMBIGUOUS"
   ],
   "rules_provenance": "project_policy_with_source_tiers",
-  "rules_sha256": "a2bce7b25504583f757a136e802043e1fc640326fc873f0cea8876134cc5c09a",
+  "rules_sha256": "70e2909d26598695f74ae9e4d5c81dabb4c772d1f6d376d6567923cdc8a52506",
   "seeds": [
     1701,
     2029,

@@ -83,7 +83,7 @@
     "razorpay_documented_retry_attempts": {
       "classification": "VENDOR_DOCUMENTED",
       "effective_date": "2026-08-24",
-      "source": "Razorpay Subscriptions payment retries: 'In a T+3 days cycle, we will retry the payment thrice. That is, once every day for 3 days, excluding the date of the charge.' Documented for the card model; the UPI AutoPay and eMandate retry models are not published.",
+      "source": "Razorpay Subscriptions payment retries: 'In a T+3 days cycle, we will retry the payment thrice. That is, once every day for 3 days, excluding the date of the charge.' Documented for the card model. This project's RZP arm uses that card schedule as a fixed temporal reference policy; it does not reproduce or benchmark Razorpay's Intelligent UPI Retry Engine, and MandateGuard has not been evaluated against Razorpay's production decision logic.",
       "source_url": "https://razorpay.com/docs/payments/subscriptions/payment-retries/",
       "value": 3
     },

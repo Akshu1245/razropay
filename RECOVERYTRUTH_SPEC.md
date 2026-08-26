@@ -58,6 +58,7 @@ The deterministic consistency gate owns the executable verdict.
 Initial canonical states:
 
 - `RECOVERABLE_FAILURE`
+- `TERMINAL_FAILURE`
 - `MONEY_ALREADY_MOVED`
 - `ENTITLEMENT_MISMATCH`
 - `MANDATE_NOT_ACTIONABLE`
@@ -76,9 +77,10 @@ Initial resolution actions:
 1. Current provider evidence that money moved blocks another money action regardless of model output.
 2. A revoked/cancelled/paused/expired mandate blocks recovery regardless of model confidence.
 3. Missing current provider state is an abstention; an older failed webhook is not enough to proceed.
-4. Only a current failed payment + actionable mandate + sufficiently confident recoverable hypothesis may hand off to MandateGuard.
-5. Provider timeout or unknown postcondition remains `UNKNOWN` until independently resolved.
-6. A hypothesis that references an evidence ID not present in the bundle is invalid.
+4. A high-confidence terminal interpretation may stop recovery but may never create a provider action.
+5. Only a current failed payment + actionable mandate + sufficiently confident recoverable hypothesis may hand off to MandateGuard.
+6. Provider timeout or unknown postcondition remains `UNKNOWN` until independently resolved.
+7. A hypothesis that references an evidence ID not present in the bundle is invalid.
 
 ## Hero cases required before UI work
 
@@ -164,6 +166,8 @@ All five hero cases above pass in CI. Existing MandateGuard tests remain green.
 ### Gate B — AI earns its place
 
 On held-out ambiguous/unseen cases, the AI-assisted system must show measurable value over deterministic taxonomy through higher selective accuracy, useful additional coverage at a controlled error rate, or materially safer abstention. If it does not, report that result and change the AI role rather than fabricating benefit.
+
+The deterministic comparison is frozen before the real-model run. The real model does not get a lower bar simply because it is an LLM.
 
 ### Gate C — provider truth
 

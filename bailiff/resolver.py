@@ -76,6 +76,11 @@ class RealEvidenceStateResolver:
     It has no provider tools and no authority. It returns a hypothesis only;
     ``evaluate_recovery_preflight`` decides whether any recovery action may be
     handed to MandateGuard.
+
+    Provider selection is configuration, not code: an OpenAI-compatible base
+    URL, model ID and API key may be supplied explicitly or through the
+    ``RECOVERYTRUTH_RESOLVER_*`` environment variables. This keeps the frozen
+    benchmark identical across legitimate model providers.
     """
 
     _REASONING_FAMILY_PREFIXES = ("gpt-5", "o1", "o3", "o4")
@@ -86,9 +91,16 @@ class RealEvidenceStateResolver:
         model: str | None = None,
         client: Any | None = None,
         base_url: str | None = None,
+        api_key: str | None = None,
     ) -> None:
         self.model = model or os.getenv("RECOVERYTRUTH_RESOLVER_MODEL", "gpt-5-mini")
         self.base_url = base_url or os.getenv("RECOVERYTRUTH_RESOLVER_BASE_URL") or None
+        self.api_key = (
+            api_key
+            or os.getenv("RECOVERYTRUTH_RESOLVER_API_KEY")
+            or os.getenv("OPENAI_API_KEY")
+            or None
+        )
         self._client = client
 
     @property
@@ -98,7 +110,12 @@ class RealEvidenceStateResolver:
                 from openai import OpenAI
             except ImportError as exc:  # pragma: no cover - optional dependency
                 raise RuntimeError("install the interpreter extra to use the real state resolver") from exc
-            self._client = OpenAI(base_url=self.base_url) if self.base_url else OpenAI()
+            kwargs: dict[str, str] = {}
+            if self.base_url:
+                kwargs["base_url"] = self.base_url
+            if self.api_key:
+                kwargs["api_key"] = self.api_key
+            self._client = OpenAI(**kwargs)
         return self._client
 
     @property

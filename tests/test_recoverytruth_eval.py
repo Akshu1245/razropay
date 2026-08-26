@@ -64,4 +64,4 @@ def test_keyword_taxonomy_does_not_get_a_free_pass_on_contradictory_semantics():
 
     assert row.gold_state == "unknown_conflict"
     assert row.recovery_action_allowed is False
-    assert row.decision == "ABSTAIN"
+    assert row.decision == "abstain"

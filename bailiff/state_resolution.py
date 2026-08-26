@@ -9,6 +9,7 @@ from .evidence import EvidenceBundle, EvidenceSource
 
 class CanonicalFinancialState(str, Enum):
     RECOVERABLE_FAILURE = "recoverable_failure"
+    TERMINAL_FAILURE = "terminal_failure"
     MONEY_ALREADY_MOVED = "money_already_moved"
     ENTITLEMENT_MISMATCH = "entitlement_mismatch"
     MANDATE_NOT_ACTIONABLE = "mandate_not_actionable"
@@ -108,7 +109,9 @@ def evaluate_recovery_preflight(
     2. A non-actionable mandate blocks recovery regardless of model confidence.
     3. Missing current provider truth is an abstention, not permission to trust
        an older failure webhook.
-    4. Only a current failed payment + actionable mandate + sufficiently
+    4. A high-confidence terminal interpretation may stop recovery but never
+       create a provider action.
+    5. Only a current failed payment + actionable mandate + sufficiently
        confident recoverable hypothesis may reach MandateGuard.
     """
 
@@ -186,6 +189,19 @@ def evaluate_recovery_preflight(
             reason="AI_CONFIDENCE_BELOW_THRESHOLD",
             action=ResolutionAction.HUMAN_REVIEW,
             hypothesis=hypothesis,
+        )
+
+    if hypothesis.state is CanonicalFinancialState.TERMINAL_FAILURE:
+        return PreflightVerdict(
+            decision=Decision.STOP,
+            state=CanonicalFinancialState.TERMINAL_FAILURE,
+            resolution_action=ResolutionAction.STOP_RECOVERY,
+            recovery_action_allowed=False,
+            reason_codes=("AI_TERMINAL_FAILURE",),
+            evidence_ids=_all_ids(bundle),
+            confidence=hypothesis.confidence,
+            contradictions=hypothesis.contradicting_evidence,
+            unknowns=hypothesis.unknowns,
         )
 
     if hypothesis.state is not CanonicalFinancialState.RECOVERABLE_FAILURE:

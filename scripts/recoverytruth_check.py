@@ -4,7 +4,15 @@ from contextlib import contextmanager
 from datetime import datetime, timedelta, timezone
 import os
 
-from bailiff.recovery_runtime import FALLBACK_ACTION, RecoveryRequest, RecoveryTruthRuntime, recovery_reference
+import httpx
+
+from bailiff.recovery_runtime import (
+    FALLBACK_ACTION,
+    ExecutionState,
+    RecoveryRequest,
+    RecoveryTruthRuntime,
+    recovery_reference,
+)
 from bailiff.recovery_truth import ProviderEvidence, TruthState, WriteFence, resolve_financial_truth
 from bailiff.razorpay_testmode import RazorpayConfigurationError, RazorpayTestModeClient
 
@@ -50,6 +58,8 @@ class FakeProvider:
         self.create_calls = 0
         self.link = None
         self.evidence_reads = 0
+        self.fail_read_at: int | None = None
+        self.ambiguous_write = False
 
     def order_evidence(
         self,
@@ -64,6 +74,8 @@ class FakeProvider:
         assert expected_amount_minor == 1000
         assert expected_currency == "INR"
         self.evidence_reads += 1
+        if self.fail_read_at == self.evidence_reads:
+            raise httpx.ReadTimeout("provider read timed out")
         mandate = evidence(mandate_status or "active", mandate_id or "mandate_1", entity_type="mandate")
         if self.phase == 2:
             return (evidence("captured", "pay_late"), mandate)
@@ -72,8 +84,10 @@ class FakeProvider:
         return (evidence("failed"), mandate)
 
     def create_payment_link_once(self, *, amount_minor: int, currency: str, reference_id: str, description: str):
+        self.create_calls += 1
+        if self.ambiguous_write:
+            raise httpx.WriteTimeout("provider write timed out after send")
         if self.link is None:
-            self.create_calls += 1
             self.link = {
                 "id": "plink_test_1",
                 "short_url": "https://rzp.io/i/test",
@@ -166,6 +180,22 @@ def main() -> int:
     else:
         raise AssertionError("recovery request widened the policy amount authority")
 
+    # Provider read failures are explicit zero-write SAFE_BLOCKs, including at
+    # the immediate pre-write read.
+    provider = FakeProvider()
+    provider.fail_read_at = 1
+    attempt = RecoveryTruthRuntime(provider).execute_customer_fallback(request())
+    assert attempt.execution_state == ExecutionState.NOT_EXECUTED
+    assert attempt.reason_code == "SAFE_BLOCK_PROVIDER_READ_ERROR"
+    assert provider.create_calls == 0
+
+    provider = FakeProvider()
+    provider.fail_read_at = 2
+    attempt = RecoveryTruthRuntime(provider).execute_customer_fallback(request())
+    assert attempt.execution_state == ExecutionState.NOT_EXECUTED
+    assert attempt.reason_code == "SAFE_BLOCK_PREWRITE_PROVIDER_READ_ERROR"
+    assert provider.create_calls == 0
+
     provider = FakeProvider()
     runtime = RecoveryTruthRuntime(provider)
     req = request()
@@ -181,7 +211,7 @@ def main() -> int:
     second = runtime.execute_customer_fallback(req)
     assert second.executed and second.receipt is not None
     assert second.receipt.payment_link_id == attempt.receipt.payment_link_id
-    assert provider.create_calls == 1
+    assert provider.create_calls == 2  # provider method is invoked again, but returns the same logical object
 
     proof = runtime.verify_recovery(attempt.receipt)
     assert proof.payment_id == "pay_captured_1"
@@ -221,6 +251,18 @@ def main() -> int:
     assert not attempt.executed and attempt.reason_code == "SAFE_BLOCK_IN_FLIGHT"
     assert provider.create_calls == 0
 
+    # An unresolved POST timeout is not falsely labelled non-execution. The
+    # runtime records the financial outcome as unknown so the only safe next
+    # operation is reconciliation, never another blind write.
+    provider = FakeProvider()
+    provider.ambiguous_write = True
+    attempt = RecoveryTruthRuntime(provider).execute_customer_fallback(req)
+    assert attempt.execution_state == ExecutionState.WRITE_OUTCOME_UNKNOWN
+    assert attempt.write_outcome_unknown
+    assert attempt.reason_code == "PROVIDER_WRITE_OUTCOME_UNKNOWN"
+    assert attempt.receipt is None
+    assert provider.create_calls == 1
+
     with env(RAZORPAY_TEST_KEY_ID="rzp_live_forbidden", RAZORPAY_TEST_KEY_SECRET="secret"):
         try:
             RazorpayTestModeClient.from_env()
@@ -229,7 +271,10 @@ def main() -> int:
         else:
             raise AssertionError("live Razorpay key was not refused")
 
-    print("RecoveryTruth acceptance checks passed: exact order binding, truth, in-flight block, expiring authority, fence, exactly-once action, proof")
+    print(
+        "RecoveryTruth acceptance checks passed: exact order binding, provider-read fail-closed, "
+        "truth, in-flight block, expiring authority, fence, logical idempotency, ambiguous-write state, proof"
+    )
     return 0
 
 

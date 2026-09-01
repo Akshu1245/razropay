@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, asdict
+from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
 from hashlib import sha256
@@ -26,8 +26,9 @@ class ProviderEvidence:
     amount_minor: int | None = None
     currency: str | None = None
     reference_id: str | None = None
-    observed_at: datetime = datetime.min.replace(tzinfo=timezone.utc)
+    observed_at: datetime = field(default_factory=lambda: datetime.min.replace(tzinfo=timezone.utc))
     raw_hash: str = ""
+    authoritative: bool = True
 
     def fingerprint(self) -> str:
         body = {
@@ -39,6 +40,7 @@ class ProviderEvidence:
             "currency": self.currency,
             "reference_id": self.reference_id,
             "raw_hash": self.raw_hash,
+            "authoritative": self.authoritative,
         }
         return sha256(json.dumps(body, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
 
@@ -55,32 +57,90 @@ class TruthResolution:
         return self.state == TruthState.RECOVERABLE
 
 
-_CAPTURED = {"captured", "paid"}
-_FAILED = {"failed"}
-_TERMINAL = {"refunded", "cancelled", "expired"}
-_RECOVERABLE = {"created", "authorized", "pending"}
+_PAYMENT_CAPTURED = {"captured", "paid"}
+_PAYMENT_FAILED = {"failed"}
+_PAYMENT_RECOVERABLE = {"created", "authorized", "pending"}
+_PAYMENT_TERMINAL = {"refunded"}
+_MANDATE_ACTIVE = {"active", "enabled", "authenticated"}
+_MANDATE_TERMINAL = {"revoked", "cancelled", "canceled", "paused", "expired", "halted"}
+
+
+def _status(row: ProviderEvidence) -> str:
+    return str(row.status or "").strip().lower()
+
+
+def _collapse_latest(rows: Iterable[ProviderEvidence]) -> tuple[tuple[ProviderEvidence, ...], bool]:
+    """Keep the freshest authoritative observation per provider entity.
+
+    Two different states for the same entity at the same observation time are
+    treated as an unresolved conflict rather than choosing one arbitrarily.
+    Historical webhook snapshots should be supplied with authoritative=False;
+    they remain useful evidence but never outrank a fresh provider read.
+    """
+    latest: dict[tuple[str, str, str], ProviderEvidence] = {}
+    conflict = False
+    for row in rows:
+        if not row.authoritative:
+            continue
+        key = (row.source, row.entity_type.lower(), row.entity_id)
+        current = latest.get(key)
+        if current is None or row.observed_at > current.observed_at:
+            latest[key] = row
+        elif row.observed_at == current.observed_at and row.fingerprint() != current.fingerprint():
+            conflict = True
+    return tuple(latest.values()), conflict
 
 
 def resolve_financial_truth(evidence: Iterable[ProviderEvidence]) -> TruthResolution:
-    rows = tuple(evidence)
+    all_rows = tuple(evidence)
     now = datetime.now(timezone.utc)
-    if not rows:
+    if not all_rows:
         return TruthResolution(TruthState.UNKNOWN, ("NO_PROVIDER_EVIDENCE",), (), now)
 
-    statuses = {str(row.status).lower() for row in rows if row.status is not None}
-    fingerprints = tuple(row.fingerprint() for row in rows)
+    current_rows, same_entity_conflict = _collapse_latest(all_rows)
+    fingerprints = tuple(sorted(row.fingerprint() for row in all_rows))
+    if same_entity_conflict:
+        return TruthResolution(TruthState.CONFLICT, ("SAME_ENTITY_CURRENT_STATE_CONFLICT",), fingerprints, now)
+    if not current_rows:
+        return TruthResolution(TruthState.UNKNOWN, ("NO_AUTHORITATIVE_CURRENT_EVIDENCE",), fingerprints, now)
 
-    if statuses & _CAPTURED and (statuses & (_FAILED | _RECOVERABLE | _TERMINAL)):
-        return TruthResolution(TruthState.CONFLICT, ("CAPTURED_CONFLICTS_WITH_OTHER_STATE",), fingerprints, now)
-    if statuses & _CAPTURED:
-        return TruthResolution(TruthState.PAID, ("CAPTURED_PAYMENT_OBSERVED",), fingerprints, now)
-    if statuses & _TERMINAL:
-        return TruthResolution(TruthState.TERMINAL, ("TERMINAL_PROVIDER_STATE",), fingerprints, now)
-    if statuses and statuses.issubset(_FAILED):
-        return TruthResolution(TruthState.FAILED, ("FAILED_PROVIDER_STATE",), fingerprints, now)
-    if statuses and statuses.issubset(_FAILED | _RECOVERABLE) and statuses & _RECOVERABLE:
-        return TruthResolution(TruthState.RECOVERABLE, ("NO_CAPTURED_PAYMENT_AND_RECOVERABLE_STATE",), fingerprints, now)
-    return TruthResolution(TruthState.UNKNOWN, ("UNRECOGNIZED_OR_INCOMPLETE_PROVIDER_STATE",), fingerprints, now)
+    payment_rows = tuple(row for row in current_rows if row.entity_type.lower() == "payment")
+    mandate_rows = tuple(row for row in current_rows if row.entity_type.lower() in {"mandate", "subscription"})
+
+    # A fresh captured payment is the strongest financial fact. Older failed
+    # webhooks are expected history and do not create a conflict with it.
+    captured = tuple(row for row in payment_rows if _status(row) in _PAYMENT_CAPTURED)
+    if captured:
+        return TruthResolution(TruthState.PAID, ("CURRENT_CAPTURED_PAYMENT_OBSERVED",), fingerprints, now)
+
+    if any(_status(row) in _MANDATE_TERMINAL for row in mandate_rows):
+        return TruthResolution(TruthState.TERMINAL, ("CURRENT_MANDATE_NOT_EXECUTABLE",), fingerprints, now)
+
+    unknown_payment = tuple(
+        row
+        for row in payment_rows
+        if _status(row) not in (_PAYMENT_CAPTURED | _PAYMENT_FAILED | _PAYMENT_RECOVERABLE | _PAYMENT_TERMINAL)
+    )
+    if unknown_payment:
+        return TruthResolution(TruthState.UNKNOWN, ("UNRECOGNIZED_CURRENT_PAYMENT_STATE",), fingerprints, now)
+
+    if any(_status(row) in _PAYMENT_TERMINAL for row in payment_rows):
+        return TruthResolution(TruthState.TERMINAL, ("CURRENT_PAYMENT_TERMINAL",), fingerprints, now)
+
+    if any(_status(row) in _PAYMENT_RECOVERABLE for row in payment_rows):
+        return TruthResolution(TruthState.RECOVERABLE, ("CURRENT_PAYMENT_RECOVERABLE",), fingerprints, now)
+
+    if payment_rows and all(_status(row) in _PAYMENT_FAILED for row in payment_rows):
+        if mandate_rows and all(_status(row) in _MANDATE_ACTIVE for row in mandate_rows):
+            return TruthResolution(
+                TruthState.RECOVERABLE,
+                ("CURRENT_PAYMENT_FAILED", "CURRENT_MANDATE_ACTIVE"),
+                fingerprints,
+                now,
+            )
+        return TruthResolution(TruthState.FAILED, ("CURRENT_PAYMENT_FAILED_RECOVERABILITY_UNPROVEN",), fingerprints, now)
+
+    return TruthResolution(TruthState.UNKNOWN, ("INCOMPLETE_CURRENT_FINANCIAL_STATE",), fingerprints, now)
 
 
 @dataclass(frozen=True)
@@ -89,7 +149,11 @@ class WriteFence:
 
     @classmethod
     def from_evidence(cls, evidence: Iterable[ProviderEvidence]) -> "WriteFence":
-        return cls(_set_fingerprint(evidence))
+        rows = tuple(evidence)
+        resolution = resolve_financial_truth(rows)
+        if resolution.state != TruthState.RECOVERABLE:
+            raise ValueError(f"write fence can only be armed from RECOVERABLE state, got {resolution.state.value}")
+        return cls(_set_fingerprint(rows))
 
     def check(self, fresh_evidence: Iterable[ProviderEvidence]) -> tuple[bool, str]:
         fresh = tuple(fresh_evidence)
@@ -104,7 +168,7 @@ class WriteFence:
 
 
 def _set_fingerprint(evidence: Iterable[ProviderEvidence]) -> str:
-    values = sorted(row.fingerprint() for row in evidence)
+    values = sorted(row.fingerprint() for row in evidence if row.authoritative)
     return sha256("|".join(values).encode()).hexdigest()
 
 
@@ -120,7 +184,7 @@ class CapturedPaymentProof:
 def verify_captured_payment(
     payment: Mapping[str, object], *, expected_amount_minor: int, expected_currency: str, expected_reference_id: str
 ) -> CapturedPaymentProof:
-    payment_id = str(payment.get("id") or "")
+    payment_id = str(payment.get("id") or payment.get("payment_id") or "")
     status = str(payment.get("status") or "").lower()
     amount = int(payment.get("amount") or 0)
     currency = str(payment.get("currency") or "")
@@ -147,12 +211,15 @@ class RecoveryProof:
     policy_version: str
     prewrite_resolution: str
     prewrite_evidence_hash: str
+    provider_action_type: str
     provider_action_id: str
+    postcondition_evidence_hash: str
     payment_id: str
     amount_minor: int
     currency: str
     reference_id: str
     previous_proof_hash: str = "GENESIS"
+    proof_version: str = "recoveryproof_v1"
 
     def hash(self) -> str:
         body = asdict(self)

@@ -12,6 +12,7 @@ class TruthState(str, Enum):
     PAID = "PAID"
     FAILED = "FAILED"
     RECOVERABLE = "RECOVERABLE"
+    IN_FLIGHT = "IN_FLIGHT"
     TERMINAL = "TERMINAL"
     UNKNOWN = "UNKNOWN"
     CONFLICT = "CONFLICT"
@@ -59,7 +60,7 @@ class TruthResolution:
 
 _PAYMENT_CAPTURED = {"captured", "paid"}
 _PAYMENT_FAILED = {"failed"}
-_PAYMENT_RECOVERABLE = {"created", "authorized", "pending"}
+_PAYMENT_IN_FLIGHT = {"created", "authorized", "pending"}
 _PAYMENT_TERMINAL = {"refunded"}
 _MANDATE_ACTIVE = {"active", "enabled", "authenticated"}
 _MANDATE_TERMINAL = {"revoked", "cancelled", "canceled", "paused", "expired", "halted"}
@@ -70,13 +71,7 @@ def _status(row: ProviderEvidence) -> str:
 
 
 def _collapse_latest(rows: Iterable[ProviderEvidence]) -> tuple[tuple[ProviderEvidence, ...], bool]:
-    """Keep the freshest authoritative observation per provider entity.
-
-    Two different states for the same entity at the same observation time are
-    treated as an unresolved conflict rather than choosing one arbitrarily.
-    Historical webhook snapshots should be supplied with authoritative=False;
-    they remain useful evidence but never outrank a fresh provider read.
-    """
+    """Keep the freshest authoritative observation per provider entity."""
     latest: dict[tuple[str, str, str], ProviderEvidence] = {}
     conflict = False
     for row in rows:
@@ -107,38 +102,40 @@ def resolve_financial_truth(evidence: Iterable[ProviderEvidence]) -> TruthResolu
     payment_rows = tuple(row for row in current_rows if row.entity_type.lower() == "payment")
     mandate_rows = tuple(row for row in current_rows if row.entity_type.lower() in {"mandate", "subscription"})
 
-    # A fresh captured payment is the strongest financial fact. Older failed
-    # webhooks are expected history and do not create a conflict with it.
-    captured = tuple(row for row in payment_rows if _status(row) in _PAYMENT_CAPTURED)
-    if captured:
+    # A current captured payment is the strongest financial fact. Historical
+    # failed webhook snapshots are normal history and do not conflict with it.
+    if any(_status(row) in _PAYMENT_CAPTURED for row in payment_rows):
         return TruthResolution(TruthState.PAID, ("CURRENT_CAPTURED_PAYMENT_OBSERVED",), fingerprints, now)
 
-    if any(_status(row) in _MANDATE_TERMINAL for row in mandate_rows):
-        return TruthResolution(TruthState.TERMINAL, ("CURRENT_MANDATE_NOT_EXECUTABLE",), fingerprints, now)
+    if mandate_rows:
+        mandate_statuses = {_status(row) for row in mandate_rows}
+        if mandate_statuses & _MANDATE_TERMINAL:
+            return TruthResolution(TruthState.TERMINAL, ("CURRENT_MANDATE_NOT_EXECUTABLE",), fingerprints, now)
+        if not mandate_statuses.issubset(_MANDATE_ACTIVE):
+            return TruthResolution(TruthState.UNKNOWN, ("UNRECOGNIZED_CURRENT_MANDATE_STATE",), fingerprints, now)
 
-    unknown_payment = tuple(
-        row
-        for row in payment_rows
-        if _status(row) not in (_PAYMENT_CAPTURED | _PAYMENT_FAILED | _PAYMENT_RECOVERABLE | _PAYMENT_TERMINAL)
-    )
-    if unknown_payment:
+    known_payment_states = _PAYMENT_CAPTURED | _PAYMENT_FAILED | _PAYMENT_IN_FLIGHT | _PAYMENT_TERMINAL
+    if any(_status(row) not in known_payment_states for row in payment_rows):
         return TruthResolution(TruthState.UNKNOWN, ("UNRECOGNIZED_CURRENT_PAYMENT_STATE",), fingerprints, now)
+
+    if any(_status(row) in _PAYMENT_IN_FLIGHT for row in payment_rows):
+        return TruthResolution(
+            TruthState.IN_FLIGHT,
+            ("CURRENT_PAYMENT_MAY_STILL_CAPTURE", "PARALLEL_RECOVERY_BLOCKED"),
+            fingerprints,
+            now,
+        )
 
     if any(_status(row) in _PAYMENT_TERMINAL for row in payment_rows):
         return TruthResolution(TruthState.TERMINAL, ("CURRENT_PAYMENT_TERMINAL",), fingerprints, now)
 
-    if any(_status(row) in _PAYMENT_RECOVERABLE for row in payment_rows):
-        return TruthResolution(TruthState.RECOVERABLE, ("CURRENT_PAYMENT_RECOVERABLE",), fingerprints, now)
-
     if payment_rows and all(_status(row) in _PAYMENT_FAILED for row in payment_rows):
-        if mandate_rows and all(_status(row) in _MANDATE_ACTIVE for row in mandate_rows):
-            return TruthResolution(
-                TruthState.RECOVERABLE,
-                ("CURRENT_PAYMENT_FAILED", "CURRENT_MANDATE_ACTIVE"),
-                fingerprints,
-                now,
-            )
-        return TruthResolution(TruthState.FAILED, ("CURRENT_PAYMENT_FAILED_RECOVERABILITY_UNPROVEN",), fingerprints, now)
+        return TruthResolution(
+            TruthState.RECOVERABLE,
+            ("ALL_CURRENT_PAYMENT_ATTEMPTS_FAILED", "NO_CAPTURED_OR_INFLIGHT_PAYMENT"),
+            fingerprints,
+            now,
+        )
 
     return TruthResolution(TruthState.UNKNOWN, ("INCOMPLETE_CURRENT_FINANCIAL_STATE",), fingerprints, now)
 
@@ -165,6 +162,10 @@ class WriteFence:
         if _set_fingerprint(fresh) != self.diagnosis_fingerprint:
             return False, "SAFE_BLOCK_STATE_CHANGED_BEFORE_WRITE"
         return True, "WRITE_FENCE_PASSED"
+
+
+def evidence_set_hash(evidence: Iterable[ProviderEvidence]) -> str:
+    return _set_fingerprint(tuple(evidence))
 
 
 def _set_fingerprint(evidence: Iterable[ProviderEvidence]) -> str:

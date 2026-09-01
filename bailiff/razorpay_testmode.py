@@ -58,7 +58,10 @@ class RazorpayTestModeClient:
     def fetch_payment(self, payment_id: str) -> Mapping[str, object]:
         if not payment_id.startswith("pay_"):
             raise ValueError("invalid Razorpay payment id")
-        return self._request("GET", f"/payments/{payment_id}")
+        payment = self._request("GET", f"/payments/{payment_id}")
+        if str(payment.get("id") or "") != payment_id:
+            raise ValueError("Razorpay returned a different payment id")
+        return payment
 
     def fetch_order_payments(self, order_id: str) -> tuple[Mapping[str, object], ...]:
         if not order_id.startswith("order_"):
@@ -76,7 +79,10 @@ class RazorpayTestModeClient:
     def fetch_payment_link(self, payment_link_id: str) -> Mapping[str, object]:
         if not payment_link_id.startswith("plink_"):
             raise ValueError("invalid Razorpay payment link id")
-        return self._request("GET", f"/payment_links/{payment_link_id}")
+        link = self._request("GET", f"/payment_links/{payment_link_id}")
+        if str(link.get("id") or "") != payment_link_id:
+            raise ValueError("Razorpay returned a different payment link id")
+        return link
 
     def find_payment_link_by_reference(self, reference_id: str) -> Mapping[str, object] | None:
         if not reference_id or len(reference_id) > 40:
@@ -205,6 +211,8 @@ class RazorpayTestModeClient:
             raise ValueError("payment link currency mismatch")
         if bool(link.get("accept_partial", False)):
             raise ValueError("partial payment link is outside RecoveryTruth proof contract")
+        if str(link.get("status") or "").lower() != "paid":
+            raise ValueError("payment link is not in paid state")
 
         payments = link.get("payments")
         if not isinstance(payments, list) or not payments:
@@ -221,6 +229,12 @@ class RazorpayTestModeClient:
         linked_plink = str(link_payment.get("payment_link_id") or "")
         if linked_plink and linked_plink != payment_link_id:
             raise ValueError("captured payment is bound to a different payment link")
+        link_payment_status = str(link_payment.get("status") or "").lower()
+        if link_payment_status and link_payment_status != "captured":
+            raise ValueError("payment link entry is not captured")
+        link_payment_amount = link_payment.get("amount")
+        if link_payment_amount is not None and int(link_payment_amount) != expected_amount_minor:
+            raise ValueError("payment link captured payment amount mismatch")
 
         provider_payment = dict(self.fetch_payment(payment_id))
         payment_raw_hash = self._raw_hash(provider_payment)
@@ -232,6 +246,8 @@ class RazorpayTestModeClient:
             expected_currency=expected_currency,
             expected_reference_id=expected_reference_id,
         )
+        if proof.payment_id != payment_id:
+            raise ValueError("captured payment proof identity mismatch")
         binding = f"{link_raw_hash}:{payment_raw_hash}:{payment_link_id}:{payment_id}:{expected_reference_id}"
         postcondition_evidence_hash = sha256(binding.encode()).hexdigest()
         return proof, postcondition_evidence_hash

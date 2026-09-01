@@ -55,11 +55,13 @@ def env(**values: str):
 class FakeProvider:
     def __init__(self) -> None:
         self.phase = 0
-        self.create_calls = 0
+        self.write_attempts = 0
+        self.create_method_calls = 0
         self.link = None
         self.evidence_reads = 0
         self.fail_read_at: int | None = None
         self.ambiguous_write = False
+        self.malformed_write_response = False
 
     def order_evidence(
         self,
@@ -84,10 +86,15 @@ class FakeProvider:
         return (evidence("failed"), mandate)
 
     def create_payment_link_once(self, *, amount_minor: int, currency: str, reference_id: str, description: str):
-        self.create_calls += 1
+        self.create_method_calls += 1
         if self.ambiguous_write:
+            self.write_attempts += 1
             raise httpx.WriteTimeout("provider write timed out after send")
+        if self.malformed_write_response:
+            self.write_attempts += 1
+            return {"id": "not-a-payment-link", "reference_id": reference_id, "amount": amount_minor, "currency": currency}
         if self.link is None:
+            self.write_attempts += 1
             self.link = {
                 "id": "plink_test_1",
                 "short_url": "https://rzp.io/i/test",
@@ -160,7 +167,7 @@ def main() -> int:
     expired = request(expires_at=now - timedelta(seconds=1))
     attempt = RecoveryTruthRuntime(provider).execute_customer_fallback(expired)
     assert not attempt.executed and attempt.reason_code == "SAFE_BLOCK_AUTHORITY_EXPIRED"
-    assert provider.create_calls == 0 and provider.evidence_reads == 0
+    assert provider.write_attempts == 0 and provider.evidence_reads == 0
 
     try:
         RecoveryRequest(
@@ -180,21 +187,19 @@ def main() -> int:
     else:
         raise AssertionError("recovery request widened the policy amount authority")
 
-    # Provider read failures are explicit zero-write SAFE_BLOCKs, including at
-    # the immediate pre-write read.
     provider = FakeProvider()
     provider.fail_read_at = 1
     attempt = RecoveryTruthRuntime(provider).execute_customer_fallback(request())
     assert attempt.execution_state == ExecutionState.NOT_EXECUTED
     assert attempt.reason_code == "SAFE_BLOCK_PROVIDER_READ_ERROR"
-    assert provider.create_calls == 0
+    assert provider.write_attempts == 0
 
     provider = FakeProvider()
     provider.fail_read_at = 2
     attempt = RecoveryTruthRuntime(provider).execute_customer_fallback(request())
     assert attempt.execution_state == ExecutionState.NOT_EXECUTED
     assert attempt.reason_code == "SAFE_BLOCK_PREWRITE_PROVIDER_READ_ERROR"
-    assert provider.create_calls == 0
+    assert provider.write_attempts == 0
 
     provider = FakeProvider()
     runtime = RecoveryTruthRuntime(provider)
@@ -202,7 +207,7 @@ def main() -> int:
     attempt = runtime.execute_customer_fallback(req)
     assert attempt.executed and attempt.receipt is not None
     assert provider.evidence_reads == 2
-    assert provider.create_calls == 1
+    assert provider.write_attempts == 1
     assert len(attempt.receipt.reference_id) <= 40
     assert attempt.receipt.reference_id == recovery_reference("case_1")
     assert attempt.receipt.decision_evidence_hash == "decision_hash_1"
@@ -211,7 +216,8 @@ def main() -> int:
     second = runtime.execute_customer_fallback(req)
     assert second.executed and second.receipt is not None
     assert second.receipt.payment_link_id == attempt.receipt.payment_link_id
-    assert provider.create_calls == 2  # provider method is invoked again, but returns the same logical object
+    assert provider.create_method_calls == 2
+    assert provider.write_attempts == 1
 
     proof = runtime.verify_recovery(attempt.receipt)
     assert proof.payment_id == "pay_captured_1"
@@ -234,7 +240,7 @@ def main() -> int:
     provider.order_evidence = changing_to_paid  # type: ignore[method-assign]
     attempt = RecoveryTruthRuntime(provider).execute_customer_fallback(req)
     assert not attempt.executed and attempt.reason_code == "SAFE_BLOCK_ALREADY_PAID"
-    assert provider.create_calls == 0
+    assert provider.write_attempts == 0
 
     provider = FakeProvider()
     original = provider.order_evidence
@@ -249,11 +255,8 @@ def main() -> int:
     provider.order_evidence = changing_to_inflight  # type: ignore[method-assign]
     attempt = RecoveryTruthRuntime(provider).execute_customer_fallback(req)
     assert not attempt.executed and attempt.reason_code == "SAFE_BLOCK_IN_FLIGHT"
-    assert provider.create_calls == 0
+    assert provider.write_attempts == 0
 
-    # An unresolved POST timeout is not falsely labelled non-execution. The
-    # runtime records the financial outcome as unknown so the only safe next
-    # operation is reconciliation, never another blind write.
     provider = FakeProvider()
     provider.ambiguous_write = True
     attempt = RecoveryTruthRuntime(provider).execute_customer_fallback(req)
@@ -261,7 +264,15 @@ def main() -> int:
     assert attempt.write_outcome_unknown
     assert attempt.reason_code == "PROVIDER_WRITE_OUTCOME_UNKNOWN"
     assert attempt.receipt is None
-    assert provider.create_calls == 1
+    assert provider.write_attempts == 1
+
+    provider = FakeProvider()
+    provider.malformed_write_response = True
+    attempt = RecoveryTruthRuntime(provider).execute_customer_fallback(req)
+    assert attempt.execution_state == ExecutionState.WRITE_OUTCOME_UNKNOWN
+    assert attempt.reason_code == "PROVIDER_WRITE_OUTCOME_UNKNOWN"
+    assert attempt.receipt is None
+    assert provider.write_attempts == 1
 
     with env(RAZORPAY_TEST_KEY_ID="rzp_live_forbidden", RAZORPAY_TEST_KEY_SECRET="secret"):
         try:
@@ -272,8 +283,9 @@ def main() -> int:
             raise AssertionError("live Razorpay key was not refused")
 
     print(
-        "RecoveryTruth acceptance checks passed: exact order binding, provider-read fail-closed, "
-        "truth, in-flight block, expiring authority, fence, logical idempotency, ambiguous-write state, proof"
+        "RecoveryTruth acceptance checks passed: exact order binding, provider-read fail-closed, truth, "
+        "in-flight block, expiring authority, write fence, logical exactly-once, ambiguous/malformed "
+        "post-write state, captured-payment proof"
     )
     return 0
 

@@ -47,6 +47,14 @@ class RazorpayTestModeClient:
         raw = json.dumps(dict(value), sort_keys=True, default=str, separators=(",", ":")).encode()
         return sha256(raw).hexdigest()
 
+    def fetch_order(self, order_id: str) -> Mapping[str, object]:
+        if not order_id.startswith("order_"):
+            raise ValueError("invalid Razorpay order id")
+        order = self._request("GET", f"/orders/{order_id}")
+        if str(order.get("id") or "") != order_id:
+            raise ValueError("Razorpay returned a different order id")
+        return order
+
     def fetch_payment(self, payment_id: str) -> Mapping[str, object]:
         if not payment_id.startswith("pay_"):
             raise ValueError("invalid Razorpay payment id")
@@ -59,7 +67,11 @@ class RazorpayTestModeClient:
         items = data.get("items", [])
         if not isinstance(items, list):
             raise ValueError("Razorpay order payments response has invalid items")
-        return tuple(item for item in items if isinstance(item, Mapping))
+        payments = tuple(item for item in items if isinstance(item, Mapping))
+        for payment in payments:
+            if str(payment.get("order_id") or "") != order_id:
+                raise ValueError("Razorpay order-payments response contains a payment for another order")
+        return payments
 
     def fetch_payment_link(self, payment_link_id: str) -> Mapping[str, object]:
         if not payment_link_id.startswith("plink_"):
@@ -83,10 +95,10 @@ class RazorpayTestModeClient:
     ) -> Mapping[str, object]:
         """Create a customer-initiated fallback collection link exactly once.
 
-        This is intentionally not labelled an AutoPay debit retry. It is a
-        separate recovery action. On an ambiguous POST timeout we reconcile by
-        unique reference before returning control; callers must never blindly
-        POST the same logical recovery again.
+        This is not an AutoPay debit retry. A deterministic unique reference is
+        used as the provider reconciliation key. Network ambiguity and a
+        concurrent duplicate-reference race are reconciled by lookup before
+        the caller is allowed to consider another provider write.
         """
         if amount_minor <= 0:
             raise ValueError("amount_minor must be positive")
@@ -112,6 +124,16 @@ class RazorpayTestModeClient:
             if reconciled is not None:
                 return reconciled
             raise
+        except httpx.HTTPStatusError as exc:
+            # Razorpay documents duplicate reference_id as HTTP 400. In a
+            # concurrent race one actor may create the link after our initial
+            # lookup. Reconcile the reference rather than treating the 400 as
+            # permission to generate a new logical recovery action.
+            if exc.response.status_code in {400, 409}:
+                reconciled = self.find_payment_link_by_reference(reference_id)
+                if reconciled is not None:
+                    return reconciled
+            raise
 
     @staticmethod
     def payment_evidence(payment: Mapping[str, object], *, authoritative: bool = True) -> ProviderEvidence:
@@ -129,24 +151,39 @@ class RazorpayTestModeClient:
         )
 
     def order_evidence(
-        self, *, order_id: str, mandate_id: str | None = None, mandate_status: str | None = None
+        self,
+        *,
+        order_id: str,
+        mandate_id: str | None = None,
+        mandate_status: str | None = None,
+        expected_amount_minor: int | None = None,
+        expected_currency: str | None = None,
     ) -> tuple[ProviderEvidence, ...]:
-        """Return only fresh Razorpay provider evidence for financial truth.
+        """Fetch and bind fresh Razorpay payment evidence to one exact order.
 
-        `mandate_id` and `mandate_status` remain accepted for protocol
-        compatibility, but are deliberately not converted into authoritative
-        provider evidence. Mandate/consent permission belongs to the expiring
-        MandateGuard decision authority unless a real current-state source is
-        independently queried. This prevents caller-supplied state from being
-        mislabeled as fresh Razorpay truth.
+        Caller-supplied mandate state is intentionally ignored as provider
+        truth. Mandate/consent permission is carried by the expiring
+        MandateGuard decision authority unless a separate authoritative source
+        is actually queried.
         """
         del mandate_id, mandate_status
-        return tuple(self.payment_evidence(payment) for payment in self.fetch_order_payments(order_id))
+        order = self.fetch_order(order_id)
+        if expected_amount_minor is not None and int(order.get("amount") or 0) != expected_amount_minor:
+            raise ValueError("Razorpay order amount does not match recovery authority")
+        if expected_currency is not None and str(order.get("currency") or "") != expected_currency:
+            raise ValueError("Razorpay order currency does not match recovery authority")
+
+        payments = self.fetch_order_payments(order_id)
+        for payment in payments:
+            if expected_amount_minor is not None and int(payment.get("amount") or 0) != expected_amount_minor:
+                raise ValueError("Razorpay payment amount does not match recovery order")
+            if expected_currency is not None and str(payment.get("currency") or "") != expected_currency:
+                raise ValueError("Razorpay payment currency does not match recovery order")
+        return tuple(self.payment_evidence(payment) for payment in payments)
 
     def verify_payment_link_capture(
         self, *, payment_link_id: str, expected_amount_minor: int, expected_currency: str, expected_reference_id: str
     ) -> tuple[CapturedPaymentProof, str]:
-        """Bind the Payment Link to the exact captured Razorpay payment."""
         link = self.fetch_payment_link(payment_link_id)
         link_raw_hash = self._raw_hash(link)
         if str(link.get("reference_id") or "") != expected_reference_id:

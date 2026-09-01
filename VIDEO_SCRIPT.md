@@ -16,6 +16,8 @@ Then state scope immediately:
 
 > The benchmark numbers I am about to show are synthetic counterfactual INR over a frozen generated ledger. They are not Razorpay merchant revenue.
 
+**Do not open with a recovery number.** Open with the refusal question and the scope statement above.
+
 ## 0:25–1:25 — The 60 second proof
 
 Run:
@@ -60,7 +62,7 @@ Show B3 and `outputs/real_interpreter_evidence.json`.
 
 Say:
 
-> Eight arms are deterministic on purpose. Cancelled mandates, withdrawn consent and exhausted retry budgets do not become safer because an LLM is placed in the loop. B3 is the only arm that uses a bounded model for ambiguous failure interpretation. The model gets no payment authority. Low confidence means abstain and zero provider calls, and even a hostile interpreter cannot turn a revoked mandate into an allowed debit.
+> The non-B3 policy arms are deterministic on purpose. Cancelled mandates, withdrawn consent and exhausted retry budgets do not become safer because an LLM is placed in the loop. B3 uses a bounded real-model interpreter only for ambiguous failure meaning. The model gets no payment authority. Low confidence means abstain and zero provider calls, and even a hostile interpreter cannot turn a revoked mandate into an allowed debit.
 
 The point is restraint, not chatbot surface area.
 

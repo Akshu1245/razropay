@@ -1,10 +1,14 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from hashlib import sha256
 from typing import Protocol
 
 from .recovery_truth import RecoveryProof, TruthResolution, TruthState, WriteFence, resolve_financial_truth
+
+
+FALLBACK_ACTION = "CREATE_PAYMENT_LINK_FALLBACK"
 
 
 class RecoveryProvider(Protocol):
@@ -23,33 +27,45 @@ class RecoveryProvider(Protocol):
 class RecoveryRequest:
     case_id: str
     decision_id: str
+    decision_evidence_hash: str
     policy_version: str
     order_id: str
     mandate_id: str
     mandate_status: str
     amount_minor: int
+    max_authorized_amount_minor: int
+    authority_expires_at: datetime
+    authorized_action_type: str = FALLBACK_ACTION
     currency: str = "INR"
     description: str = "RecoveryTruth customer-initiated fallback"
 
     def __post_init__(self) -> None:
-        if not self.case_id or not self.decision_id or not self.policy_version:
-            raise ValueError("case_id, decision_id and policy_version are required")
+        if not self.case_id or not self.decision_id or not self.policy_version or not self.decision_evidence_hash:
+            raise ValueError("case_id, decision_id, decision_evidence_hash and policy_version are required")
         if not self.order_id.startswith("order_"):
             raise ValueError("RecoveryTruth requires a Razorpay order id")
         if not self.mandate_id:
             raise ValueError("mandate_id is required")
-        if self.amount_minor <= 0:
-            raise ValueError("amount_minor must be positive")
+        if self.amount_minor <= 0 or self.max_authorized_amount_minor <= 0:
+            raise ValueError("amount ceilings must be positive")
+        if self.amount_minor > self.max_authorized_amount_minor:
+            raise ValueError("requested recovery exceeds decision authority amount ceiling")
         if self.currency != "INR":
             raise ValueError("RecoveryTruth fallback currently supports INR only")
+        if self.authorized_action_type != FALLBACK_ACTION:
+            raise ValueError("decision authority does not allow the fallback action")
+        if self.authority_expires_at.tzinfo is None:
+            raise ValueError("authority_expires_at must be timezone-aware")
 
 
 @dataclass(frozen=True)
 class RecoveryActionReceipt:
     case_id: str
     decision_id: str
+    decision_evidence_hash: str
     policy_version: str
     action_type: str
+    authority_expires_at: str
     reference_id: str
     payment_link_id: str
     short_url: str
@@ -68,7 +84,6 @@ class RecoveryAttempt:
 
 
 def recovery_reference(case_id: str) -> str:
-    """Stable <=40-char provider idempotency/reconciliation reference."""
     return "rt_" + sha256(case_id.encode()).hexdigest()[:32]
 
 
@@ -76,21 +91,28 @@ def _resolution_hash(resolution: TruthResolution) -> str:
     return sha256("|".join(sorted(resolution.evidence_fingerprints)).encode()).hexdigest()
 
 
-class RecoveryTruthRuntime:
-    """Financial-truth enforcement boundary for the provider-backed demo.
+def _authority_block(reason: str) -> RecoveryAttempt:
+    now = datetime.now(timezone.utc)
+    truth = TruthResolution(TruthState.UNKNOWN, (reason,), (), now)
+    return RecoveryAttempt(False, reason, truth)
 
-    The runtime deliberately does not replace MandateGuard's policy engine.
-    It runs after a deterministic decision has authorised a fallback action.
-    Before the provider write it resolves current financial truth twice: once
-    to arm the fence and again immediately at the write boundary. A state
-    change, captured payment, terminal mandate, unknown state or conflict is a
-    zero-write SAFE_BLOCK.
-    """
+
+class RecoveryTruthRuntime:
+    """Financial-truth and write-authority boundary for provider execution."""
 
     def __init__(self, provider: RecoveryProvider) -> None:
         self.provider = provider
 
     def execute_customer_fallback(self, request: RecoveryRequest) -> RecoveryAttempt:
+        # Authority is checked before any provider write and again immediately
+        # before the write. Expired or widened decisions make zero writes.
+        if datetime.now(timezone.utc) >= request.authority_expires_at.astimezone(timezone.utc):
+            return _authority_block("SAFE_BLOCK_AUTHORITY_EXPIRED")
+        if request.authorized_action_type != FALLBACK_ACTION:
+            return _authority_block("SAFE_BLOCK_ACTION_NOT_AUTHORIZED")
+        if request.amount_minor > request.max_authorized_amount_minor:
+            return _authority_block("SAFE_BLOCK_AMOUNT_EXCEEDS_AUTHORITY")
+
         initial_evidence = tuple(
             self.provider.order_evidence(
                 order_id=request.order_id,
@@ -106,9 +128,6 @@ class RecoveryTruthRuntime:
 
         fence = WriteFence.from_evidence(initial_evidence)
 
-        # This second provider read is intentionally adjacent to the financial
-        # write. It closes the time-of-check/time-of-use gap between diagnosis
-        # and execution.
         fresh_evidence = tuple(
             self.provider.order_evidence(
                 order_id=request.order_id,
@@ -120,6 +139,11 @@ class RecoveryTruthRuntime:
         fresh_truth = resolve_financial_truth(fresh_evidence)
         if not allowed:
             return RecoveryAttempt(False, reason, fresh_truth)
+
+        if datetime.now(timezone.utc) >= request.authority_expires_at.astimezone(timezone.utc):
+            return RecoveryAttempt(False, "SAFE_BLOCK_AUTHORITY_EXPIRED_AT_WRITE", fresh_truth)
+        if request.amount_minor > request.max_authorized_amount_minor:
+            return RecoveryAttempt(False, "SAFE_BLOCK_AMOUNT_EXCEEDS_AUTHORITY", fresh_truth)
 
         reference_id = recovery_reference(request.case_id)
         link = self.provider.create_payment_link_once(
@@ -142,8 +166,10 @@ class RecoveryTruthRuntime:
         receipt = RecoveryActionReceipt(
             case_id=request.case_id,
             decision_id=request.decision_id,
+            decision_evidence_hash=request.decision_evidence_hash,
             policy_version=request.policy_version,
-            action_type="CREATE_PAYMENT_LINK_FALLBACK",
+            action_type=FALLBACK_ACTION,
+            authority_expires_at=request.authority_expires_at.astimezone(timezone.utc).isoformat(),
             reference_id=reference_id,
             payment_link_id=link_id,
             short_url=short_url,
@@ -155,6 +181,8 @@ class RecoveryTruthRuntime:
         return RecoveryAttempt(True, "FALLBACK_PAYMENT_LINK_CREATED", fresh_truth, receipt)
 
     def verify_recovery(self, receipt: RecoveryActionReceipt) -> RecoveryProof:
+        if receipt.action_type != FALLBACK_ACTION:
+            raise ValueError("receipt action type is outside RecoveryTruth proof contract")
         captured, postcondition_hash = self.provider.verify_payment_link_capture(
             payment_link_id=receipt.payment_link_id,
             expected_amount_minor=receipt.amount_minor,
@@ -164,6 +192,7 @@ class RecoveryTruthRuntime:
         return RecoveryProof(
             case_id=receipt.case_id,
             decision_id=receipt.decision_id,
+            decision_evidence_hash=receipt.decision_evidence_hash,
             policy_version=receipt.policy_version,
             prewrite_resolution=receipt.prewrite_resolution,
             prewrite_evidence_hash=receipt.prewrite_evidence_hash,

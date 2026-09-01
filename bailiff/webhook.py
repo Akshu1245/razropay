@@ -307,7 +307,7 @@ class WebhookGate:
     def _staleness_reason(self, parsed: Mapping[str, object], received_at: datetime) -> str | None:
         created_at = parsed.get("created_at")
         if created_at is None:
-            return None
+            return "MISSING_CREATED_AT"
         try:
             created = datetime.fromtimestamp(int(created_at), tz=timezone.utc)
         except (OverflowError, OSError, ValueError, TypeError):

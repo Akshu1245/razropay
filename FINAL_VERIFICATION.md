@@ -1,5 +1,7 @@
 # Final verification record
 
+> **Scope of this record:** this document records the frozen **offline MandateGuard benchmark/archive verification**. It predates the optional RecoveryTruth Razorpay Test Mode execution path. Statements below about no Razorpay API calls refer to that frozen offline proof only. A new final verification record will supersede this one after the credentialed Test Mode fallback, SAFE_BLOCK, and RecoveryProof artifacts are captured.
+
 Everything below was produced by running the commands in this file against
 the packaged archive, not carried forward from an earlier run. Where a number
 appears here it was read off the run, not typed from memory.
@@ -141,9 +143,9 @@ credit sentences in `README.md`, `ARCHITECTURE.md`, and `docs/panel_qa.md`.
 document ever asserts "Rillet integration", "integrates with Rillet",
 "powered by Rillet", "built on Rillet", or "Rillet MCP".
 
-## No live Razorpay integration
+## Frozen offline archive provider scope
 
-No Razorpay API is called at any point. The input is a Razorpay *shaped*,
+No Razorpay API was called by the frozen offline archive verified in this record. The input is a Razorpay *shaped*,
 signed test webhook fixture; the provider is a local simulator; no production
 money moves and no customer is contacted. Every rupee figure is a synthetic
 counterfactual over a frozen generated ledger.

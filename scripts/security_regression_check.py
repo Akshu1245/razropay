@@ -17,6 +17,7 @@ from bailiff.policies import default_policy
 from bailiff.razorpay_testmode import RazorpayTestModeClient
 from bailiff.replay import CommonOutcomeLedger, ReplayProvider
 from bailiff.state import CaseStore
+from bailiff.webhook import WebhookGate, build_signed_delivery
 
 
 def _event() -> RecoveryEvent:
@@ -197,14 +198,51 @@ def check_provider_identity_echo() -> None:
         raise AssertionError("provider payment-link identity mismatch was accepted")
 
 
+def check_signed_webhook_requires_created_at() -> None:
+    secret = "whsec_security_regression"
+    payload = {
+        "event": "payment.failed",
+        "payload": {
+            "payment": {
+                "entity": {
+                    "id": "pay_security_missing_time",
+                    "error_reason": "insufficient_funds",
+                }
+            },
+            "subscription": {
+                "entity": {
+                    "id": "sub_security_missing_time",
+                    "status": "active",
+                }
+            },
+        },
+    }
+    raw_body, headers = build_signed_delivery(
+        payload,
+        secret=secret,
+        event_id="evt_security_missing_created_at",
+    )
+    verdict = WebhookGate(secrets=(secret,)).verify(
+        raw_body=raw_body,
+        headers=headers,
+        received_at=datetime.now(timezone.utc),
+    )
+    assert not verdict.accepted
+    assert verdict.reason_code == "MISSING_CREATED_AT"
+    assert not verdict.should_process
+
+
+
 def main() -> int:
     check_authority_identity_binding()
     check_denied_decision_cannot_reuse_prior_provider_result()
     check_provider_identity_echo()
+    check_signed_webhook_requires_created_at()
     print("security regression check: PASS")
     print("  authority identity binding: PASS")
     print("  denied decision cannot reuse prior provider result: PASS")
     print("  provider payment/link identity echo: PASS")
+    print("  signed webhook missing created_at fails closed: PASS")
     return 0
 
 

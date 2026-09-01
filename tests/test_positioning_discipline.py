@@ -94,7 +94,7 @@ def test_no_shipped_surface_states_a_known_stale_count(needle):
         path = ROOT / name
         if not path.exists():
             continue
-        text = _normalise(path.read_text())
+        text = _normalise(path.read_text(encoding="utf-8"))
         if needle in text:
             offenders.append(name)
     assert not offenders, f"stale count {needle!r} found in {offenders}"
@@ -126,7 +126,7 @@ def _shipped_lines() -> list[tuple[str, str]]:
     for name in SHIPPED_DOCS:
         path = ROOT / name
         if path.exists():
-            for line in _normalise(path.read_text()).splitlines():
+            for line in _normalise(path.read_text(encoding="utf-8")).splitlines():
                 out.append((name, line))
     return out
 
@@ -182,7 +182,7 @@ def test_problem_evidence_disclaims_feeding_the_benchmark():
 
 def test_video_script_does_not_open_on_a_recovery_number():
     """The ungated arms beat the guarded arms on recovery. Leading with it loses."""
-    text = _normalise((ROOT / "VIDEO_SCRIPT.md").read_text())
+    text = _normalise((ROOT / "VIDEO_SCRIPT.md").read_text(encoding="utf-8"))
     assert "do not open with a recovery number" in text
 
 

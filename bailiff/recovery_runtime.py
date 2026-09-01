@@ -2,13 +2,22 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime, timezone
+from enum import Enum
 from hashlib import sha256
 from typing import Protocol
+
+import httpx
 
 from .recovery_truth import RecoveryProof, TruthResolution, TruthState, WriteFence, resolve_financial_truth
 
 
 FALLBACK_ACTION = "CREATE_PAYMENT_LINK_FALLBACK"
+
+
+class ExecutionState(str, Enum):
+    NOT_EXECUTED = "NOT_EXECUTED"
+    EXECUTED = "EXECUTED"
+    WRITE_OUTCOME_UNKNOWN = "WRITE_OUTCOME_UNKNOWN"
 
 
 class RecoveryProvider(Protocol):
@@ -86,10 +95,18 @@ class RecoveryActionReceipt:
 
 @dataclass(frozen=True)
 class RecoveryAttempt:
-    executed: bool
+    execution_state: ExecutionState
     reason_code: str
     truth: TruthResolution
     receipt: RecoveryActionReceipt | None = None
+
+    @property
+    def executed(self) -> bool:
+        return self.execution_state == ExecutionState.EXECUTED
+
+    @property
+    def write_outcome_unknown(self) -> bool:
+        return self.execution_state == ExecutionState.WRITE_OUTCOME_UNKNOWN
 
 
 def recovery_reference(case_id: str) -> str:
@@ -100,14 +117,22 @@ def _resolution_hash(resolution: TruthResolution) -> str:
     return sha256("|".join(sorted(resolution.evidence_fingerprints)).encode()).hexdigest()
 
 
-def _authority_block(reason: str) -> RecoveryAttempt:
-    now = datetime.now(timezone.utc)
-    truth = TruthResolution(TruthState.UNKNOWN, (reason,), (), now)
-    return RecoveryAttempt(False, reason, truth)
+def _unknown_truth(reason: str) -> TruthResolution:
+    return TruthResolution(TruthState.UNKNOWN, (reason,), (), datetime.now(timezone.utc))
+
+
+def _block(reason: str, truth: TruthResolution | None = None) -> RecoveryAttempt:
+    return RecoveryAttempt(ExecutionState.NOT_EXECUTED, reason, truth or _unknown_truth(reason))
 
 
 class RecoveryTruthRuntime:
-    """Financial-truth and write-authority boundary for provider execution."""
+    """Financial-truth and write-authority boundary for provider execution.
+
+    Provider read faults fail closed. A network-ambiguous provider write is
+    represented separately from both success and non-execution so callers are
+    never encouraged to blindly repeat a financial write whose outcome is not
+    known.
+    """
 
     def __init__(self, provider: RecoveryProvider) -> None:
         self.provider = provider
@@ -123,43 +148,82 @@ class RecoveryTruthRuntime:
             )
         )
 
+    def _safe_read_bound_evidence(self, request: RecoveryRequest) -> tuple[tuple[object, ...] | None, str | None]:
+        try:
+            return self._read_bound_evidence(request), None
+        except (httpx.HTTPError, OSError, TimeoutError, ValueError, RuntimeError) as exc:
+            return None, f"{type(exc).__name__}:{exc}"
+
     def execute_customer_fallback(self, request: RecoveryRequest) -> RecoveryAttempt:
         if datetime.now(timezone.utc) >= request.authority_expires_at.astimezone(timezone.utc):
-            return _authority_block("SAFE_BLOCK_AUTHORITY_EXPIRED")
+            return _block("SAFE_BLOCK_AUTHORITY_EXPIRED")
         if request.authorized_action_type != FALLBACK_ACTION:
-            return _authority_block("SAFE_BLOCK_ACTION_NOT_AUTHORIZED")
+            return _block("SAFE_BLOCK_ACTION_NOT_AUTHORIZED")
         if request.amount_minor > request.max_authorized_amount_minor:
-            return _authority_block("SAFE_BLOCK_AMOUNT_EXCEEDS_AUTHORITY")
+            return _block("SAFE_BLOCK_AMOUNT_EXCEEDS_AUTHORITY")
 
-        initial_evidence = self._read_bound_evidence(request)
+        initial_evidence, read_error = self._safe_read_bound_evidence(request)
+        if initial_evidence is None:
+            return _block("SAFE_BLOCK_PROVIDER_READ_ERROR", _unknown_truth(read_error or "PROVIDER_READ_ERROR"))
         initial_truth = resolve_financial_truth(initial_evidence)
         if initial_truth.state == TruthState.PAID:
-            return RecoveryAttempt(False, "SAFE_BLOCK_ALREADY_PAID", initial_truth)
+            return _block("SAFE_BLOCK_ALREADY_PAID", initial_truth)
         if not initial_truth.executable:
-            return RecoveryAttempt(False, f"SAFE_BLOCK_{initial_truth.state.value}", initial_truth)
+            return _block(f"SAFE_BLOCK_{initial_truth.state.value}", initial_truth)
 
         fence = WriteFence.from_evidence(initial_evidence)
 
         # Exact order/amount/currency is fetched again immediately before the
         # write, so both financial state and identity binding are fenced.
-        fresh_evidence = self._read_bound_evidence(request)
+        fresh_evidence, read_error = self._safe_read_bound_evidence(request)
+        if fresh_evidence is None:
+            return _block("SAFE_BLOCK_PREWRITE_PROVIDER_READ_ERROR", _unknown_truth(read_error or "PROVIDER_READ_ERROR"))
         allowed, reason = fence.check(fresh_evidence)
         fresh_truth = resolve_financial_truth(fresh_evidence)
         if not allowed:
-            return RecoveryAttempt(False, reason, fresh_truth)
+            return _block(reason, fresh_truth)
 
         if datetime.now(timezone.utc) >= request.authority_expires_at.astimezone(timezone.utc):
-            return RecoveryAttempt(False, "SAFE_BLOCK_AUTHORITY_EXPIRED_AT_WRITE", fresh_truth)
+            return _block("SAFE_BLOCK_AUTHORITY_EXPIRED_AT_WRITE", fresh_truth)
         if request.amount_minor > request.max_authorized_amount_minor:
-            return RecoveryAttempt(False, "SAFE_BLOCK_AMOUNT_EXCEEDS_AUTHORITY", fresh_truth)
+            return _block("SAFE_BLOCK_AMOUNT_EXCEEDS_AUTHORITY", fresh_truth)
 
         reference_id = recovery_reference(request.case_id)
-        link = self.provider.create_payment_link_once(
-            amount_minor=request.amount_minor,
-            currency=request.currency,
-            reference_id=reference_id,
-            description=request.description,
-        )
+        try:
+            link = self.provider.create_payment_link_once(
+                amount_minor=request.amount_minor,
+                currency=request.currency,
+                reference_id=reference_id,
+                description=request.description,
+            )
+        except (httpx.TimeoutException, httpx.NetworkError, TimeoutError, OSError) as exc:
+            # The adapter has already attempted lookup-by-reference after the
+            # ambiguous write. If it still cannot resolve the outcome, this is
+            # neither success nor a safe assertion of non-execution.
+            return RecoveryAttempt(
+                ExecutionState.WRITE_OUTCOME_UNKNOWN,
+                "PROVIDER_WRITE_OUTCOME_UNKNOWN",
+                TruthResolution(
+                    TruthState.UNKNOWN,
+                    ("AMBIGUOUS_PROVIDER_WRITE", f"{type(exc).__name__}:{exc}"),
+                    fresh_truth.evidence_fingerprints,
+                    datetime.now(timezone.utc),
+                ),
+            )
+        except httpx.HTTPStatusError as exc:
+            if exc.response.status_code >= 500:
+                return RecoveryAttempt(
+                    ExecutionState.WRITE_OUTCOME_UNKNOWN,
+                    "PROVIDER_WRITE_OUTCOME_UNKNOWN",
+                    TruthResolution(
+                        TruthState.UNKNOWN,
+                        ("PROVIDER_5XX_AFTER_WRITE_ATTEMPT",),
+                        fresh_truth.evidence_fingerprints,
+                        datetime.now(timezone.utc),
+                    ),
+                )
+            return _block("PROVIDER_WRITE_REJECTED", fresh_truth)
+
         link_id = str(link.get("id") or "")
         short_url = str(link.get("short_url") or "")
         if not link_id.startswith("plink_"):
@@ -187,7 +251,7 @@ class RecoveryTruthRuntime:
             prewrite_resolution=fresh_truth.state.value,
             prewrite_evidence_hash=_resolution_hash(fresh_truth),
         )
-        return RecoveryAttempt(True, "FALLBACK_PAYMENT_LINK_CREATED", fresh_truth, receipt)
+        return RecoveryAttempt(ExecutionState.EXECUTED, "FALLBACK_PAYMENT_LINK_CREATED", fresh_truth, receipt)
 
     def verify_recovery(self, receipt: RecoveryActionReceipt) -> RecoveryProof:
         if receipt.action_type != FALLBACK_ACTION:

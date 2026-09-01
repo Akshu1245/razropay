@@ -23,6 +23,8 @@ jobs:
         run: ./scripts/test.sh
       - name: RecoveryTruth acceptance
         run: python3 scripts/recoverytruth_check.py
+      - name: Security regression acceptance
+        run: python3 scripts/security_regression_check.py
       - name: Offline demo
         run: ./scripts/demo.sh
         env:

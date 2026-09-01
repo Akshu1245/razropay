@@ -113,6 +113,23 @@ class GuardrailEngine:
             for reason in reasons
         )
 
+    @staticmethod
+    def _authority_identity_reasons(context: EvaluationContext) -> tuple[str, ...]:
+        event = context.event
+        authority = context.authority
+        policy = context.policy
+        checks = (
+            (authority.correlation_id == event.correlation_id, "AUTHORITY_CORRELATION_ID_MISMATCH"),
+            (authority.policy_id == policy.policy_id, "AUTHORITY_POLICY_ID_MISMATCH"),
+            (authority.mandate_id == event.mandate_id, "AUTHORITY_MANDATE_ID_MISMATCH"),
+            (
+                authority.scheduled_execution_id == event.scheduled_execution_id,
+                "AUTHORITY_SCHEDULED_EXECUTION_ID_MISMATCH",
+            ),
+            (authority.recovery_case_id == event.recovery_case_id, "AUTHORITY_RECOVERY_CASE_ID_MISMATCH"),
+        )
+        return tuple(reason for ok, reason in checks if not ok)
+
     def evaluate(self, context: EvaluationContext) -> PolicyDecision:
         event = context.event
         policy = context.policy
@@ -125,9 +142,15 @@ class GuardrailEngine:
         decision = Decision.ALLOW
         final_action: ActionType | None = context.proposed_action
 
-        self._ensure_classified(record)
+        identity_reasons = self._authority_identity_reasons(context)
+        if not identity_reasons:
+            self._ensure_classified(record)
 
-        if context.proposed_action not in policy.allow_actions:
+        if identity_reasons:
+            decision = Decision.DENY
+            final_action = None
+            reasons.extend(identity_reasons)
+        elif context.proposed_action not in policy.allow_actions:
             decision = Decision.DENY
             final_action = None
             reasons.append("ACTION_NOT_ALLOWLISTED")
@@ -281,24 +304,6 @@ class GuardrailEngine:
         return decision_record
 
     def execute(self, *, context: EvaluationContext, decision: PolicyDecision) -> ProviderResult | None:
-        replay_action = decision.final_action or decision.proposed_action
-        replay_key = self.idempotency_key(context.event, replay_action) if replay_action else None
-        existing = self.provider.result_for(replay_key) if replay_key else None
-
-        # Reuse only an approved identical action. A new denied decision after a
-        # terminal state must not receive an old provider result accidentally.
-        if existing is not None and replay_action is not None:
-            self.audit.append(
-                correlation_id=context.event.correlation_id,
-                event_type="idempotent_replay",
-                entity_id=existing.provider_call_id,
-                decision=decision.decision.value,
-                reasons=("IDEMPOTENT_RESULT_REUSED",),
-                provider_call_made=False,
-                metadata={"idempotency_key": replay_key},
-            )
-            return existing
-
         record = self.cases.get(context.event.recovery_case_id)
         action = decision.final_action
 
@@ -338,7 +343,20 @@ class GuardrailEngine:
                 provider_call_made=False,
             )
             return None
+
         idempotency_key = self.idempotency_key(context.event, action)
+        existing = self.provider.result_for(idempotency_key)
+        if existing is not None:
+            self.audit.append(
+                correlation_id=context.event.correlation_id,
+                event_type="idempotent_replay",
+                entity_id=existing.provider_call_id,
+                decision=decision.decision.value,
+                reasons=("IDEMPOTENT_RESULT_REUSED",),
+                provider_call_made=False,
+                metadata={"idempotency_key": idempotency_key},
+            )
+            return existing
 
         if action == ActionType.SCHEDULE_RETRY:
             record.transition(CaseState.RETRY_SCHEDULED, "policy_allowed_retry")

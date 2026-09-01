@@ -128,36 +128,25 @@ class RazorpayTestModeClient:
             authoritative=authoritative,
         )
 
-    @staticmethod
-    def mandate_evidence(*, mandate_id: str, status: str, reference_id: str = "") -> ProviderEvidence:
-        return ProviderEvidence(
-            source="merchant_current_state",
-            entity_type="mandate",
-            entity_id=mandate_id,
-            status=status,
-            reference_id=reference_id,
-            observed_at=datetime.now(timezone.utc),
-            authoritative=True,
-        )
-
     def order_evidence(
         self, *, order_id: str, mandate_id: str | None = None, mandate_status: str | None = None
     ) -> tuple[ProviderEvidence, ...]:
-        rows = [self.payment_evidence(payment) for payment in self.fetch_order_payments(order_id)]
-        if mandate_id and mandate_status:
-            rows.append(self.mandate_evidence(mandate_id=mandate_id, status=mandate_status, reference_id=order_id))
-        return tuple(rows)
+        """Return only fresh Razorpay provider evidence for financial truth.
+
+        `mandate_id` and `mandate_status` remain accepted for protocol
+        compatibility, but are deliberately not converted into authoritative
+        provider evidence. Mandate/consent permission belongs to the expiring
+        MandateGuard decision authority unless a real current-state source is
+        independently queried. This prevents caller-supplied state from being
+        mislabeled as fresh Razorpay truth.
+        """
+        del mandate_id, mandate_status
+        return tuple(self.payment_evidence(payment) for payment in self.fetch_order_payments(order_id))
 
     def verify_payment_link_capture(
         self, *, payment_link_id: str, expected_amount_minor: int, expected_currency: str, expected_reference_id: str
     ) -> tuple[CapturedPaymentProof, str]:
-        """Bind the Payment Link to the exact captured Razorpay payment.
-
-        Razorpay documents that the Payment Link `payments` array is populated
-        only with captured payments. We still fetch the referenced Payment
-        object independently and verify its current `captured` status, amount
-        and currency instead of trusting the link status alone.
-        """
+        """Bind the Payment Link to the exact captured Razorpay payment."""
         link = self.fetch_payment_link(payment_link_id)
         link_raw_hash = self._raw_hash(link)
         if str(link.get("reference_id") or "") != expected_reference_id:
@@ -187,10 +176,6 @@ class RazorpayTestModeClient:
 
         provider_payment = dict(self.fetch_payment(payment_id))
         payment_raw_hash = self._raw_hash(provider_payment)
-
-        # The reference belongs to the verified Payment Link, not the Payment
-        # entity. Add it only to a derived copy used by the local binding
-        # verifier; the evidence hash below remains over raw provider bytes.
         bound_payment = dict(provider_payment)
         bound_payment["reference_id"] = expected_reference_id
         proof = verify_captured_payment(

@@ -159,6 +159,7 @@ class RazorpayTestModeClient:
         and currency instead of trusting the link status alone.
         """
         link = self.fetch_payment_link(payment_link_id)
+        link_raw_hash = self._raw_hash(link)
         if str(link.get("reference_id") or "") != expected_reference_id:
             raise ValueError("payment link reference mismatch")
         if int(link.get("amount") or 0) != expected_amount_minor:
@@ -184,13 +185,20 @@ class RazorpayTestModeClient:
         if linked_plink and linked_plink != payment_link_id:
             raise ValueError("captured payment is bound to a different payment link")
 
-        current_payment = dict(self.fetch_payment(payment_id))
-        current_payment["reference_id"] = expected_reference_id
+        provider_payment = dict(self.fetch_payment(payment_id))
+        payment_raw_hash = self._raw_hash(provider_payment)
+
+        # The reference belongs to the verified Payment Link, not the Payment
+        # entity. Add it only to a derived copy used by the local binding
+        # verifier; the evidence hash below remains over raw provider bytes.
+        bound_payment = dict(provider_payment)
+        bound_payment["reference_id"] = expected_reference_id
         proof = verify_captured_payment(
-            current_payment,
+            bound_payment,
             expected_amount_minor=expected_amount_minor,
             expected_currency=expected_currency,
             expected_reference_id=expected_reference_id,
         )
-        evidence_hash = self._raw_hash(current_payment)
-        return proof, evidence_hash
+        binding = f"{link_raw_hash}:{payment_raw_hash}:{payment_link_id}:{payment_id}:{expected_reference_id}"
+        postcondition_evidence_hash = sha256(binding.encode()).hexdigest()
+        return proof, postcondition_evidence_hash

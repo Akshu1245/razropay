@@ -7,6 +7,10 @@ for script in scripts/test.sh scripts/demo.sh scripts/evaluate.sh scripts/releas
   test -x "$script"
 done
 
+test -f RECOVERYTRUTH.md
+test -f SUBMISSION_READINESS.md
+test -f SHA256SUMS.txt
+
 if grep -RInE '^(<<<<<<<|=======|>>>>>>>)( |$)' \
   --exclude-dir=.git --exclude-dir=outputs/generated \
   --exclude-dir=.venv --exclude-dir=venv \
@@ -16,19 +20,38 @@ if grep -RInE '^(<<<<<<<|=======|>>>>>>>)( |$)' \
   echo "release check failed: merge conflict markers found" >&2
   exit 1
 fi
-if grep -RInE '\{\{[^}]+\}\}' README.md docs outputs FINDINGS.md; then
+if grep -RInE '\{\{[^}]+\}\}' README.md RECOVERYTRUTH.md SUBMISSION_READINESS.md docs outputs FINDINGS.md; then
   echo "release check failed: unresolved placeholders found" >&2
   exit 1
 fi
 
+# Credentials and provider execution receipts are local operator evidence, not
+# source files. They must never enter the submission archive by accident.
+_secret_file="$(find . -type f \( \( -name '.env*' ! -name '.env.example' \) -o -iname '*recoverytruth*receipt*.json' -o -iname '*recoverytruth*proof*.json' -o -iname '*.recoverytruth-receipt.json' -o -iname '*.recoverytruth-proof.json' \) -not -path './.git/*' -print -quit)"
+if [[ -n "$_secret_file" ]]; then
+  echo "release check failed: local credential/provider-evidence file would be shipped: $_secret_file" >&2
+  exit 1
+fi
+
+# The manifest is a shipped-content contract, not a historical decoration.
+# Re-derive the exact candidate and require byte-for-byte agreement.
+_manifest_candidate="$(mktemp)"
+python3 scripts/make_checksum_manifest.py > "$_manifest_candidate"
+if ! cmp -s SHA256SUMS.txt "$_manifest_candidate"; then
+  echo "release check failed: SHA256SUMS.txt is stale; regenerate from scripts/make_checksum_manifest.py" >&2
+  rm -f "$_manifest_candidate"
+  exit 1
+fi
+rm -f "$_manifest_candidate"
+sha256sum -c SHA256SUMS.txt >/dev/null
+
 python3 -m compileall -q bailiff tests scripts
 python3 -m pytest -q
 
-# RecoveryTruth is kept outside the frozen 283-test benchmark count so the
-# original benchmark evidence does not silently move. It is nevertheless a
-# mandatory release gate: financial-truth resolution, stale-event precedence,
-# in-flight duplicate-collection blocking, write-time fencing, exactly-once
-# fallback creation and postcondition proof must all pass before packaging.
+# RecoveryTruth is outside the frozen 283-test benchmark count so the original
+# benchmark evidence does not silently move. It is nevertheless mandatory:
+# state precedence, identity binding, in-flight blocking, write-time fencing,
+# expiring authority, exactly-once logical fallback and proof must all pass.
 python3 scripts/recoverytruth_check.py
 
 python3 -m bailiff.demo

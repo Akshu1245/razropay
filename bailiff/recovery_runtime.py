@@ -12,7 +12,15 @@ FALLBACK_ACTION = "CREATE_PAYMENT_LINK_FALLBACK"
 
 
 class RecoveryProvider(Protocol):
-    def order_evidence(self, *, order_id: str, mandate_id: str | None = None, mandate_status: str | None = None): ...
+    def order_evidence(
+        self,
+        *,
+        order_id: str,
+        mandate_id: str | None = None,
+        mandate_status: str | None = None,
+        expected_amount_minor: int | None = None,
+        expected_currency: str | None = None,
+    ): ...
 
     def create_payment_link_once(
         self, *, amount_minor: int, currency: str, reference_id: str, description: str
@@ -66,6 +74,7 @@ class RecoveryActionReceipt:
     policy_version: str
     action_type: str
     authority_expires_at: str
+    order_id: str
     reference_id: str
     payment_link_id: str
     short_url: str
@@ -103,9 +112,18 @@ class RecoveryTruthRuntime:
     def __init__(self, provider: RecoveryProvider) -> None:
         self.provider = provider
 
+    def _read_bound_evidence(self, request: RecoveryRequest):
+        return tuple(
+            self.provider.order_evidence(
+                order_id=request.order_id,
+                mandate_id=request.mandate_id,
+                mandate_status=request.mandate_status,
+                expected_amount_minor=request.amount_minor,
+                expected_currency=request.currency,
+            )
+        )
+
     def execute_customer_fallback(self, request: RecoveryRequest) -> RecoveryAttempt:
-        # Authority is checked before any provider write and again immediately
-        # before the write. Expired or widened decisions make zero writes.
         if datetime.now(timezone.utc) >= request.authority_expires_at.astimezone(timezone.utc):
             return _authority_block("SAFE_BLOCK_AUTHORITY_EXPIRED")
         if request.authorized_action_type != FALLBACK_ACTION:
@@ -113,13 +131,7 @@ class RecoveryTruthRuntime:
         if request.amount_minor > request.max_authorized_amount_minor:
             return _authority_block("SAFE_BLOCK_AMOUNT_EXCEEDS_AUTHORITY")
 
-        initial_evidence = tuple(
-            self.provider.order_evidence(
-                order_id=request.order_id,
-                mandate_id=request.mandate_id,
-                mandate_status=request.mandate_status,
-            )
-        )
+        initial_evidence = self._read_bound_evidence(request)
         initial_truth = resolve_financial_truth(initial_evidence)
         if initial_truth.state == TruthState.PAID:
             return RecoveryAttempt(False, "SAFE_BLOCK_ALREADY_PAID", initial_truth)
@@ -128,13 +140,9 @@ class RecoveryTruthRuntime:
 
         fence = WriteFence.from_evidence(initial_evidence)
 
-        fresh_evidence = tuple(
-            self.provider.order_evidence(
-                order_id=request.order_id,
-                mandate_id=request.mandate_id,
-                mandate_status=request.mandate_status,
-            )
-        )
+        # Exact order/amount/currency is fetched again immediately before the
+        # write, so both financial state and identity binding are fenced.
+        fresh_evidence = self._read_bound_evidence(request)
         allowed, reason = fence.check(fresh_evidence)
         fresh_truth = resolve_financial_truth(fresh_evidence)
         if not allowed:
@@ -170,6 +178,7 @@ class RecoveryTruthRuntime:
             policy_version=request.policy_version,
             action_type=FALLBACK_ACTION,
             authority_expires_at=request.authority_expires_at.astimezone(timezone.utc).isoformat(),
+            order_id=request.order_id,
             reference_id=reference_id,
             payment_link_id=link_id,
             short_url=short_url,

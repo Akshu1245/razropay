@@ -4,11 +4,11 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from enum import Enum
 from hashlib import sha256
-from typing import Protocol
+from typing import Mapping, Protocol
 
 import httpx
 
-from .recovery_truth import RecoveryProof, TruthResolution, TruthState, WriteFence, resolve_financial_truth
+from .recovery_truth import ProviderEvidence, RecoveryProof, TruthResolution, TruthState, WriteFence, resolve_financial_truth
 
 
 FALLBACK_ACTION = "CREATE_PAYMENT_LINK_FALLBACK"
@@ -117,27 +117,35 @@ def _resolution_hash(resolution: TruthResolution) -> str:
     return sha256("|".join(sorted(resolution.evidence_fingerprints)).encode()).hexdigest()
 
 
-def _unknown_truth(reason: str) -> TruthResolution:
-    return TruthResolution(TruthState.UNKNOWN, (reason,), (), datetime.now(timezone.utc))
+def _unknown_truth(reason: str, fingerprints: tuple[str, ...] = ()) -> TruthResolution:
+    return TruthResolution(TruthState.UNKNOWN, (reason,), fingerprints, datetime.now(timezone.utc))
 
 
 def _block(reason: str, truth: TruthResolution | None = None) -> RecoveryAttempt:
     return RecoveryAttempt(ExecutionState.NOT_EXECUTED, reason, truth or _unknown_truth(reason))
 
 
+def _unknown_write(reason: str, truth: TruthResolution) -> RecoveryAttempt:
+    return RecoveryAttempt(
+        ExecutionState.WRITE_OUTCOME_UNKNOWN,
+        "PROVIDER_WRITE_OUTCOME_UNKNOWN",
+        _unknown_truth(reason, truth.evidence_fingerprints),
+    )
+
+
 class RecoveryTruthRuntime:
     """Financial-truth and write-authority boundary for provider execution.
 
-    Provider read faults fail closed. A network-ambiguous provider write is
-    represented separately from both success and non-execution so callers are
-    never encouraged to blindly repeat a financial write whose outcome is not
-    known.
+    Provider read faults fail closed. A network-ambiguous or malformed
+    post-write provider result is represented separately from both success and
+    non-execution so callers are never encouraged to repeat an unresolved
+    financial write.
     """
 
     def __init__(self, provider: RecoveryProvider) -> None:
         self.provider = provider
 
-    def _read_bound_evidence(self, request: RecoveryRequest):
+    def _read_bound_evidence(self, request: RecoveryRequest) -> tuple[ProviderEvidence, ...]:
         return tuple(
             self.provider.order_evidence(
                 order_id=request.order_id,
@@ -148,11 +156,11 @@ class RecoveryTruthRuntime:
             )
         )
 
-    def _safe_read_bound_evidence(self, request: RecoveryRequest) -> tuple[tuple[object, ...] | None, str | None]:
+    def _safe_read_bound_evidence(self, request: RecoveryRequest) -> tuple[tuple[ProviderEvidence, ...] | None, str | None]:
         try:
             return self._read_bound_evidence(request), None
         except (httpx.HTTPError, OSError, TimeoutError, ValueError, RuntimeError) as exc:
-            return None, f"{type(exc).__name__}:{exc}"
+            return None, type(exc).__name__
 
     def execute_customer_fallback(self, request: RecoveryRequest) -> RecoveryAttempt:
         if datetime.now(timezone.utc) >= request.authority_expires_at.astimezone(timezone.utc):
@@ -173,8 +181,6 @@ class RecoveryTruthRuntime:
 
         fence = WriteFence.from_evidence(initial_evidence)
 
-        # Exact order/amount/currency is fetched again immediately before the
-        # write, so both financial state and identity binding are fenced.
         fresh_evidence, read_error = self._safe_read_bound_evidence(request)
         if fresh_evidence is None:
             return _block("SAFE_BLOCK_PREWRITE_PROVIDER_READ_ERROR", _unknown_truth(read_error or "PROVIDER_READ_ERROR"))
@@ -196,44 +202,29 @@ class RecoveryTruthRuntime:
                 reference_id=reference_id,
                 description=request.description,
             )
-        except (httpx.TimeoutException, httpx.NetworkError, TimeoutError, OSError) as exc:
-            # The adapter has already attempted lookup-by-reference after the
-            # ambiguous write. If it still cannot resolve the outcome, this is
-            # neither success nor a safe assertion of non-execution.
-            return RecoveryAttempt(
-                ExecutionState.WRITE_OUTCOME_UNKNOWN,
-                "PROVIDER_WRITE_OUTCOME_UNKNOWN",
-                TruthResolution(
-                    TruthState.UNKNOWN,
-                    ("AMBIGUOUS_PROVIDER_WRITE", f"{type(exc).__name__}:{exc}"),
-                    fresh_truth.evidence_fingerprints,
-                    datetime.now(timezone.utc),
-                ),
-            )
+        except (httpx.TimeoutException, httpx.NetworkError, TimeoutError, OSError):
+            return _unknown_write("AMBIGUOUS_PROVIDER_WRITE", fresh_truth)
         except httpx.HTTPStatusError as exc:
             if exc.response.status_code >= 500:
-                return RecoveryAttempt(
-                    ExecutionState.WRITE_OUTCOME_UNKNOWN,
-                    "PROVIDER_WRITE_OUTCOME_UNKNOWN",
-                    TruthResolution(
-                        TruthState.UNKNOWN,
-                        ("PROVIDER_5XX_AFTER_WRITE_ATTEMPT",),
-                        fresh_truth.evidence_fingerprints,
-                        datetime.now(timezone.utc),
-                    ),
-                )
+                return _unknown_write("PROVIDER_5XX_AFTER_WRITE_ATTEMPT", fresh_truth)
             return _block("PROVIDER_WRITE_REJECTED", fresh_truth)
 
+        if not isinstance(link, Mapping):
+            return _unknown_write("POST_WRITE_PROVIDER_RESPONSE_NOT_OBJECT", fresh_truth)
         link_id = str(link.get("id") or "")
         short_url = str(link.get("short_url") or "")
         if not link_id.startswith("plink_"):
-            raise RuntimeError("provider returned an invalid payment link id")
+            return _unknown_write("POST_WRITE_PROVIDER_ID_INVALID", fresh_truth)
         if str(link.get("reference_id") or "") != reference_id:
-            raise RuntimeError("provider returned a payment link with the wrong recovery reference")
-        if int(link.get("amount") or 0) != request.amount_minor:
-            raise RuntimeError("provider returned a payment link with the wrong amount")
+            return _unknown_write("POST_WRITE_PROVIDER_REFERENCE_MISMATCH", fresh_truth)
+        try:
+            returned_amount = int(link.get("amount") or 0)
+        except (TypeError, ValueError):
+            return _unknown_write("POST_WRITE_PROVIDER_AMOUNT_INVALID", fresh_truth)
+        if returned_amount != request.amount_minor:
+            return _unknown_write("POST_WRITE_PROVIDER_AMOUNT_MISMATCH", fresh_truth)
         if str(link.get("currency") or "") != request.currency:
-            raise RuntimeError("provider returned a payment link with the wrong currency")
+            return _unknown_write("POST_WRITE_PROVIDER_CURRENCY_MISMATCH", fresh_truth)
 
         receipt = RecoveryActionReceipt(
             case_id=request.case_id,

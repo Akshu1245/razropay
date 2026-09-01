@@ -84,6 +84,7 @@ class RecoveryActionReceipt:
     action_type: str
     authority_expires_at: str
     order_id: str
+    mandate_id: str
     reference_id: str
     payment_link_id: str
     short_url: str
@@ -234,6 +235,7 @@ class RecoveryTruthRuntime:
             action_type=FALLBACK_ACTION,
             authority_expires_at=request.authority_expires_at.astimezone(timezone.utc).isoformat(),
             order_id=request.order_id,
+            mandate_id=request.mandate_id,
             reference_id=reference_id,
             payment_link_id=link_id,
             short_url=short_url,
@@ -255,9 +257,12 @@ class RecoveryTruthRuntime:
         )
         return RecoveryProof(
             case_id=receipt.case_id,
+            mandate_id=receipt.mandate_id,
+            original_order_id=receipt.order_id,
             decision_id=receipt.decision_id,
             decision_evidence_hash=receipt.decision_evidence_hash,
             policy_version=receipt.policy_version,
+            authority_expires_at=receipt.authority_expires_at,
             prewrite_resolution=receipt.prewrite_resolution,
             prewrite_evidence_hash=receipt.prewrite_evidence_hash,
             provider_action_type=receipt.action_type,

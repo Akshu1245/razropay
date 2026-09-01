@@ -49,8 +49,21 @@ class FakeProvider:
         self.phase = 0
         self.create_calls = 0
         self.link = None
+        self.evidence_reads = 0
 
-    def order_evidence(self, *, order_id: str, mandate_id: str | None = None, mandate_status: str | None = None):
+    def order_evidence(
+        self,
+        *,
+        order_id: str,
+        mandate_id: str | None = None,
+        mandate_status: str | None = None,
+        expected_amount_minor: int | None = None,
+        expected_currency: str | None = None,
+    ):
+        assert order_id == "order_1"
+        assert expected_amount_minor == 1000
+        assert expected_currency == "INR"
+        self.evidence_reads += 1
         mandate = evidence(mandate_status or "active", mandate_id or "mandate_1", entity_type="mandate")
         if self.phase == 2:
             return (evidence("captured", "pay_late"), mandate)
@@ -129,14 +142,12 @@ def main() -> int:
     allowed, reason = fence.check([evidence("authorized", "pay_inflight"), active])
     assert not allowed and reason == "SAFE_BLOCK_IN_FLIGHT"
 
-    # Stale authority is a zero-write block before provider execution.
     provider = FakeProvider()
     expired = request(expires_at=now - timedelta(seconds=1))
     attempt = RecoveryTruthRuntime(provider).execute_customer_fallback(expired)
     assert not attempt.executed and attempt.reason_code == "SAFE_BLOCK_AUTHORITY_EXPIRED"
-    assert provider.create_calls == 0
+    assert provider.create_calls == 0 and provider.evidence_reads == 0
 
-    # Authority cannot be widened at request construction.
     try:
         RecoveryRequest(
             case_id="case_1",
@@ -160,10 +171,12 @@ def main() -> int:
     req = request()
     attempt = runtime.execute_customer_fallback(req)
     assert attempt.executed and attempt.receipt is not None
+    assert provider.evidence_reads == 2
     assert provider.create_calls == 1
     assert len(attempt.receipt.reference_id) <= 40
     assert attempt.receipt.reference_id == recovery_reference("case_1")
     assert attempt.receipt.decision_evidence_hash == "decision_hash_1"
+    assert attempt.receipt.order_id == "order_1"
 
     second = runtime.execute_customer_fallback(req)
     assert second.executed and second.receipt is not None
@@ -216,7 +229,7 @@ def main() -> int:
         else:
             raise AssertionError("live Razorpay key was not refused")
 
-    print("RecoveryTruth acceptance checks passed: truth, in-flight block, expiring authority, fence, exactly-once action, proof")
+    print("RecoveryTruth acceptance checks passed: exact order binding, truth, in-flight block, expiring authority, fence, exactly-once action, proof")
     return 0
 
 

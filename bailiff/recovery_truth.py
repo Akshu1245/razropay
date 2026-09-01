@@ -103,8 +103,6 @@ def resolve_financial_truth(evidence: Iterable[ProviderEvidence]) -> TruthResolu
     order_rows = tuple(row for row in current_rows if row.entity_type.lower() == "order")
     mandate_rows = tuple(row for row in current_rows if row.entity_type.lower() in {"mandate", "subscription"})
 
-    # Razorpay documents Order=paid as a terminal successful financial fact:
-    # once paid, no further payment requests are permitted for that Order.
     if any(_status(row) == "paid" for row in order_rows):
         return TruthResolution(TruthState.PAID, ("CURRENT_RAZORPAY_ORDER_PAID",), fingerprints, now)
 
@@ -215,9 +213,12 @@ def verify_captured_payment(
 @dataclass(frozen=True)
 class RecoveryProof:
     case_id: str
+    mandate_id: str
+    original_order_id: str
     decision_id: str
     decision_evidence_hash: str
     policy_version: str
+    authority_expires_at: str
     prewrite_resolution: str
     prewrite_evidence_hash: str
     provider_action_type: str

@@ -1,179 +1,47 @@
-# Panel Q&A — the questions most likely to be asked, and the answer that survives follow-up
+# MandateGuard — panel answers to memorize
 
-This document exists for one purpose: so the first time you say these answers
-out loud is not in front of the panel. Read each question, say the answer to
-yourself before you read the notes, then check it against what's here. If your
-version is shorter and still true, use yours — a memorized paragraph reads as
-memorized, and a panel notices instantly.
+Keep every answer short, concede the limitation first, then point to the checkable proof.
 
----
+## “Where is the agent?”
 
-### "This is Track 03. Where's the agent that executes recovery? Your README used to say you're not a recovery engine."
+> Razorpay already has recovery agents. MandateGuard is the harness in front of a recovery policy: it authenticates the event, evaluates a candidate policy on a frozen ledger, enforces deterministic authority at runtime, and proves both execution and refusal at the provider boundary. In the benchmark, permitted retries really call the local provider simulator; denied and abstained cases must record zero provider calls. RecoveryTruth adds a separate Razorpay Test Mode execution path for one bounded customer-initiated fallback.
 
-Nine arms are nine competing recovery agents. Seven of them execute real
-retries in the benchmark when they decide to. The thing that makes this
-different from "just build a retry agent" is that a retry agent which always
-retries wins on recovered money and loses on everything else — mandate state,
-consent, prohibited debits. This project is what happens when you build the
-agent *and* insist on proving, before it ships, which version of it should be
-trusted with a merchant's money. That proof is not a side document, it's
-`outputs/frontier.png` and the hash-chained receipt on every single decision.
+Do not say MandateGuard replaces Intelligent Retry or Agent Studio.
 
-Do not open with the disclaimer. Open with: "we built nine recovery agents
-and ran a tournament — here's who won and why the obvious answer lost."
+## “Where is the AI?”
 
----
+> Eight arms are deterministic on purpose because consent, mandate state, timing and retry-budget checks should not depend on a model. B3 uses a bounded real-model interpreter only for ambiguous failure meaning. The model has no payment authority. If confidence is low, B3 abstains to human review with zero provider calls; even a hostile interpreter cannot turn a revoked mandate into an allowed action.
 
-### "Where's the actual AI? Everything I'm seeing looks like a rules engine."
+The design choice is **where not to use AI**.
 
-Correct, and deliberate. Eight of the nine arms are rules because the failure
-modes they handle — a cancelled mandate, an exhausted retry budget, consent
-withdrawn — don't need a model to classify; a model there would just be
-latency and cost with no accuracy gain, and this project doesn't fake AI usage
-to check a box. The one arm that needs a model, `B3`, calls one for real: not
-a mock, not a canned string — `outputs/real_interpreter_evidence.json` is an
-actual captured response from `openai/gpt-oss-20b`, ambiguous failure in,
-taxonomy reason and confidence out. The interesting design decision isn't
-"we used an LLM," it's "we used an LLM and then refused to let its opinion
-become authority" — the model's confidence still has to clear a threshold
-this codebase enforces, not the model, before its answer changes anything.
-If confidence is low, it abstains to human review with zero provider calls,
-regardless of what the model said.
+## “Isn’t `RZP` a strawman?”
 
-Say the restraint out loud before they ask why AI usage looks thin. If you
-wait for the question, it sounds like an excuse instead of the thesis.
+> `RZP` is explicitly a fixed temporal reference derived from Razorpay's published **card** retry schedule. It is not Razorpay's current Intelligent UPI Retry Engine and MandateGuard has not been evaluated against Razorpay production decision logic. The narrow finding is that, on this frozen synthetic scheduled-AutoPay ledger, the tested reason-aware arms outperform that fixed temporal reference on the stated metrics.
 
----
+If asked what would change your mind:
 
-### "You're beating a strawman. You implemented the *card* schedule, not Razorpay's current UPI retry engine."
+> Another reproducible policy run on the same frozen ledger and metrics that matches or beats the reason-aware arms. The harness should be willing to prove me wrong.
 
-Correct — and the repository says so before the benchmark result. `RZP` is a
-**fixed temporal reference arm** derived from Razorpay's documented card retry
-schedule. It is not a reproduction or benchmark of Razorpay's current
-Intelligent UPI Retry Engine, and MandateGuard has not been evaluated against
-Razorpay's production decision logic. The result is narrower: on the same
-synthetic scheduled AutoPay ledger, the tested reason-aware policies recover
-more while moving less prohibited value than that fixed temporal reference.
+## “Is this real?”
 
-If pushed further: "what would change your mind?" — an independently
-reproducible UPI retry policy evaluated on the same frozen ledger and metrics
-that matches or outperforms the reason-aware arms. The harness is designed to
-accept such a policy as another benchmark arm.
+> The benchmark rupees are synthetic counterfactuals and the default provider is a local simulator. I say that before showing any result. What is real is the code path and its invariants: Razorpay-style webhook HMAC verification, deterministic guardrails, zero-provider-call refusal checks, 283 passing tests, 14/14 deliberately reintroduced defects caught, RecoveryTruth's state resolver and write fence, and the Test Mode-only Razorpay adapter. A standard Payment Link fallback is not an AutoPay retry. A credentialed Test Mode receipt, safe block and RecoveryProof should only be claimed after those artifacts actually exist.
 
----
+## “Why should Razorpay care if it already recovers?”
 
-### "Is this real, or is it just a synthetic simulation with big numbers on a chart?"
+> Because a configurable recovery engine still needs a pre-deployment answer to: what will this configuration recover, what legitimate recovery will it refuse, what prohibited value can it expose, and can every refusal be proven to have stopped before the provider boundary? MandateGuard is that evaluation and refusal-proof harness.
 
-It is a synthetic simulation, stated as such in the first mention of it in
-the README and repeated in `FINDINGS.md`'s limitations section. No Razorpay
-API is called, no production money moves. What's real: the webhook
-authentication logic (`bailiff/webhook.py`) implements Razorpay's actual
-published HMAC contract and is attacked 39 ways in tests; the guardrail
-engine is a real state machine that really refuses actions, provably, not by
-convention; and in the optional real-interpreter mode the LLM call is a real
-API call with real tokens and real cost (the default benchmark does not make
-it).
-The rupee figures are counterfactual attribution over a frozen synthetic
-ledger, and the project says so before it says anything else about them —
-don't let a panelist "catch" you conceding this, concede it first.
+## “Why lead with refusals instead of recovered money?”
 
----
+> Because the ungated policies can recover more. Hiding that would make the benchmark useless. MandateGuard reports recovery, legitimate recovery forgone, prohibited value, violations and provider calls together. The product is the instrument that exposes the trade-off, not a claim that the strictest policy always wins.
 
-### "Your test suite is huge and your rigor language is unusual for a hackathon project. Is any of this real, or is it AI-generated boilerplate?"
+## “Is the hash chain tamper-proof?”
 
-Answer with one falsifiable fact, not a defense of the volume: mutation
-testing (`scripts/mutation_check.py`) reintroduces 13 known defects into the
-codebase one at a time and confirms the test suite catches every one — if you
-delete the check that stops a denied retry from reaching the provider, a test
-fails. That's not boilerplate, it's a claim you can break on demand: "pick any
-one of the 13 mutations, I'll show you the exact test that catches it." Offer
-to demo it live if there's time. Do not lead with the number 198; lead with
-"I can show you the test suite catching a real bug I put back in on purpose."
+> No. It is tamper-evident evidence: modifying historical evidence causes verification to fail. I do not claim it prevents someone with write access from changing bytes; I claim the change is detectable under the verification model.
 
----
+## “What is the Test Mode action?”
 
-### "What broke during development, and how did you fix it?"
+> A standard customer-initiated Razorpay Payment Link fallback in Test Mode. It is not an AutoPay debit retry. Before the write, RecoveryTruth re-reads the current Order and Payments. If the case is already paid, in-flight, conflicting, unknown or terminal, it blocks instead of creating a second recovery action.
 
-Not a required field on this application, but assume it'll come up
-conversationally. Have one real answer ready, not a rehearsed list — the
-authentic one is the webhook: the project's whole thesis is "authority
-control before the provider boundary," and for a while the boundary that
-authenticates the *input* didn't exist at all — anyone who could POST to the
-endpoint could manufacture a failure event and drive the whole system. That's
-a real gap you found and closed (`bailiff/webhook.py`, 37 attack tests). It's
-a good answer because it's specific, it's embarrassing in exactly the way a
-true story is, and it's fixed with evidence, not assertion.
+## “What would you do in week one if you joined?”
 
----
-
-### "Is your GitHub repo actually public, and does it have real commit history, or did you paste in one giant commit right before the deadline?"
-
-Answer honestly with whatever your actual history shows. If it's a small
-number of large commits because most of the work happened in a compressed
-window, say that plainly rather than let it look evasive — judges are
-evaluating build quality and reasoning, not commit cadence for its own sake.
-
----
-
-### "Did any of this exist before the buildathon started?"
-
-Answer this one before anyone asks it, in your own head, right now, with the
-true answer. A vague or hesitant answer under direct questioning costs more
-than an honest "I had X before and built Y and Z during the window" ever
-would.
-
----
-
-## The one thing to get right regardless of which question lands
-
-Every hard question above has the same shape: concede the real limitation in
-one sentence, then pivot immediately to the specific, checkable thing that
-survives the concession. Never argue the limitation doesn't exist — every one
-of these limitations is already written down in this project's own docs, on
-purpose, so that conceding it live matches what's on the page instead of
-contradicting it.
-
----
-
-### "You added an operations console. Can it actually do anything, or does it just look like it can?"
-
-It cannot act, and that is enforced rather than promised.
-
-All of the lineage, exception queue and provenance logic lives in
-`bailiff/lineage.py` as pure functions over evidence the benchmark already
-wrote. It computes no metric, opens no ledger, calls no provider, writes no
-file, and opens no socket. `app.py` only renders what those functions return.
-There is no button on any screen that approves, retries, executes, or
-contacts anyone.
-
-The tests are the part worth pointing at. `tests/test_lineage_and_exception_queue.py`
-replaces every public method on the provider simulator with a trap and then
-builds the entire queue — any call at all fails the suite. It hashes every
-canonical output before and after a full render pass and asserts nothing
-changed. It blocks `socket.connect`, `socket.create_connection` and
-`socket.getaddrinfo` and renders again. And it greps both files for write and
-network operations, so a later edit that adds one fails rather than shipping.
-
-Two details a reviewer should check directly. A field the evidence does not
-carry displays `not present in fixture` — the benchmark ledger genuinely has
-no mandate id or wire timestamps, and the panel says so on every row instead
-of inferring them. And every denied or abstained row shows
-`provider_calls = 0`; if a non executing row ever reported a call, the queue
-raises it as an invariant contradiction rather than rendering it quietly.
-
----
-
-### "Where does Rillet fit — are you integrated with them?"
-
-It is not an integration, and nothing in the repository talks to Rillet.
-
-Rillet's public Aura and MCP material was used as design inspiration for
-contextual data access, reviewable workflow actions, permission boundaries,
-and auditability. MandateGuard does not integrate with Rillet. It applies
-those ideas narrowly to scheduled AutoPay recovery policy evaluation.
-
-Concretely: there is no Rillet dependency, credential, endpoint, or runtime
-reference anywhere here, and the name does not appear in the product, the UI,
-the policy arm list, the API, or the benchmark. If a panelist wants to verify
-that, `grep -ri rillet` over the source, the UI, and the arm list returns
-nothing outside the design-credit sentences in the documentation.
+> I would plug this harness in front of Intelligent Retry templates so a merchant can see recovered versus refused before enabling a configuration. A failed-payment diagnostic explains why a debit failed; MandateGuard proves when the compliant action is **not** to debit again.

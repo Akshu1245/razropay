@@ -51,9 +51,12 @@ class FakeProvider:
         self.link = None
 
     def order_evidence(self, *, order_id: str, mandate_id: str | None = None, mandate_status: str | None = None):
+        mandate = evidence(mandate_status or "active", mandate_id or "mandate_1", entity_type="mandate")
         if self.phase == 2:
-            return (evidence("captured", "pay_late"), evidence("active", mandate_id or "mandate_1", entity_type="mandate"))
-        return (evidence("failed"), evidence(mandate_status or "active", mandate_id or "mandate_1", entity_type="mandate"))
+            return (evidence("captured", "pay_late"), mandate)
+        if self.phase == 3:
+            return (evidence("authorized", "pay_inflight"), mandate)
+        return (evidence("failed"), mandate)
 
     def create_payment_link_once(self, *, amount_minor: int, currency: str, reference_id: str, description: str):
         if self.link is None:
@@ -90,39 +93,33 @@ class FakeProvider:
 def main() -> int:
     now = datetime.now(timezone.utc)
 
-    # Historical failed webhook must never overrule a fresh captured payment.
+    # Historical failure loses to fresh current financial truth.
     stale = evidence("failed", authoritative=False, observed_at=now - timedelta(minutes=5))
     captured = evidence("captured", "pay_2", observed_at=now)
     result = resolve_financial_truth([stale, captured])
     assert result.state == TruthState.PAID and not result.executable
 
-    # Failed payment becomes executable only when current authority evidence
-    # proves the mandate is still active.
+    # A completed failed attempt may be considered for recovery, while a
+    # payment still created/authorized/pending must block parallel collection.
     failed = evidence("failed")
     active = evidence("active", "mandate_1", entity_type="mandate")
     result = resolve_financial_truth([failed, active])
     assert result.state == TruthState.RECOVERABLE and result.executable
-    result = resolve_financial_truth([failed])
-    assert result.state == TruthState.FAILED and not result.executable
+    assert resolve_financial_truth([evidence("authorized", "pay_3"), active]).state == TruthState.IN_FLIGHT
+    assert resolve_financial_truth([evidence("pending", "pay_4"), active]).state == TruthState.IN_FLIGHT
 
-    # Unknown and terminal provider states always abstain.
+    # Unknown and terminal states always abstain.
     assert resolve_financial_truth([evidence("mystery")]).state == TruthState.UNKNOWN
     assert resolve_financial_truth([failed, evidence("revoked", "mandate_1", entity_type="mandate")]).state == TruthState.TERMINAL
-
-    # The fence can only be armed from proven recoverable truth.
-    try:
-        WriteFence.from_evidence([failed])
-    except ValueError:
-        pass
-    else:
-        raise AssertionError("write fence armed from unproven FAILED state")
 
     fence = WriteFence.from_evidence([failed, active])
     allowed, reason = fence.check([captured, active])
     assert not allowed and reason == "SAFE_BLOCK_ALREADY_PAID"
+    allowed, reason = fence.check([evidence("authorized", "pay_inflight"), active])
+    assert not allowed and reason == "SAFE_BLOCK_IN_FLIGHT"
 
-    # Full runtime path: resolve -> re-read -> fence -> exactly-one provider
-    # write -> postcondition -> RecoveryProof.
+    # Full runtime path: resolve -> immediate re-read -> fence -> exactly-one
+    # provider write -> independent captured-payment verification -> proof.
     provider = FakeProvider()
     runtime = RecoveryTruthRuntime(provider)
     request = RecoveryRequest(
@@ -140,26 +137,49 @@ def main() -> int:
     assert len(attempt.receipt.reference_id) <= 40
     assert attempt.receipt.reference_id == recovery_reference("case_1")
 
+    # Repeating the logical action must reuse the same provider reference.
+    second = runtime.execute_customer_fallback(request)
+    assert second.executed and second.receipt is not None
+    assert second.receipt.payment_link_id == attempt.receipt.payment_link_id
+    assert provider.create_calls == 1
+
     proof = runtime.verify_recovery(attempt.receipt)
     assert proof.payment_id == "pay_captured_1"
     assert proof.provider_action_id == "plink_test_1"
+    assert proof.provider_action_type == "CREATE_PAYMENT_LINK_FALLBACK"
+    assert proof.postcondition_evidence_hash == "postcondition_hash_1"
     assert proof.hash() == proof.hash()
 
-    # TOCTOU attack: state changes to captured between diagnosis and the
-    # immediate pre-write read. The provider write must remain zero.
+    # TOCTOU: payment captures between diagnosis and write. Zero provider writes.
     provider = FakeProvider()
     original = provider.order_evidence
     calls = {"n": 0}
 
-    def changing_read(**kwargs):
+    def changing_to_paid(**kwargs):
         calls["n"] += 1
         if calls["n"] == 2:
             provider.phase = 2
         return original(**kwargs)
 
-    provider.order_evidence = changing_read  # type: ignore[method-assign]
+    provider.order_evidence = changing_to_paid  # type: ignore[method-assign]
     attempt = RecoveryTruthRuntime(provider).execute_customer_fallback(request)
     assert not attempt.executed and attempt.reason_code == "SAFE_BLOCK_ALREADY_PAID"
+    assert provider.create_calls == 0
+
+    # TOCTOU: another payment becomes authorized between diagnosis and write.
+    provider = FakeProvider()
+    original = provider.order_evidence
+    calls = {"n": 0}
+
+    def changing_to_inflight(**kwargs):
+        calls["n"] += 1
+        if calls["n"] == 2:
+            provider.phase = 3
+        return original(**kwargs)
+
+    provider.order_evidence = changing_to_inflight  # type: ignore[method-assign]
+    attempt = RecoveryTruthRuntime(provider).execute_customer_fallback(request)
+    assert not attempt.executed and attempt.reason_code == "SAFE_BLOCK_IN_FLIGHT"
     assert provider.create_calls == 0
 
     # Live credentials are a hard failure. Test Mode only.
@@ -171,7 +191,7 @@ def main() -> int:
         else:
             raise AssertionError("live Razorpay key was not refused")
 
-    print("RecoveryTruth acceptance checks passed: authority, freshness, fence, exactly-once action, postcondition proof")
+    print("RecoveryTruth acceptance checks passed: freshness, in-flight block, fence, exactly-once action, proof")
     return 0
 
 

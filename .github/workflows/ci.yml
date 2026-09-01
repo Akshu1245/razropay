@@ -14,6 +14,11 @@ jobs:
           python-version: "3.11"
       - name: Install
         run: python -m pip install -e '.[test]'
+      - name: Checksum manifest candidate
+        run: |
+          echo '--- SHA256SUMS CANDIDATE BEGIN ---'
+          python3 scripts/make_checksum_manifest.py
+          echo '--- SHA256SUMS CANDIDATE END ---'
       - name: Test
         run: ./scripts/test.sh
       - name: RecoveryTruth acceptance
@@ -33,6 +38,8 @@ jobs:
       - name: README and report integrity
         run: |
           ! grep -nE '\{\{|\}\}' README.md outputs/report.md
+          test -f RECOVERYTRUTH.md
+          test -f SUBMISSION_READINESS.md
           test -f outputs/manifest.json
           grep -q '"final": true' outputs/manifest.json
           grep -q '"B1.5"' outputs/manifest.json

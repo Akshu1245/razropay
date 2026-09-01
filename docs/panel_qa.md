@@ -1,47 +1,76 @@
-# MandateGuard — panel answers to memorize
+# Panel Q&A — short answers that survive follow-up
 
-Keep every answer short, concede the limitation first, then point to the checkable proof.
+Use these in your own words. Concede the real limitation first, then point to the executable proof.
 
-## “Where is the agent?”
+## "Where's the agent?"
 
-> Razorpay already has recovery agents. MandateGuard is the harness in front of a recovery policy: it authenticates the event, evaluates a candidate policy on a frozen ledger, enforces deterministic authority at runtime, and proves both execution and refusal at the provider boundary. In the benchmark, permitted retries really call the local provider simulator; denied and abstained cases must record zero provider calls. RecoveryTruth adds a separate Razorpay Test Mode execution path for one bounded customer-initiated fallback.
+The recovery policy is the agent. MandateGuard runs competing recovery policies against the same frozen evidence and provider contract, then proves what each policy executed, refused or escalated. The interesting part is not another detect-retry dashboard; it is that unsafe non-actions are first-class outcomes with provider-call evidence.
 
-Do not say MandateGuard replaces Intelligent Retry or Agent Studio.
+The default benchmark uses a local provider simulator. RecoveryTruth adds an optional Razorpay Test Mode path for one bounded customer-initiated fallback, with fresh provider truth, an immediate pre-write re-read, safe blocking and postcondition verification.
 
-## “Where is the AI?”
+## "Where's the AI? This looks like rules."
 
-> The non-B3 policy arms are deterministic on purpose because consent, mandate state, timing and retry-budget checks should not depend on a model. B3 uses a bounded real-model interpreter only for ambiguous failure meaning. The model has no payment authority. If confidence is low, B3 abstains to human review with zero provider calls; even a hostile interpreter cannot turn a revoked mandate into an allowed action.
+That is deliberate. Most safety facts do not need an LLM: revoked mandate, exhausted attempt budget, missing consent and amount authority are deterministic constraints.
 
-The design choice is **where not to use AI**.
+B3 is the bounded interpreter arm. A model may interpret an ambiguous provider payload and return a normalized reason plus confidence. It cannot authorize a payment action, widen an authority envelope, change mandate state or bypass the guardrail layer.
 
-## “Isn’t `RZP` a strawman?”
+The design sentence is:
 
-> `RZP` is explicitly a fixed temporal reference derived from Razorpay's published **card** retry schedule. It is not Razorpay's current Intelligent UPI Retry Engine and MandateGuard has not been evaluated against Razorpay production decision logic. The narrow finding is that, on this frozen synthetic scheduled-AutoPay ledger, the tested reason-aware arms outperform that fixed temporal reference on the stated metrics.
+> **AI interprets. Policy authorizes. Provider executes. Evidence proves.**
 
-If asked what would change your mind:
+The AI claim is restraint, not a chatbot. A compromised or overconfident interpreter still cannot move a revoked mandate past deterministic authority.
 
-> Another reproducible policy run on the same frozen ledger and metrics that matches or beats the reason-aware arms. The harness should be willing to prove me wrong.
+## "Isn't `RZP` a strawman?"
 
-## “Is this real?”
+It would be if I presented it as Razorpay's current UPI retry engine. I do not.
 
-> The benchmark rupees are synthetic counterfactuals and the default provider is a local simulator. I say that before showing any result. What is real is the code path and its invariants: Razorpay-style webhook HMAC verification, attacked 39 ways in tests; deterministic guardrails; zero-provider-call refusal checks; 283 passing tests; 14/14 deliberately reintroduced defects caught; RecoveryTruth's state resolver and write fence; and the Test Mode-only Razorpay adapter. A standard Payment Link fallback is not an AutoPay retry. A credentialed Test Mode receipt, safe block and RecoveryProof should only be claimed after those artifacts actually exist.
+`RZP` is a **fixed temporal reference arm** derived from Razorpay's documented **card** retry schedule. It does not reproduce Razorpay Intelligent Retry, and MandateGuard has not been evaluated against Razorpay's production decision logic.
 
-## “Why should Razorpay care if it already recovers?”
+The narrower result is: on the same frozen synthetic scheduled AutoPay ledger, the tested reason-aware policies outperform that fixed temporal reference under the stated metrics.
 
-> Because a configurable recovery engine still needs a pre-deployment answer to: what will this configuration recover, what legitimate recovery will it refuse, what prohibited value can it expose, and can every refusal be proven to have stopped before the provider boundary? MandateGuard is that evaluation and refusal-proof harness.
+If asked what would change my mind: another independently reproducible policy evaluated on the same frozen ledger and independent checker that preserves mandatory refusals while matching or outperforming the reason-aware arms.
 
-## “Why lead with refusals instead of recovered money?”
+## "Is this real or just synthetic simulation?"
 
-> Because the ungated policies can recover more. Hiding that would make the benchmark useless. MandateGuard reports recovery, legitimate recovery forgone, prohibited value, violations and provider calls together. The product is the instrument that exposes the trade-off, not a claim that the strictest policy always wins.
+The benchmark is synthetic and offline, and every rupee number in it is a counterfactual benchmark value, not observed merchant revenue.
 
-## “Is the hash chain tamper-proof?”
+What is executable and falsifiable: webhook HMAC validation, replay/order controls, deterministic authority attenuation, guardrails, provider-call accounting, abstention, timeout handling, audit verification and the independent checker. The baseline suite currently contains 283 tests and a 14/14 mutation check; the final verification record must quote the final frozen run rather than assume those numbers.
 
-> No. It is tamper-evident evidence: modifying historical evidence causes verification to fail. I do not claim it prevents someone with write access from changing bytes; I claim the change is detectable under the verification model.
+Separately, RecoveryTruth has a Razorpay **Test Mode only** execution path. Its concrete write is a **Standard Payment Link fallback**, not an AutoPay retry. The final submission should show one real fallback receipt, one real `SAFE_BLOCK_ALREADY_PAID` or `SAFE_BLOCK_IN_FLIGHT`, and a captured-payment `RecoveryProof`.
 
-## “What is the Test Mode action?”
+## "What does the RecoveryProof actually prove?"
 
-> A standard customer-initiated Razorpay Payment Link fallback in Test Mode. It is not an AutoPay debit retry. Before the write, RecoveryTruth re-reads the current Order and Payments. If the case is already paid, in-flight, conflicting, unknown or terminal, it blocks instead of creating a second recovery action.
+It binds the recovery case to the decision evidence, policy version, authority expiry, original Order, mandate, pre-write financial truth, provider action, postcondition evidence, captured Payment, amount, currency and recovery reference.
 
-## “What would you do in week one if you joined?”
+The proof hash is **tamper-evident evidence**. It does not make the underlying files tamper-proof or immutable.
 
-> I would plug this harness in front of Intelligent Retry templates so a merchant can see recovered versus refused before enabling a configuration. A failed-payment diagnostic explains why a debit failed; MandateGuard proves when the compliant action is **not** to debit again.
+## "Does the decision evidence hash mean any external caller is cryptographically authorized?"
+
+No. In the current Test Mode harness the decision evidence hash is an operator-supplied binding to the MandateGuard decision/audit evidence. It is not a signed external capability token.
+
+Production hardening could add a signed capability, but that is not required for the claim being demonstrated here: the in-process MandateGuard authority layer remains deterministic, and the Test Mode harness proves the provider-side truth/write/postcondition path.
+
+## "Why not just maximize recovered money?"
+
+Because the ungated arms demonstrate the failure mode: they can recover more by executing actions the independent checker considers prohibited. Recovery alone therefore rewards unsafe behavior.
+
+MandateGuard reports recovery together with protected value by denial, realized harm, prohibited execution rate, violations, legitimate recovery forgone and sensitivity to the assumed harm price. The headline product is the **Refusal Report**, not the biggest rupee number.
+
+## "What would you do inside Razorpay?"
+
+I would not try to replace Intelligent Retry or Agent Studio. I would put this evaluation harness in front of retry templates so a merchant or internal recovery team can see recovered versus refused before a configuration is enabled.
+
+A failure receipt proves a debit failed. MandateGuard is designed to prove a compliant non-debit: the system had a recovery opportunity, evaluated it, refused it for a specific reason, and made zero provider calls.
+
+## "What broke during development?"
+
+A useful example is the input boundary. The project initially focused on action authority, but an unauthenticated or badly authenticated failure event could make every downstream control irrelevant. The webhook boundary was therefore hardened around raw-body HMAC verification, duplicate delivery, replay window and out-of-order events, then attacked directly in the test suite.
+
+Another example is ambiguous provider writes. A timeout after a provider write cannot safely be called "not executed" because the remote side may have committed it. RecoveryTruth therefore has a distinct `WRITE_OUTCOME_UNKNOWN` state and reconciliation behavior rather than encouraging an immediate repeat.
+
+## Four sentences to remember
+
+1. **Razorpay already recovers; MandateGuard evaluates whether a recovery policy should be trusted before it goes live.**
+2. **Synthetic rupees stay synthetic; the real Test Mode artifact is separate evidence.**
+3. **Payment Link fallback is not an AutoPay retry, and `RZP` is not Intelligent Retry.**
+4. **The proof chain is tamper-evident, and a refusal is only interesting when provider calls are provably zero.**

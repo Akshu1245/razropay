@@ -125,10 +125,6 @@ class RazorpayTestModeClient:
                 return reconciled
             raise
         except httpx.HTTPStatusError as exc:
-            # Razorpay documents duplicate reference_id as HTTP 400. In a
-            # concurrent race one actor may create the link after our initial
-            # lookup. Reconcile the reference rather than treating the 400 as
-            # permission to generate a new logical recovery action.
             if exc.response.status_code in {400, 409}:
                 reconciled = self.find_payment_link_by_reference(reference_id)
                 if reconciled is not None:
@@ -150,6 +146,21 @@ class RazorpayTestModeClient:
             authoritative=authoritative,
         )
 
+    @staticmethod
+    def order_state_evidence(order: Mapping[str, object]) -> ProviderEvidence:
+        return ProviderEvidence(
+            source="razorpay_test_mode",
+            entity_type="order",
+            entity_id=str(order.get("id") or ""),
+            status=str(order.get("status") or ""),
+            amount_minor=int(order.get("amount") or 0),
+            currency=str(order.get("currency") or ""),
+            reference_id=str(order.get("receipt") or ""),
+            observed_at=datetime.now(timezone.utc),
+            raw_hash=RazorpayTestModeClient._raw_hash(order),
+            authoritative=True,
+        )
+
     def order_evidence(
         self,
         *,
@@ -159,7 +170,7 @@ class RazorpayTestModeClient:
         expected_amount_minor: int | None = None,
         expected_currency: str | None = None,
     ) -> tuple[ProviderEvidence, ...]:
-        """Fetch and bind fresh Razorpay payment evidence to one exact order.
+        """Fetch and bind fresh Razorpay order + payment evidence.
 
         Caller-supplied mandate state is intentionally ignored as provider
         truth. Mandate/consent permission is carried by the expiring
@@ -179,7 +190,7 @@ class RazorpayTestModeClient:
                 raise ValueError("Razorpay payment amount does not match recovery order")
             if expected_currency is not None and str(payment.get("currency") or "") != expected_currency:
                 raise ValueError("Razorpay payment currency does not match recovery order")
-        return tuple(self.payment_evidence(payment) for payment in payments)
+        return (self.order_state_evidence(order), *(self.payment_evidence(payment) for payment in payments))
 
     def verify_payment_link_capture(
         self, *, payment_link_id: str, expected_amount_minor: int, expected_currency: str, expected_reference_id: str

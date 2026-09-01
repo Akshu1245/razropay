@@ -93,7 +93,9 @@ def main() -> int:
     attempt = runtime.execute_customer_fallback(request)
     output: dict[str, object] = {
         "mode": "razorpay_test_mode_execute",
+        "execution_state": attempt.execution_state.value,
         "executed": attempt.executed,
+        "write_outcome_unknown": attempt.write_outcome_unknown,
         "reason_code": attempt.reason_code,
         "financial_truth": attempt.truth.state.value,
         "truth_reason_codes": list(attempt.truth.reason_codes),

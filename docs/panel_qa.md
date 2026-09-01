@@ -10,7 +10,7 @@ Do not say MandateGuard replaces Intelligent Retry or Agent Studio.
 
 ## “Where is the AI?”
 
-> Eight arms are deterministic on purpose because consent, mandate state, timing and retry-budget checks should not depend on a model. B3 uses a bounded real-model interpreter only for ambiguous failure meaning. The model has no payment authority. If confidence is low, B3 abstains to human review with zero provider calls; even a hostile interpreter cannot turn a revoked mandate into an allowed action.
+> The non-B3 policy arms are deterministic on purpose because consent, mandate state, timing and retry-budget checks should not depend on a model. B3 uses a bounded real-model interpreter only for ambiguous failure meaning. The model has no payment authority. If confidence is low, B3 abstains to human review with zero provider calls; even a hostile interpreter cannot turn a revoked mandate into an allowed action.
 
 The design choice is **where not to use AI**.
 
@@ -24,7 +24,7 @@ If asked what would change your mind:
 
 ## “Is this real?”
 
-> The benchmark rupees are synthetic counterfactuals and the default provider is a local simulator. I say that before showing any result. What is real is the code path and its invariants: Razorpay-style webhook HMAC verification, deterministic guardrails, zero-provider-call refusal checks, 283 passing tests, 14/14 deliberately reintroduced defects caught, RecoveryTruth's state resolver and write fence, and the Test Mode-only Razorpay adapter. A standard Payment Link fallback is not an AutoPay retry. A credentialed Test Mode receipt, safe block and RecoveryProof should only be claimed after those artifacts actually exist.
+> The benchmark rupees are synthetic counterfactuals and the default provider is a local simulator. I say that before showing any result. What is real is the code path and its invariants: Razorpay-style webhook HMAC verification, attacked 39 ways in tests; deterministic guardrails; zero-provider-call refusal checks; 283 passing tests; 14/14 deliberately reintroduced defects caught; RecoveryTruth's state resolver and write fence; and the Test Mode-only Razorpay adapter. A standard Payment Link fallback is not an AutoPay retry. A credentialed Test Mode receipt, safe block and RecoveryProof should only be claimed after those artifacts actually exist.
 
 ## “Why should Razorpay care if it already recovers?”
 

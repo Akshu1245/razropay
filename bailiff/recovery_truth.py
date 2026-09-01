@@ -96,7 +96,7 @@ class WriteFence:
         resolution = resolve_financial_truth(fresh)
         if resolution.state == TruthState.PAID:
             return False, "SAFE_BLOCK_ALREADY_PAID"
-        if resolution.state in {TruthState.UNKNOWN, TruthState.CONFLICT, TruthState.TERMINAL}:
+        if resolution.state != TruthState.RECOVERABLE:
             return False, f"SAFE_BLOCK_{resolution.state.value}"
         if _set_fingerprint(fresh) != self.diagnosis_fingerprint:
             return False, "SAFE_BLOCK_STATE_CHANGED_BEFORE_WRITE"
@@ -124,7 +124,9 @@ def verify_captured_payment(
     status = str(payment.get("status") or "").lower()
     amount = int(payment.get("amount") or 0)
     currency = str(payment.get("currency") or "")
-    reference = str(payment.get("reference_id") or payment.get("notes", {}).get("recovery_reference", "") if isinstance(payment.get("notes"), Mapping) else "")
+    notes = payment.get("notes")
+    note_reference = notes.get("recovery_reference", "") if isinstance(notes, Mapping) else ""
+    reference = str(payment.get("reference_id") or note_reference)
     if not payment_id:
         raise ValueError("payment id missing")
     if status != "captured":

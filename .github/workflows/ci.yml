@@ -27,12 +27,8 @@ jobs:
         run: ./scripts/demo.sh
         env:
           MANDATEGUARD_OFFLINE: "1"
-      - name: Final benchmark
-        run: ./scripts/evaluate.sh
-        env:
-          MANDATEGUARD_OFFLINE: "1"
-      - name: Release gate
-        run: ./scripts/release_check.sh
+      - name: Deep non-mutating verification
+        run: ./scripts/verify_all.sh
         env:
           MANDATEGUARD_OFFLINE: "1"
       - name: README and report integrity
@@ -46,10 +42,12 @@ jobs:
           test -f outputs/sensitivity.json
           test -f outputs/sensitivity.png
           grep -q 'harm priced' outputs/report.md
-      - name: Upload generated evidence
+      - name: Upload verified evidence
         uses: actions/upload-artifact@v4
         with:
           name: mandateguard-outputs
           path: |
             outputs/
             FINDINGS.md
+            RECOVERYTRUTH.md
+            SUBMISSION_READINESS.md

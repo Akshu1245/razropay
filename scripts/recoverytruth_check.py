@@ -124,6 +124,91 @@ class FakeProvider:
         return proof, "postcondition_hash_1"
 
 
+class StubRazorpayClient(RazorpayTestModeClient):
+    """Exercise the real adapter contract without network or credentials."""
+
+    def __init__(self, *, post_mode: str = "normal") -> None:
+        super().__init__(key_id="rzp_test_contract", key_secret="not-a-real-secret")
+        self.post_mode = post_mode
+        self.link: dict[str, object] | None = None
+        self.post_writes = 0
+        self.paid = False
+        self.order_status = "attempted"
+        self.wrong_order_payment = False
+
+    def _request(self, method: str, path: str, **kwargs: object):
+        if method == "GET" and path == "/orders/order_1":
+            return {
+                "id": "order_1",
+                "amount": 1000,
+                "amount_paid": 1000 if self.order_status == "paid" else 0,
+                "amount_due": 0 if self.order_status == "paid" else 1000,
+                "currency": "INR",
+                "status": self.order_status,
+                "receipt": "case_1",
+            }
+        if method == "GET" and path == "/orders/order_1/payments":
+            return {
+                "items": [
+                    {
+                        "id": "pay_failed_1",
+                        "order_id": "order_wrong" if self.wrong_order_payment else "order_1",
+                        "amount": 1000,
+                        "currency": "INR",
+                        "status": "failed",
+                    }
+                ]
+            }
+        if method == "GET" and path == "/payment_links/":
+            links = [] if self.link is None else [dict(self.link)]
+            return {"payment_links": links}
+        if method == "POST" and path == "/payment_links":
+            payload = kwargs.get("json")
+            assert isinstance(payload, dict)
+            self.post_writes += 1
+            self.link = {
+                "id": "plink_contract_1",
+                "short_url": "https://rzp.io/i/contract",
+                "amount": payload["amount"],
+                "currency": payload["currency"],
+                "reference_id": payload["reference_id"],
+                "accept_partial": payload["accept_partial"],
+                "status": "created",
+                "payments": None,
+            }
+            request = httpx.Request("POST", "https://api.razorpay.com/v1/payment_links")
+            if self.post_mode == "timeout_after_create":
+                raise httpx.WriteTimeout("simulated timeout after provider accepted write", request=request)
+            if self.post_mode == "duplicate_after_create":
+                response = httpx.Response(400, request=request)
+                raise httpx.HTTPStatusError("duplicate reference", request=request, response=response)
+            return dict(self.link)
+        if method == "GET" and path == "/payment_links/plink_contract_1":
+            assert self.link is not None
+            link = dict(self.link)
+            if self.paid:
+                link["status"] = "paid"
+                link["amount_paid"] = 1000
+                link["payments"] = [
+                    {
+                        "payment_id": "pay_captured_1",
+                        "payment_link_id": "plink_contract_1",
+                        "amount": 1000,
+                        "status": "captured",
+                    }
+                ]
+            return link
+        if method == "GET" and path == "/payments/pay_captured_1":
+            return {
+                "id": "pay_captured_1",
+                "order_id": None,
+                "amount": 1000,
+                "currency": "INR",
+                "status": "captured",
+            }
+        raise AssertionError(f"unexpected adapter request: {method} {path} {kwargs}")
+
+
 def request(*, expires_at: datetime | None = None) -> RecoveryRequest:
     return RecoveryRequest(
         case_id="case_1",
@@ -138,6 +223,75 @@ def request(*, expires_at: datetime | None = None) -> RecoveryRequest:
         authority_expires_at=expires_at or datetime.now(timezone.utc) + timedelta(minutes=5),
         authorized_action_type=FALLBACK_ACTION,
     )
+
+
+def check_real_adapter_contract() -> None:
+    client = StubRazorpayClient()
+    rows = client.order_evidence(
+        order_id="order_1",
+        expected_amount_minor=1000,
+        expected_currency="INR",
+    )
+    assert resolve_financial_truth(rows).state == TruthState.RECOVERABLE
+
+    reference = recovery_reference("case_1")
+    link = client.create_payment_link_once(
+        amount_minor=1000,
+        currency="INR",
+        reference_id=reference,
+        description="contract test",
+    )
+    assert link["id"] == "plink_contract_1"
+    assert client.post_writes == 1
+    reused = client.create_payment_link_once(
+        amount_minor=1000,
+        currency="INR",
+        reference_id=reference,
+        description="contract test",
+    )
+    assert reused["id"] == "plink_contract_1" and client.post_writes == 1
+
+    client.paid = True
+    proof, evidence_hash = client.verify_payment_link_capture(
+        payment_link_id="plink_contract_1",
+        expected_amount_minor=1000,
+        expected_currency="INR",
+        expected_reference_id=reference,
+    )
+    assert proof.payment_id == "pay_captured_1"
+    assert proof.captured and len(evidence_hash) == 64
+
+    timeout_client = StubRazorpayClient(post_mode="timeout_after_create")
+    reconciled = timeout_client.create_payment_link_once(
+        amount_minor=1000,
+        currency="INR",
+        reference_id=reference,
+        description="timeout reconciliation",
+    )
+    assert reconciled["id"] == "plink_contract_1" and timeout_client.post_writes == 1
+
+    duplicate_client = StubRazorpayClient(post_mode="duplicate_after_create")
+    reconciled = duplicate_client.create_payment_link_once(
+        amount_minor=1000,
+        currency="INR",
+        reference_id=reference,
+        description="duplicate reconciliation",
+    )
+    assert reconciled["id"] == "plink_contract_1" and duplicate_client.post_writes == 1
+
+    paid_order = StubRazorpayClient()
+    paid_order.order_status = "paid"
+    rows = paid_order.order_evidence(order_id="order_1", expected_amount_minor=1000, expected_currency="INR")
+    assert resolve_financial_truth(rows).state == TruthState.PAID
+
+    mismatched = StubRazorpayClient()
+    mismatched.wrong_order_payment = True
+    try:
+        mismatched.order_evidence(order_id="order_1", expected_amount_minor=1000, expected_currency="INR")
+    except ValueError as exc:
+        assert "another order" in str(exc)
+    else:
+        raise AssertionError("adapter accepted a payment bound to a different Razorpay order")
 
 
 def main() -> int:
@@ -274,6 +428,8 @@ def main() -> int:
     assert attempt.receipt is None
     assert provider.write_attempts == 1
 
+    check_real_adapter_contract()
+
     with env(RAZORPAY_TEST_KEY_ID="rzp_live_forbidden", RAZORPAY_TEST_KEY_SECRET="secret"):
         try:
             RazorpayTestModeClient.from_env()
@@ -283,9 +439,9 @@ def main() -> int:
             raise AssertionError("live Razorpay key was not refused")
 
     print(
-        "RecoveryTruth acceptance checks passed: exact order binding, provider-read fail-closed, truth, "
-        "in-flight block, expiring authority, write fence, logical exactly-once, ambiguous/malformed "
-        "post-write state, captured-payment proof"
+        "RecoveryTruth acceptance checks passed: financial truth, exact order binding, actual Test Mode adapter "
+        "contract, provider-read fail-closed, in-flight block, expiring authority, write fence, logical "
+        "exactly-once, timeout/duplicate reconciliation, ambiguous/malformed post-write state, captured-payment proof"
     )
     return 0
 

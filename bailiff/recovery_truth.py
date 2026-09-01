@@ -62,6 +62,7 @@ _PAYMENT_CAPTURED = {"captured", "paid"}
 _PAYMENT_FAILED = {"failed"}
 _PAYMENT_IN_FLIGHT = {"created", "authorized", "pending"}
 _PAYMENT_TERMINAL = {"refunded"}
+_ORDER_KNOWN = {"created", "attempted", "paid"}
 _MANDATE_ACTIVE = {"active", "enabled", "authenticated"}
 _MANDATE_TERMINAL = {"revoked", "cancelled", "canceled", "paused", "expired", "halted"}
 
@@ -99,10 +100,19 @@ def resolve_financial_truth(evidence: Iterable[ProviderEvidence]) -> TruthResolu
         return TruthResolution(TruthState.UNKNOWN, ("NO_AUTHORITATIVE_CURRENT_EVIDENCE",), fingerprints, now)
 
     payment_rows = tuple(row for row in current_rows if row.entity_type.lower() == "payment")
+    order_rows = tuple(row for row in current_rows if row.entity_type.lower() == "order")
     mandate_rows = tuple(row for row in current_rows if row.entity_type.lower() in {"mandate", "subscription"})
+
+    # Razorpay documents Order=paid as a terminal successful financial fact:
+    # once paid, no further payment requests are permitted for that Order.
+    if any(_status(row) == "paid" for row in order_rows):
+        return TruthResolution(TruthState.PAID, ("CURRENT_RAZORPAY_ORDER_PAID",), fingerprints, now)
 
     if any(_status(row) in _PAYMENT_CAPTURED for row in payment_rows):
         return TruthResolution(TruthState.PAID, ("CURRENT_CAPTURED_PAYMENT_OBSERVED",), fingerprints, now)
+
+    if order_rows and any(_status(row) not in _ORDER_KNOWN for row in order_rows):
+        return TruthResolution(TruthState.UNKNOWN, ("UNRECOGNIZED_CURRENT_ORDER_STATE",), fingerprints, now)
 
     if mandate_rows:
         mandate_statuses = {_status(row) for row in mandate_rows}

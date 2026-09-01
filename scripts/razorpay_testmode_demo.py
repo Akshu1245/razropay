@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 from dataclasses import asdict
+from datetime import datetime, timedelta, timezone
 import json
 from pathlib import Path
 
@@ -24,8 +25,11 @@ def parser() -> argparse.ArgumentParser:
     execute.add_argument("--mandate-id", required=True)
     execute.add_argument("--mandate-status", default="active", help="Current merchant-side mandate state")
     execute.add_argument("--amount-minor", required=True, type=int, help="Expected INR amount in paise")
-    execute.add_argument("--decision-id", default="demo_decision")
+    execute.add_argument("--max-authorized-amount-minor", type=int, help="Amount ceiling from the policy decision; defaults to amount-minor")
+    execute.add_argument("--decision-id", required=True)
+    execute.add_argument("--decision-evidence-hash", required=True, help="Hash of the exact MandateGuard decision/audit evidence")
     execute.add_argument("--policy-version", default="mandateguard_policy_0.2")
+    execute.add_argument("--authority-ttl-seconds", type=int, default=300, help="Short-lived execution authority TTL")
     execute.add_argument(
         "--receipt-out",
         type=Path,
@@ -71,14 +75,20 @@ def main() -> int:
         )
         return 0
 
+    if args.authority_ttl_seconds <= 0 or args.authority_ttl_seconds > 3600:
+        raise ValueError("authority-ttl-seconds must be between 1 and 3600")
+    max_amount = args.max_authorized_amount_minor or args.amount_minor
     request = RecoveryRequest(
         case_id=args.case_id,
         decision_id=args.decision_id,
+        decision_evidence_hash=args.decision_evidence_hash,
         policy_version=args.policy_version,
         order_id=args.order_id,
         mandate_id=args.mandate_id,
         mandate_status=args.mandate_status,
         amount_minor=args.amount_minor,
+        max_authorized_amount_minor=max_amount,
+        authority_expires_at=datetime.now(timezone.utc) + timedelta(seconds=args.authority_ttl_seconds),
     )
     attempt = runtime.execute_customer_fallback(request)
     output: dict[str, object] = {

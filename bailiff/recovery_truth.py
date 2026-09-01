@@ -71,7 +71,6 @@ def _status(row: ProviderEvidence) -> str:
 
 
 def _collapse_latest(rows: Iterable[ProviderEvidence]) -> tuple[tuple[ProviderEvidence, ...], bool]:
-    """Keep the freshest authoritative observation per provider entity."""
     latest: dict[tuple[str, str, str], ProviderEvidence] = {}
     conflict = False
     for row in rows:
@@ -102,8 +101,6 @@ def resolve_financial_truth(evidence: Iterable[ProviderEvidence]) -> TruthResolu
     payment_rows = tuple(row for row in current_rows if row.entity_type.lower() == "payment")
     mandate_rows = tuple(row for row in current_rows if row.entity_type.lower() in {"mandate", "subscription"})
 
-    # A current captured payment is the strongest financial fact. Historical
-    # failed webhook snapshots are normal history and do not conflict with it.
     if any(_status(row) in _PAYMENT_CAPTURED for row in payment_rows):
         return TruthResolution(TruthState.PAID, ("CURRENT_CAPTURED_PAYMENT_OBSERVED",), fingerprints, now)
 
@@ -209,6 +206,7 @@ def verify_captured_payment(
 class RecoveryProof:
     case_id: str
     decision_id: str
+    decision_evidence_hash: str
     policy_version: str
     prewrite_resolution: str
     prewrite_evidence_hash: str

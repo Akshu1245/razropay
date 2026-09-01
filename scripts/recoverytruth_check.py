@@ -4,7 +4,7 @@ from contextlib import contextmanager
 from datetime import datetime, timedelta, timezone
 import os
 
-from bailiff.recovery_runtime import RecoveryRequest, RecoveryTruthRuntime, recovery_reference
+from bailiff.recovery_runtime import FALLBACK_ACTION, RecoveryRequest, RecoveryTruthRuntime, recovery_reference
 from bailiff.recovery_truth import ProviderEvidence, TruthState, WriteFence, resolve_financial_truth
 from bailiff.razorpay_testmode import RazorpayConfigurationError, RazorpayTestModeClient
 
@@ -90,25 +90,36 @@ class FakeProvider:
         return proof, "postcondition_hash_1"
 
 
+def request(*, expires_at: datetime | None = None) -> RecoveryRequest:
+    return RecoveryRequest(
+        case_id="case_1",
+        decision_id="dec_1",
+        decision_evidence_hash="decision_hash_1",
+        policy_version="mandateguard_policy_0.2",
+        order_id="order_1",
+        mandate_id="mandate_1",
+        mandate_status="active",
+        amount_minor=1000,
+        max_authorized_amount_minor=1000,
+        authority_expires_at=expires_at or datetime.now(timezone.utc) + timedelta(minutes=5),
+        authorized_action_type=FALLBACK_ACTION,
+    )
+
+
 def main() -> int:
     now = datetime.now(timezone.utc)
 
-    # Historical failure loses to fresh current financial truth.
     stale = evidence("failed", authoritative=False, observed_at=now - timedelta(minutes=5))
     captured = evidence("captured", "pay_2", observed_at=now)
     result = resolve_financial_truth([stale, captured])
     assert result.state == TruthState.PAID and not result.executable
 
-    # A completed failed attempt may be considered for recovery, while a
-    # payment still created/authorized/pending must block parallel collection.
     failed = evidence("failed")
     active = evidence("active", "mandate_1", entity_type="mandate")
     result = resolve_financial_truth([failed, active])
     assert result.state == TruthState.RECOVERABLE and result.executable
     assert resolve_financial_truth([evidence("authorized", "pay_3"), active]).state == TruthState.IN_FLIGHT
     assert resolve_financial_truth([evidence("pending", "pay_4"), active]).state == TruthState.IN_FLIGHT
-
-    # Unknown and terminal states always abstain.
     assert resolve_financial_truth([evidence("mystery")]).state == TruthState.UNKNOWN
     assert resolve_financial_truth([failed, evidence("revoked", "mandate_1", entity_type="mandate")]).state == TruthState.TERMINAL
 
@@ -118,27 +129,43 @@ def main() -> int:
     allowed, reason = fence.check([evidence("authorized", "pay_inflight"), active])
     assert not allowed and reason == "SAFE_BLOCK_IN_FLIGHT"
 
-    # Full runtime path: resolve -> immediate re-read -> fence -> exactly-one
-    # provider write -> independent captured-payment verification -> proof.
+    # Stale authority is a zero-write block before provider execution.
+    provider = FakeProvider()
+    expired = request(expires_at=now - timedelta(seconds=1))
+    attempt = RecoveryTruthRuntime(provider).execute_customer_fallback(expired)
+    assert not attempt.executed and attempt.reason_code == "SAFE_BLOCK_AUTHORITY_EXPIRED"
+    assert provider.create_calls == 0
+
+    # Authority cannot be widened at request construction.
+    try:
+        RecoveryRequest(
+            case_id="case_1",
+            decision_id="dec_1",
+            decision_evidence_hash="decision_hash_1",
+            policy_version="v1",
+            order_id="order_1",
+            mandate_id="mandate_1",
+            mandate_status="active",
+            amount_minor=1001,
+            max_authorized_amount_minor=1000,
+            authority_expires_at=now + timedelta(minutes=5),
+        )
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("recovery request widened the policy amount authority")
+
     provider = FakeProvider()
     runtime = RecoveryTruthRuntime(provider)
-    request = RecoveryRequest(
-        case_id="case_1",
-        decision_id="dec_1",
-        policy_version="mandateguard_policy_0.2",
-        order_id="order_1",
-        mandate_id="mandate_1",
-        mandate_status="active",
-        amount_minor=1000,
-    )
-    attempt = runtime.execute_customer_fallback(request)
+    req = request()
+    attempt = runtime.execute_customer_fallback(req)
     assert attempt.executed and attempt.receipt is not None
     assert provider.create_calls == 1
     assert len(attempt.receipt.reference_id) <= 40
     assert attempt.receipt.reference_id == recovery_reference("case_1")
+    assert attempt.receipt.decision_evidence_hash == "decision_hash_1"
 
-    # Repeating the logical action must reuse the same provider reference.
-    second = runtime.execute_customer_fallback(request)
+    second = runtime.execute_customer_fallback(req)
     assert second.executed and second.receipt is not None
     assert second.receipt.payment_link_id == attempt.receipt.payment_link_id
     assert provider.create_calls == 1
@@ -146,11 +173,11 @@ def main() -> int:
     proof = runtime.verify_recovery(attempt.receipt)
     assert proof.payment_id == "pay_captured_1"
     assert proof.provider_action_id == "plink_test_1"
-    assert proof.provider_action_type == "CREATE_PAYMENT_LINK_FALLBACK"
+    assert proof.provider_action_type == FALLBACK_ACTION
+    assert proof.decision_evidence_hash == "decision_hash_1"
     assert proof.postcondition_evidence_hash == "postcondition_hash_1"
     assert proof.hash() == proof.hash()
 
-    # TOCTOU: payment captures between diagnosis and write. Zero provider writes.
     provider = FakeProvider()
     original = provider.order_evidence
     calls = {"n": 0}
@@ -162,11 +189,10 @@ def main() -> int:
         return original(**kwargs)
 
     provider.order_evidence = changing_to_paid  # type: ignore[method-assign]
-    attempt = RecoveryTruthRuntime(provider).execute_customer_fallback(request)
+    attempt = RecoveryTruthRuntime(provider).execute_customer_fallback(req)
     assert not attempt.executed and attempt.reason_code == "SAFE_BLOCK_ALREADY_PAID"
     assert provider.create_calls == 0
 
-    # TOCTOU: another payment becomes authorized between diagnosis and write.
     provider = FakeProvider()
     original = provider.order_evidence
     calls = {"n": 0}
@@ -178,11 +204,10 @@ def main() -> int:
         return original(**kwargs)
 
     provider.order_evidence = changing_to_inflight  # type: ignore[method-assign]
-    attempt = RecoveryTruthRuntime(provider).execute_customer_fallback(request)
+    attempt = RecoveryTruthRuntime(provider).execute_customer_fallback(req)
     assert not attempt.executed and attempt.reason_code == "SAFE_BLOCK_IN_FLIGHT"
     assert provider.create_calls == 0
 
-    # Live credentials are a hard failure. Test Mode only.
     with env(RAZORPAY_TEST_KEY_ID="rzp_live_forbidden", RAZORPAY_TEST_KEY_SECRET="secret"):
         try:
             RazorpayTestModeClient.from_env()
@@ -191,7 +216,7 @@ def main() -> int:
         else:
             raise AssertionError("live Razorpay key was not refused")
 
-    print("RecoveryTruth acceptance checks passed: freshness, in-flight block, fence, exactly-once action, proof")
+    print("RecoveryTruth acceptance checks passed: truth, in-flight block, expiring authority, fence, exactly-once action, proof")
     return 0
 
 

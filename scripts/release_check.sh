@@ -25,8 +25,9 @@ if grep -RInE '\{\{[^}]+\}\}' README.md RECOVERYTRUTH.md SUBMISSION_READINESS.md
   exit 1
 fi
 
-# Credentials and provider execution receipts are local operator evidence, not
-# source files. They must never enter the submission archive by accident.
+# Credentials and raw operator receipts are local evidence. Sanitized,
+# explicitly named docs/testmode_evidence/testmode_*.json artifacts are allowed
+# because the claims registry validates their shape without containing keys.
 _secret_file="$(find . -type f \( \( -name '.env*' ! -name '.env.example' \) -o -iname '*recoverytruth*receipt*.json' -o -iname '*recoverytruth*proof*.json' -o -iname '*.recoverytruth-receipt.json' -o -iname '*.recoverytruth-proof.json' \) -not -path './.git/*' -print -quit)"
 if [[ -n "$_secret_file" ]]; then
   echo "release check failed: local credential/provider-evidence file would be shipped: $_secret_file" >&2
@@ -48,7 +49,7 @@ sha256sum -c SHA256SUMS.txt >/dev/null
 python3 -m compileall -q bailiff tests scripts
 python3 -m pytest -q
 
-# RecoveryTruth is outside the frozen 283-test benchmark count so the original
+# RecoveryTruth is outside the frozen benchmark count so the original
 # benchmark evidence does not silently move. It is nevertheless mandatory:
 # state precedence, identity binding, in-flight blocking, write-time fencing,
 # expiring authority, exactly-once logical fallback and proof must all pass.
@@ -72,3 +73,4 @@ if [[ ! -f outputs/evidence_manifest.json || ! -f outputs/breakeven.json || ! -f
   rm -rf "$_preserved_charts"
 fi
 python3 scripts/check_release.py
+python3 scripts/claims_check.py

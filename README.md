@@ -2,8 +2,7 @@
 
 **MandateGuard compares nine recovery policy arms — including one bounded interpreter arm — head to head on the same frozen scheduled UPI AutoPay failure ledger, executes what each arm is permitted to execute, refuses what its guardrails prohibit, and proves both decisions before anything reaches the provider boundary.**
 
-
-> **Scope, stated before anything else.** Every number in this repository is a **synthetic counterfactual** over a frozen generated ledger. Provider execution is a **local simulator** — no production money moves and no customer is contacted. Input is a **Razorpay shaped signed test webhook fixture**, not a live Razorpay API call. The default benchmark is **fully deterministic and offline**; the bounded real interpreter is an **optional mode**, and in neither mode can the interpreter authorize a payment action or bypass a guardrail.
+> **Scope, stated before anything else.** Every number in this repository is a **synthetic counterfactual** over a frozen generated ledger. The **offline path** uses a **synthetic local simulator** — it does not talk to Razorpay, no production money moves, and no customer is contacted. Input to that path is a **Razorpay shaped signed test webhook fixture**. The default benchmark is **fully deterministic and offline**; the bounded real interpreter is an **optional mode**, and in neither mode can the interpreter authorize a payment action or bypass a guardrail.
 
 
 > **Optional provider-backed proof.** RecoveryTruth is a separate **Razorpay Test Mode-only** execution path. It performs fresh provider reads, applies a write-time fence, can create a **Standard Payment Link fallback**, reconciles ambiguous writes, and independently verifies the captured payment. It refuses `rzp_live_` credentials. A Payment Link fallback is **not** an AutoPay retry. The frozen benchmark and every rupee figure reported by it remain synthetic.

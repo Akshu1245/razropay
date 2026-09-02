@@ -139,7 +139,10 @@ This submission does **not** claim:
 
 ## 9. Final status
 
+Until Test Mode artifacts actually exist, record Test Mode status as **WAITING_FOR_TEST_MODE_CREDENTIALS**. Do not fill fabricated Payment IDs or receipts.
+
 - Offline proof frozen: `YES/NO`
+- Razorpay Test Mode status: `WAITING_FOR_TEST_MODE_CREDENTIALS` or captured
 - Razorpay Test Mode successful fallback captured: `YES/NO`
 - real safe block captured: `YES/NO`
 - real RecoveryProof captured: `YES/NO`

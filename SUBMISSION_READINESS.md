@@ -1,73 +1,87 @@
 # Submission Readiness — evidence, not optimism
 
-This file is the current submission-status source of truth. **VERIFIED** means the repository has an executable check or recorded CI evidence for the claim. **IMPLEMENTED / TEST MODE RUN REQUIRED** means the path exists but the credentialed Razorpay Test Mode proof has not yet been captured. **WAITING_FOR_TEST_MODE_CREDENTIALS** means the Test Mode code path is present and the remaining blocker is user-supplied `rzp_test_` keys (never `rzp_live_`); no receipts, Payment IDs, or RecoveryProof artifacts have been fabricated. Anything else is **NOT CLAIMED**.
+This file is the current submission-status source of truth. **VERIFIED** means the repository has executable evidence or recorded provider-backed evidence for the claim. Synthetic benchmark results and Razorpay Test Mode evidence are deliberately kept separate.
 
 ## Current status
 
-**Offline submission path: VERIFIED AND GREEN.**
+**Offline submission path: VERIFIED AND FROZEN.**
 
-The frozen RecoveryTruth hardening head completed the full clean GitHub Actions path successfully: install, checksum candidate, 283-test suite, RecoveryTruth acceptance, offline demo, deep non-mutating verification, README/report integrity and evidence upload. The original offline verification record still describes the synthetic benchmark baseline, while the final post-Test-Mode verification record will supersede it for the complete submission.
+The frozen MandateGuard benchmark remains the same 283-test, 14/14-mutation proof. Its rupee values are synthetic counterfactuals over a generated ledger and do not claim production revenue. The historical archive verification is preserved in `docs/OFFLINE_VERIFICATION_BASELINE.md`.
 
-**Credentialed provider path: WAITING_FOR_TEST_MODE_CREDENTIALS.**
+**Credentialed provider path: VERIFIED IN RAZORPAY TEST MODE.**
 
-The code is ready for Razorpay Test Mode only. The remaining external-account evidence is one successful fallback receipt, one real `SAFE_BLOCK_ALREADY_PAID` or `SAFE_BLOCK_IN_FLIGHT`, and one captured-payment `RecoveryProof`.
+The repository now contains a sanitized four-artifact Test Mode bundle in `docs/testmode_evidence/`:
+
+- `testmode_success_execute.json` — fresh provider state resolved `RECOVERABLE`, the write fence remained valid, and one Standard Payment Link fallback was created.
+- `testmode_recovery_proof.json` — the independently fetched captured payment satisfied the postcondition and produced a bound `RecoveryProof` with `recovery_verified: true`.
+- `testmode_safe_block.json` — an already-paid Order resolved `PAID` and returned `SAFE_BLOCK_ALREADY_PAID` with `executed: false`.
+- `testmode_safe_block_zero_write.json` — the same already-paid case proves Payment Links remained `0 -> 0`, so no replacement collection object was created.
+
+The hardening gate treats a partial provider bundle as a release failure. When these artifacts are present it verifies successful fallback, captured-payment RecoveryProof, and already-paid zero-write proof.
 
 ## RecoveryTruth implementation matrix
 
 | Capability | Status | Evidence / boundary |
 |---|---|---|
-| Fresh current financial truth states | VERIFIED OFFLINE | `bailiff/recovery_truth.py`, `scripts/recoverytruth_check.py` |
-| Stale event loses to fresh captured state | VERIFIED OFFLINE | historical evidence is non-authoritative; current captured state resolves `PAID` |
+| Fresh current financial truth states | VERIFIED | `bailiff/recovery_truth.py`, `scripts/recoverytruth_check.py` |
+| Stale failure loses to fresh captured state | VERIFIED | current provider truth resolves `PAID` |
 | In-flight payment blocks parallel collection | VERIFIED OFFLINE | `created`, `authorized`, `pending` => `IN_FLIGHT` |
-| Exact Razorpay Order binding | IMPLEMENTED / TEST MODE RUN REQUIRED | exact Order id, amount and currency validation |
-| Exact Order-payment identity binding | IMPLEMENTED / TEST MODE RUN REQUIRED | every payment must bind to exact order id, amount and currency |
-| Razorpay Order `paid` as independent stop signal | IMPLEMENTED / TEST MODE RUN REQUIRED | current Order state participates in truth resolution |
-| Immediate pre-write provider reread | VERIFIED OFFLINE | two evidence reads before one write |
-| State-change SAFE_BLOCK | VERIFIED OFFLINE | captured/in-flight TOCTOU attacks make zero writes |
-| Expiring decision authority | VERIFIED OFFLINE | decision hash/action/amount/expiry bound and rechecked at write |
-| Live credentials refused | VERIFIED OFFLINE | any non-`rzp_test_` key raises |
-| Standard Payment Link fallback | IMPLEMENTED / TEST MODE RUN REQUIRED | `scripts/razorpay_testmode_demo.py execute` |
-| Ambiguous write reconciliation | VERIFIED OFFLINE CONTRACT / TEST MODE EVIDENCE REQUIRED | timeout/network ambiguity reconciles by deterministic reference |
-| Duplicate-reference reconciliation | VERIFIED OFFLINE CONTRACT / TEST MODE EVIDENCE REQUIRED | duplicate provider reference is looked up/reused |
-| Captured-payment postcondition | IMPLEMENTED / TEST MODE RUN REQUIRED | Payment Link + independent Payment fetch; exact captured/amount/currency/reference |
-| RecoveryProof | VERIFIED OFFLINE CONTRACT / REAL EVIDENCE REQUIRED | binds decision, original order, mandate, authority, provider action and exact captured payment |
-| Production AutoPay debit retry | NOT CLAIMED | fallback is a customer-initiated Standard Payment Link, not mandate debit execution |
+| Exact Razorpay Order binding | VERIFIED TEST MODE | provider-backed Order/payment evidence |
+| Exact Order-payment identity binding | VERIFIED TEST MODE | exact Order/payment IDs in captured evidence |
+| Razorpay Order `paid` as independent stop signal | VERIFIED TEST MODE | `SAFE_BLOCK_ALREADY_PAID` evidence |
+| Immediate pre-write provider reread | VERIFIED | two-read RecoveryTruth write boundary |
+| State-change SAFE_BLOCK | VERIFIED | offline TOCTOU attacks + real already-paid block |
+| Expiring decision authority | VERIFIED | decision/action/amount/expiry bound and rechecked at write |
+| Live credentials refused | VERIFIED | non-`rzp_test_` credentials are rejected |
+| Standard Payment Link fallback | VERIFIED TEST MODE | `testmode_success_execute.json` |
+| Ambiguous/duplicate write reconciliation | VERIFIED CONTRACT | deterministic reference + timeout/duplicate acceptance checks |
+| Captured-payment postcondition | VERIFIED TEST MODE | independent captured Payment read |
+| RecoveryProof | VERIFIED TEST MODE | `testmode_recovery_proof.json` |
+| Concurrent same-reference fallback serialization | VERIFIED | `scripts/hardening_check.py` |
+| Claims registry / refusal-regret / B2→B3 ablation | VERIFIED | mandatory hardening gate |
+| Production AutoPay debit retry | NOT CLAIMED | fallback is a customer-initiated Standard Payment Link, not a mandate debit retry |
 | Production/live money execution | NOT CLAIMED | live keys are intentionally refused |
 
-## Remaining submission blockers
+## Submission-critical proof
 
-Only credential-bound/final-evidence work remains:
+The strongest provider-backed demonstration is intentionally two-sided:
 
-1. Run one Razorpay **Test Mode** recoverable case and preserve the fallback receipt.
-2. Complete the hosted Test Mode payment and generate the independent `RecoveryProof`.
-3. Capture one real Test Mode already-paid or in-flight `SAFE_BLOCK` with zero fallback write.
-4. Redact and preserve those Test Mode artifacts without secrets or customer PII.
-5. Regenerate `SHA256SUMS.txt` after those final artifacts and the final verification record exist.
-6. Replace/supersede the old `FINAL_VERIFICATION.md` with the final record separating offline synthetic evidence from real Test Mode evidence.
+1. **Allowed path:** failed current attempts -> `RECOVERABLE` -> pre-write reread -> one Test Mode Payment Link -> captured Test Mode payment -> `RecoveryProof`.
+2. **Refusal path:** already-paid Order -> `PAID` -> `SAFE_BLOCK_ALREADY_PAID` -> Payment Links `0 -> 0`.
+
+That is the product claim: recovery is not only about choosing an action; it is also about proving when an action must not exist.
 
 ## Frozen safety boundary
 
-Do not change the canonical policy arms, `guardrails.py`, webhook HMAC boundary, RecoveryTruth state resolver/write fence, or the frozen benchmark merely to improve a score. Any required safety-code change invalidates the freeze and requires a new full verification run.
+Do not change canonical policy arms, `guardrails.py`, webhook HMAC verification, RecoveryTruth state precedence/write fence, or benchmark rule values merely to improve a score. A safety-code change invalidates the freeze and requires a new full verification run.
 
-OpenEvolve experimentation is isolated from the submission safety boundary and must not modify guardrails, webhook authentication, RecoveryTruth fences or provider execution.
+OpenEvolve experiments remain outside the submission safety boundary and are not part of the final evidence claim unless separately executed and verified.
 
 ## Judge-facing wording
 
-Use this meaning until the credentialed provider evidence exists:
+> **Razorpay already recovers payments. MandateGuard/RecoveryTruth proves whether another recovery action is still financially authorized right now — and proves both the action and the refusal against provider state.**
 
-> **Razorpay already recovers. MandateGuard is the harness in front of that engine: before a retry configuration goes live, prove what it recovers, what it refuses, and that every refusal made zero provider calls.**
+Keep these limits explicit:
 
-Keep these limits explicit: benchmark rupees are synthetic counterfactuals; the Test Mode Standard Payment Link is not an AutoPay retry; `RZP` is not Intelligent Retry; the hash chain is tamper-evident evidence, not tamper-proof storage.
+- benchmark rupees are synthetic counterfactuals;
+- the Test Mode Standard Payment Link is not an AutoPay retry;
+- the `RZP` benchmark arm is a fixed card-derived temporal reference, not Razorpay Intelligent UPI Retry;
+- B3 is confidence-gated abstention, not a claim of ECE/Brier statistical calibration;
+- the audit chain and RecoveryProof are tamper-evident evidence, not tamper-proof storage;
+- no production/live Razorpay transaction is claimed.
 
 ## Current submission status
 
-- Offline proof: **GREEN / FROZEN**
-- RecoveryTruth offline acceptance: **GREEN**
-- Checksum manifest before Test Mode artifacts: **MAINTAINED**
-- Test Mode fallback receipt: **WAITING_FOR_TEST_MODE_CREDENTIALS**
-- Test Mode SAFE_BLOCK: **WAITING_FOR_TEST_MODE_CREDENTIALS**
-- Real RecoveryProof: **WAITING_FOR_TEST_MODE_CREDENTIALS + HOSTED TEST PAYMENT**
-- Final post-Test-Mode checksum freeze: **PENDING FINAL ARTIFACTS**
-- Final `FINAL_VERIFICATION.md`: **PENDING FINAL ARTIFACTS**
+- Offline 283-test proof: **GREEN / FROZEN**
+- Mutation proof: **14/14 CAUGHT**
+- RecoveryTruth acceptance: **GREEN**
+- Security regression acceptance: **GREEN**
+- Claims / ablation / refusal-regret / concurrency hardening: **GREEN**
+- Razorpay Test Mode fallback: **VERIFIED**
+- Captured-payment RecoveryProof: **VERIFIED**
+- Already-paid SAFE_BLOCK: **VERIFIED**
+- Zero-new-fallback proof: **VERIFIED (`0 -> 0`)**
+- Sanitized provider evidence bundle: **PRESENT**
+- Production/live money execution: **NOT CLAIMED**
 
-**Everything that can be completed without Razorpay Test Mode credentials is ready; the repository must not yet claim the credentialed provider proof as completed.**
+The final repository checksum and GitHub Actions run remain mechanical release gates: the exact commit is submission-ready only when those gates are green. This document does not pre-assert a future CI result; the Actions status on the submitted commit is authoritative.

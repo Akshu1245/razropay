@@ -176,7 +176,7 @@ Stated so it can be checked rather than discovered:
   adapter is Razorpay shaped rather than Razorpay connected. A separate
   RecoveryTruth path performs real Razorpay Test Mode reads and a Standard
   Payment Link fallback when `rzp_test_` keys are supplied; that path is
-  currently WAITING_FOR_TEST_MODE_CREDENTIALS and refuses live keys.
+  currently VERIFIED_TEST_MODE_EVIDENCE_CAPTURED and refuses live keys.
 
 ## Sources
 

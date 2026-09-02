@@ -1,6 +1,6 @@
 # Razorpay Test Mode Evidence Runbook
 
-This runbook is for the one real provider proof required before submission. It uses **Razorpay Test Mode only** (real Razorpay Test Mode reads + Standard Payment Link fallback, not AutoPay retry, not the offline simulator). Never put credentials in the repository, screenshots, shell history pasted into issues, or verification documents. Current status: **WAITING_FOR_TEST_MODE_CREDENTIALS**. Do not invent receipts, Payment IDs, or RecoveryProof.
+This runbook is for the one real provider proof required before submission. It uses **Razorpay Test Mode only** (real Razorpay Test Mode reads + Standard Payment Link fallback, not AutoPay retry, not the offline simulator). Never put credentials in the repository, screenshots, shell history pasted into issues, or verification documents. Current status: **VERIFIED_TEST_MODE_EVIDENCE_CAPTURED**. Do not invent receipts, Payment IDs, or RecoveryProof.
 
 ## Required outputs
 

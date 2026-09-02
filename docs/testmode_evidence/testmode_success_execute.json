@@ -18,10 +18,8 @@
     "policy_version": "mandateguard_policy_0.2",
     "prewrite_evidence_hash": "40a355f51436b57e4d2600a32b60e35b54279ac6c8a66aedcd27f2b8b0f03bf0",
     "prewrite_resolution": "RECOVERABLE",
-    "reference_id": "rt_ae0dc6ae69afb1b7700e90c39a4b49ff",
-    "short_url": "https://rzp.io/rzp/75GKJXGe"
+    "reference_id": "rt_ae0dc6ae69afb1b7700e90c39a4b49ff"
   },
-  "receipt_file": "C:\\Users\\aksha\\AppData\\Local\\Temp\\testmode_receipt.json",
   "truth_reason_codes": [
     "ALL_CURRENT_PAYMENT_ATTEMPTS_FAILED",
     "NO_CAPTURED_OR_INFLIGHT_PAYMENT"

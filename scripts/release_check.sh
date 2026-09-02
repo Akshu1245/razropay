@@ -49,10 +49,9 @@ sha256sum -c SHA256SUMS.txt >/dev/null
 python3 -m compileall -q bailiff tests scripts
 python3 -m pytest -q
 
-# RecoveryTruth is outside the frozen benchmark count so the original
-# benchmark evidence does not silently move. It is nevertheless mandatory:
-# state precedence, identity binding, in-flight blocking, write-time fencing,
-# expiring authority, exactly-once logical fallback and proof must all pass.
+# RecoveryTruth and the hardening gate deliberately sit outside the frozen
+# 283-test benchmark count. The historical offline proof therefore stays
+# stable while new provider/concurrency/claim invariants are still mandatory.
 python3 scripts/recoverytruth_check.py
 
 python3 -m bailiff.demo
@@ -73,4 +72,4 @@ if [[ ! -f outputs/evidence_manifest.json || ! -f outputs/breakeven.json || ! -f
   rm -rf "$_preserved_charts"
 fi
 python3 scripts/check_release.py
-python3 scripts/claims_check.py
+python3 scripts/hardening_check.py

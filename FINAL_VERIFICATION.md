@@ -1,6 +1,6 @@
 # Final verification record
 
-> **Scope of this record:** this document records the frozen **offline MandateGuard benchmark/archive verification**. It predates the optional RecoveryTruth Razorpay Test Mode execution path. Statements below about no Razorpay API calls refer to that frozen offline proof only. A new final verification record will supersede this one after the credentialed Test Mode fallback, SAFE_BLOCK, and RecoveryProof artifacts are captured.
+> **Scope of this record:** this document records the frozen **offline MandateGuard benchmark/archive verification**. It predates the optional RecoveryTruth Razorpay Test Mode execution path. Statements below about no Razorpay API calls refer to that frozen offline proof only. RecoveryTruth Test Mode evidence is **WAITING_FOR_TEST_MODE_CREDENTIALS**; this record does not contain receipts, Payment IDs, or RecoveryProof. A new final verification record will supersede this one after the credentialed Test Mode fallback, SAFE_BLOCK, and RecoveryProof artifacts are captured.
 
 Everything below was produced by running the commands in this file against
 the packaged archive, not carried forward from an earlier run. Where a number

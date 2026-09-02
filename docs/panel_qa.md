@@ -6,7 +6,7 @@ Use these in your own words. Concede the real limitation first, then point to th
 
 The recovery policy is the agent. MandateGuard runs competing recovery policies against the same frozen evidence and provider contract, then proves what each policy executed, refused or escalated. The interesting part is not another detect-retry dashboard; it is that unsafe non-actions are first-class outcomes with provider-call evidence.
 
-The default benchmark uses a local provider simulator. RecoveryTruth adds an optional Razorpay Test Mode path for one bounded customer-initiated fallback, with fresh provider truth, an immediate pre-write re-read, safe blocking and postcondition verification.
+The default benchmark uses a local provider simulator and does not call Razorpay. RecoveryTruth adds an optional Razorpay Test Mode path that does perform real Test Mode reads and one bounded customer-initiated Standard Payment Link fallback (not an AutoPay retry), with fresh provider truth, an immediate pre-write re-read, safe blocking and postcondition verification. That credentialed proof is currently WAITING_FOR_TEST_MODE_CREDENTIALS.
 
 ## "Where's the AI? This looks like rules."
 
@@ -36,7 +36,7 @@ The benchmark is synthetic and offline, and every rupee number in it is a counte
 
 What is executable and falsifiable: webhook HMAC validation, attacked 39 ways in tests; replay/order controls; deterministic authority attenuation; guardrails; provider-call accounting; abstention; timeout handling; audit verification; and the independent checker. The baseline suite currently contains 283 tests and a 14/14 mutation check; the final verification record must quote the final frozen run rather than assume those numbers.
 
-Separately, RecoveryTruth has a Razorpay **Test Mode only** execution path. Its concrete write is a **Standard Payment Link fallback**, not an AutoPay retry. The final submission should show one real fallback receipt, one real `SAFE_BLOCK_ALREADY_PAID` or `SAFE_BLOCK_IN_FLIGHT`, and a captured-payment `RecoveryProof`.
+Separately, RecoveryTruth has a Razorpay **Test Mode only** execution path. Its concrete write is a **Standard Payment Link fallback**, not an AutoPay retry. That proof is currently WAITING_FOR_TEST_MODE_CREDENTIALS. Once keys exist, the final submission should show one real fallback receipt, one real `SAFE_BLOCK_ALREADY_PAID` or `SAFE_BLOCK_IN_FLIGHT`, and a captured-payment `RecoveryProof`. Do not invent those artifacts.
 
 ## "What does the RecoveryProof actually prove?"
 

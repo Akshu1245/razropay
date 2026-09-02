@@ -41,7 +41,7 @@ python3 scripts/hardening_check.py
 streamlit run provider_proof_app.py
 ```
 
-The two report scripts write `outputs/interpreter_ablation.json` and `outputs/refusal_regret.json` only when explicitly invoked. The release gate itself does not rewrite frozen benchmark outputs.
+The ablation and refusal-regret commands are read-only by default. Passing `--write` stores their derived JSON under `outputs/generated/`, which is excluded from the shipped checksum contract. The release gate itself never rewrites frozen benchmark outputs.
 
 ## Public design provenance
 

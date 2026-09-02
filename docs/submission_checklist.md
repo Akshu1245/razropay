@@ -48,7 +48,7 @@ The product has a narrow answer to a practical question that a shipped, configur
 
 Razorpay already ships recovery for UPI AutoPay. This project is positioned underneath that, as the evaluation harness and bounded runtime, not as a competitor to it. Read `docs/competitive_position.md` before the panel and be ready to state the division of labour in one sentence. Be equally ready to say what would weaken the position; that document lists it.
 
-For the frozen offline benchmark, the payload adapter is Razorpay shaped, execution remains a local simulator, and the numbers remain synthetic. RecoveryTruth is a separate Razorpay Test Mode path (real Test Mode reads + Standard Payment Link fallback, not AutoPay retry) and is currently WAITING_FOR_TEST_MODE_CREDENTIALS.
+For the frozen offline benchmark, the payload adapter is Razorpay shaped, execution remains a local simulator, and the numbers remain synthetic. RecoveryTruth is a separate Razorpay Test Mode path (real Test Mode reads + Standard Payment Link fallback, not AutoPay retry) and is currently VERIFIED_TEST_MODE_EVIDENCE_CAPTURED.
 
 ## Claims that must not be made
 

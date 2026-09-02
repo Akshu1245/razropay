@@ -15,7 +15,7 @@ The repository has been reviewed from the perspective of a hostile judge, an eng
 | Policy layer | B0, B1, B1.5, RZP, B2.25, B2.5, B2.75, B2, B3 in canonical order | Policy runner and aggregate output |
 | Authority layer | Attenuating envelope with action, amount, attempt, expiry, and identity constraints | Guardrail and authority tests |
 | Guardrail layer | Consent, mandate, timing, retry gap, attempt, amount, pre debit, ambiguity, and terminal gates | Independent checker and zero call proofs |
-| Provider layer | Razorpay shaped input boundary plus simulated provider call ID, idempotency, timeout, postcondition, and recovery result. The adapter does not claim a live API call. | Direct demo and adapter tests |
+| Provider layer | Offline: Razorpay shaped input boundary plus simulated provider call ID, idempotency, timeout, postcondition, and recovery result. That adapter does not call Razorpay. Test Mode reads and Standard Payment Link fallback are a separate RecoveryTruth client. | Direct demo and adapter tests |
 | Evidence layer | Compact shipped sample with per decision receipts, plus locally generated full evidence with ledger hash, audit hashes, provenance, and financial attribution | `outputs/evidence_ledger.json` and `outputs/evidence_manifest.json` |
 | Evaluation layer | Twenty seed final protocol with mean, standard deviation, range, holdout manifest, metric comparability gates, and anti gaming gate | `outputs/aggregate.json` and `outputs/manifest.json` |
 | Economic layer | Two pricings of a prohibited action, swept across a grid, with the crossover generated rather than asserted | `outputs/sensitivity.json` and `outputs/sensitivity.png` |
@@ -44,7 +44,7 @@ The API now freezes its experiment ledger. Adding final seeds extends the frozen
 
 Timing is represented as configured data. The runtime enforces the three configured non peak intervals, the minimum retry gap, the hard attempt cap, and the configured MCC pre debit exemption. The external source tier remains visible, and no unsupported universal regulatory claim is made.
 
-The bounded interpreter callback is now actually used by B3 only for ambiguous or conflicting signals. Its output must be a valid project reason and a confidence between zero and one. Low confidence, malformed output, unavailable model, or invalid model response emits an explicit `ABSTAIN`, routes to human review, and makes zero provider calls. The abstention rate, interpreter influence, model usage, and model cost are included in the aggregate output. The demo begins from a Razorpay shaped payload and shows allowed recovery, denial, ABSTAIN, timeout, and audit tamper proof.
+The bounded interpreter callback is now actually used by B3 only for ambiguous or conflicting signals. Its output must be a valid project reason and a confidence between zero and one. Low confidence, malformed output, unavailable model, or invalid model response emits an explicit `ABSTAIN`, routes to human review, and makes zero provider calls. The abstention rate, interpreter influence, model usage, and model cost are included in the aggregate output. The demo begins from a Razorpay shaped payload and shows allowed recovery, denial, ABSTAIN, timeout, and audit tamper-evident verification.
 
 The generated report is based on output files. It exposes incremental recovery, legitimate recovery forgone, protected value by denial, violations, efficiency, abstention, interpreter influence, audit completeness, configured violation and review costs, net value, break even thresholds, and frontier recommendations. The release gate rejects conflicts, placeholders, missing final arms, insufficient seeds, missing executable scripts, missing compact evidence metadata, and failed tests.
 
@@ -60,7 +60,7 @@ The third finding was presentational rather than a defect. The entire economic r
 
 ## Remaining honest limitations
 
-The input adapter is Razorpay shaped but does not call a live Razorpay API. The provider is a local simulator. No production customer is contacted and no real money is moved.
+The offline input adapter is Razorpay shaped and does not call Razorpay APIs; its provider is a synthetic local simulator. Separately, RecoveryTruth's Test Mode path does perform real Razorpay Test Mode reads and a Standard Payment Link fallback when credentials exist. No production customer is contacted and no production money is moved. Test Mode status is WAITING_FOR_TEST_MODE_CREDENTIALS.
  The API is in memory and does not provide production authentication or durable storage. The visual interface is a planned presentation layer rather than a completed production dashboard. The benchmark is a synthetic counterfactual evaluation, not a claim about observed Razorpay revenue. Violation and human review prices are project assumptions, not provider pricing.
 
 B3 is not presented as superior by default. If the bounded interpreter ties B2, the result is shown honestly. The point is that it cannot bypass authority, not that an AI call must win every synthetic regime.

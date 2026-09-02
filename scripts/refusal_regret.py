@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import argparse
 import json
 from pathlib import Path
 
@@ -11,6 +12,14 @@ OUTPUTS = ROOT / "outputs"
 
 
 def main() -> int:
+    parser = argparse.ArgumentParser(description="Price every non-provider refusal on the frozen evidence ledger.")
+    parser.add_argument(
+        "--write",
+        action="store_true",
+        help="write the derived JSON to outputs/generated/ (excluded from shipped checksums)",
+    )
+    args = parser.parse_args()
+
     evidence = json.loads((OUTPUTS / "evidence_ledger.json").read_text(encoding="utf-8"))
     report = refusal_regret(evidence)
 
@@ -35,10 +44,13 @@ def main() -> int:
             f"{row['net_protection_minus_regret_inr']:>13,.2f}"
         )
 
-    out = OUTPUTS / "refusal_regret.json"
-    out.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-    print()
-    print(f"wrote {out.relative_to(ROOT)}")
+    if args.write:
+        generated = OUTPUTS / "generated"
+        generated.mkdir(parents=True, exist_ok=True)
+        out = generated / "refusal_regret.json"
+        out.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        print()
+        print(f"wrote {out.relative_to(ROOT)}")
     return 0
 
 

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import argparse
 import json
 from pathlib import Path
 
@@ -11,6 +12,14 @@ OUTPUTS = ROOT / "outputs"
 
 
 def main() -> int:
+    parser = argparse.ArgumentParser(description="Compare B2 and B3 on the frozen aggregate.")
+    parser.add_argument(
+        "--write",
+        action="store_true",
+        help="write the derived JSON to outputs/generated/ (excluded from shipped checksums)",
+    )
+    args = parser.parse_args()
+
     aggregate = json.loads((OUTPUTS / "aggregate.json").read_text(encoding="utf-8"))
     rows = interpreter_ablation(aggregate)
     if not rows:
@@ -35,18 +44,21 @@ def main() -> int:
             f"{str(row['interpreter_adds_recovery']):>11}"
         )
 
-    payload = {
-        "comparison": "B2 deterministic guardrails vs B3 same guardrails plus bounded interpreter",
-        "source": "outputs/aggregate.json",
-        "rows": rows,
-        "safety_bound_unchanged_all_regimes": all(row["safety_bound_unchanged"] for row in rows),
-        "recovery_wins": sum(1 for row in rows if row["interpreter_adds_recovery"]),
-        "regimes": len(rows),
-    }
-    out = OUTPUTS / "interpreter_ablation.json"
-    out.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-    print()
-    print(f"wrote {out.relative_to(ROOT)}")
+    if args.write:
+        payload = {
+            "comparison": "B2 deterministic guardrails vs B3 same guardrails plus bounded interpreter",
+            "source": "outputs/aggregate.json",
+            "rows": rows,
+            "safety_bound_unchanged_all_regimes": all(row["safety_bound_unchanged"] for row in rows),
+            "recovery_wins": sum(1 for row in rows if row["interpreter_adds_recovery"]),
+            "regimes": len(rows),
+        }
+        generated = OUTPUTS / "generated"
+        generated.mkdir(parents=True, exist_ok=True)
+        out = generated / "interpreter_ablation.json"
+        out.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        print()
+        print(f"wrote {out.relative_to(ROOT)}")
     return 0
 
 

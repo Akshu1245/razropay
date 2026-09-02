@@ -1,6 +1,6 @@
 # Submission Readiness — evidence, not optimism
 
-This file is the current submission-status source of truth. **VERIFIED** means the repository has an executable check or recorded CI evidence for the claim. **IMPLEMENTED / TEST MODE RUN REQUIRED** means the path exists but the credentialed Razorpay Test Mode proof has not yet been captured. Anything else is **NOT CLAIMED**.
+This file is the current submission-status source of truth. **VERIFIED** means the repository has an executable check or recorded CI evidence for the claim. **IMPLEMENTED / TEST MODE RUN REQUIRED** means the path exists but the credentialed Razorpay Test Mode proof has not yet been captured. **WAITING_FOR_TEST_MODE_CREDENTIALS** means the Test Mode code path is present and the remaining blocker is user-supplied `rzp_test_` keys (never `rzp_live_`); no receipts, Payment IDs, or RecoveryProof artifacts have been fabricated. Anything else is **NOT CLAIMED**.
 
 ## Current status
 
@@ -8,7 +8,7 @@ This file is the current submission-status source of truth. **VERIFIED** means t
 
 The frozen RecoveryTruth hardening head completed the full clean GitHub Actions path successfully: install, checksum candidate, 283-test suite, RecoveryTruth acceptance, offline demo, deep non-mutating verification, README/report integrity and evidence upload. The original offline verification record still describes the synthetic benchmark baseline, while the final post-Test-Mode verification record will supersede it for the complete submission.
 
-**Credentialed provider path: IMPLEMENTED / TEST MODE RUN REQUIRED.**
+**Credentialed provider path: WAITING_FOR_TEST_MODE_CREDENTIALS.**
 
 The code is ready for Razorpay Test Mode only. The remaining external-account evidence is one successful fallback receipt, one real `SAFE_BLOCK_ALREADY_PAID` or `SAFE_BLOCK_IN_FLIGHT`, and one captured-payment `RecoveryProof`.
 
@@ -64,9 +64,9 @@ Keep these limits explicit: benchmark rupees are synthetic counterfactuals; the 
 - Offline proof: **GREEN / FROZEN**
 - RecoveryTruth offline acceptance: **GREEN**
 - Checksum manifest before Test Mode artifacts: **MAINTAINED**
-- Test Mode fallback receipt: **PENDING USER TEST KEYS**
-- Test Mode SAFE_BLOCK: **PENDING USER TEST KEYS**
-- Real RecoveryProof: **PENDING USER TEST KEYS + HOSTED TEST PAYMENT**
+- Test Mode fallback receipt: **WAITING_FOR_TEST_MODE_CREDENTIALS**
+- Test Mode SAFE_BLOCK: **WAITING_FOR_TEST_MODE_CREDENTIALS**
+- Real RecoveryProof: **WAITING_FOR_TEST_MODE_CREDENTIALS + HOSTED TEST PAYMENT**
 - Final post-Test-Mode checksum freeze: **PENDING FINAL ARTIFACTS**
 - Final `FINAL_VERIFICATION.md`: **PENDING FINAL ARTIFACTS**
 

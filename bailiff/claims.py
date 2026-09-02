@@ -5,7 +5,7 @@ from enum import Enum
 from hashlib import sha256
 import json
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 
 from .hardening import interpreter_ablation
 
@@ -228,11 +228,12 @@ def assert_required_claims(root: str | Path) -> list[ClaimResult]:
     failures = [
         result
         for result in results
-        if result.required_for_release and result.status is not ClaimStatus.HELD
+        if result.status is ClaimStatus.REFUTED
+        or (result.required_for_release and result.status is not ClaimStatus.HELD)
     ]
     if failures:
         summary = ", ".join(f"{item.claim_id}={item.status.value}" for item in failures)
-        raise AssertionError(f"required evidence claims failed: {summary}")
+        raise AssertionError(f"evidence claims failed: {summary}")
     return results
 
 

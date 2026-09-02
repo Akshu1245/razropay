@@ -171,9 +171,12 @@ Stated so it can be checked rather than discovered:
 - If the retry engine leaves beta with per-decision audit artefacts, the
   evidence half of this project is subsumed and only the policy comparison
   harness survives.
-- MandateGuard has never run against live Razorpay APIs. Every result is a
-  synthetic counterfactual over a local simulator, and the input adapter is
-  Razorpay shaped rather than Razorpay connected.
+- The frozen benchmark has never called Razorpay APIs. Every rupee result is a
+  synthetic counterfactual over a synthetic local simulator, and the input
+  adapter is Razorpay shaped rather than Razorpay connected. A separate
+  RecoveryTruth path performs real Razorpay Test Mode reads and a Standard
+  Payment Link fallback when `rzp_test_` keys are supplied; that path is
+  currently WAITING_FOR_TEST_MODE_CREDENTIALS and refuses live keys.
 
 ## Sources
 

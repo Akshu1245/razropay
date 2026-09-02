@@ -62,7 +62,7 @@ A compromised or overconfident interpreter still cannot move a revoked mandate p
 
 ## The real Test Mode proof
 
-The optional RecoveryTruth path uses Razorpay **Test Mode only** and rejects live keys. The concrete execution action is a **Standard Payment Link fallback**. It is customer-initiated and must not be described as an AutoPay retry.
+The optional RecoveryTruth path uses Razorpay **Test Mode only** and rejects live keys. The concrete execution action is a **Standard Payment Link fallback**. It is customer-initiated and must not be described as an AutoPay retry. Current status: **WAITING_FOR_TEST_MODE_CREDENTIALS**. Do not present receipts, Payment IDs, or RecoveryProof until a real Test Mode run exists.
 
 The final evidence bundle must contain exactly these three demonstrations:
 
@@ -109,7 +109,7 @@ Show that harm pricing is an assumption, then show the sensitivity crossover ins
 
 **3:45–4:30 — Test Mode evidence**
 
-Show the real Test Mode fallback receipt, the `SAFE_BLOCK`, and the `RecoveryProof`. Say explicitly: "This is a Standard Payment Link fallback in Test Mode, not an AutoPay retry."
+If status is **WAITING_FOR_TEST_MODE_CREDENTIALS**, do not show invented receipts. Say the offline path is a local simulator, Test Mode is a separate real Razorpay Test Mode path (Standard Payment Link fallback, not AutoPay retry), and evidence is waiting on `rzp_test_` keys. If artifacts exist, show the fallback receipt, the `SAFE_BLOCK`, and the `RecoveryProof`. Say explicitly: "This is a Standard Payment Link fallback in Test Mode, not an AutoPay retry."
 
 **4:30–5:00 — Product fit and close**
 

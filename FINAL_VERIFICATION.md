@@ -1,6 +1,6 @@
 # Final verification record
 
-> **Scope of this record:** this document records the frozen **offline MandateGuard benchmark/archive verification**. It predates the optional RecoveryTruth Razorpay Test Mode execution path. Statements below about no Razorpay API calls refer to that frozen offline proof only. A new final verification record will supersede this one after the credentialed Test Mode fallback, SAFE_BLOCK, and RecoveryProof artifacts are captured.
+> **Scope of this record:** this document records the frozen **offline MandateGuard benchmark/archive verification**. It predates the optional RecoveryTruth Razorpay Test Mode execution path. Statements below about no Razorpay API calls refer to that frozen offline proof only. RecoveryTruth Test Mode evidence is **WAITING_FOR_TEST_MODE_CREDENTIALS**; this record does not contain receipts, Payment IDs, or RecoveryProof. A new final verification record will supersede this one after the credentialed Test Mode fallback, SAFE_BLOCK, and RecoveryProof artifacts are captured.
 
 Everything below was produced by running the commands in this file against
 the packaged archive, not carried forward from an earlier run. Where a number
@@ -279,9 +279,12 @@ These are stated here so a reviewer does not have to discover them.
    the guardrail bound holds against a live model; it is not the benchmark,
    and the default benchmark makes no model calls.
 6. **The three chart PNGs are environment dependent**, as described above.
-7. **There is no Razorpay MCP or live payments integration**, deliberately.
-   The scope is the evaluation and bounded-runtime layer that sits in front
-   of execution.
+7. **There is no Razorpay MCP integration.** This frozen offline archive does
+   not call Razorpay APIs; its provider is a synthetic local simulator.
+   RecoveryTruth's Test Mode path is separate, not claimed as completed here,
+   and is **WAITING_FOR_TEST_MODE_CREDENTIALS**. Production/live payments are
+   not used. The scope of this record is the evaluation and bounded-runtime
+   layer that sits in front of execution.
 8. **The lineage panel cannot show fields this evidence does not carry.**
    Mandate id, scheduled execution id, event creation time, received time and
    freshness are not in the benchmark ledger. They are listed and marked

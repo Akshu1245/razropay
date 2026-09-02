@@ -2,7 +2,7 @@
 
 **MandateGuard compares nine recovery policy arms — including one bounded interpreter arm — head to head on the same frozen scheduled UPI AutoPay failure ledger, executes what each arm is permitted to execute, refuses what its guardrails prohibit, and proves both decisions before anything reaches the provider boundary.**
 
-> **Scope, stated before anything else.** Every number in this repository is a **synthetic counterfactual** over a frozen generated ledger. Provider execution is a **local simulator** — no production money moves and no customer is contacted. Input is a **Razorpay shaped signed test webhook fixture**, not a live Razorpay API call. The default benchmark is **fully deterministic and offline**; the bounded real interpreter is an **optional mode**, and in neither mode can the interpreter authorize a payment action or bypass a guardrail.
+> **Scope, stated before anything else.** Every number in this repository is a **synthetic counterfactual** over a frozen generated ledger. The **offline path** uses a **synthetic local simulator** — it does not talk to Razorpay, no production money moves, and no customer is contacted. Input to that path is a **Razorpay shaped signed test webhook fixture**. The default benchmark is **fully deterministic and offline**; the bounded real interpreter is an **optional mode**, and in neither mode can the interpreter authorize a payment action or bypass a guardrail.
 
 
 > **Optional provider-backed proof.** RecoveryTruth is a separate **Razorpay Test Mode-only** execution path. It performs fresh provider reads, applies a write-time fence, can create a **Standard Payment Link fallback**, reconciles ambiguous writes, and independently verifies the captured payment. It refuses `rzp_live_` credentials. A Payment Link fallback is **not** an AutoPay retry. The frozen benchmark and every rupee figure reported by it remain synthetic.
@@ -59,7 +59,7 @@ A payload that fails verification is never normalised, never diagnosed and never
 
 See [Razorpay's webhook validation docs](https://razorpay.com/docs/webhooks/validate-test/) for the contract this implements.
 
-This is a synthetic benchmark driven through a Razorpay shaped scheduled AutoPay test payload adapter and a local provider simulator. It is not a production collection system, it does not call Razorpay APIs, and it does not claim that simulated results are Razorpay revenue.
+The default benchmark is synthetic: it is driven through a Razorpay-shaped scheduled AutoPay test payload adapter and a **local provider simulator**. That offline path does not call Razorpay APIs and does not claim simulated results as Razorpay revenue. Separately, RecoveryTruth's optional **Razorpay Test Mode** path does perform real Test Mode reads and can create a Standard Payment Link fallback (not an AutoPay retry). See the scope callouts at the top of this README.
 
 ## The headline result
 
@@ -212,7 +212,7 @@ Run the sixty second proof. This is the demo to open a pitch with: one signed Ra
 python3 scripts/demo60.py
 ```
 
-Run the fuller offline evidence demo. It starts with denial, then allowed recovery, explicit ABSTAIN, timeout, and audit tamper proof:
+Run the fuller offline evidence demo. It starts with denial, then allowed recovery, explicit ABSTAIN, timeout, and audit tamper-evident verification (a mutated old event fails the hash chain):
 
 ```bash
 ./scripts/demo.sh
@@ -337,7 +337,7 @@ The contract is therefore drawn where it can be kept. Verification never regener
 
 ## Honest limitations
 
-All outcomes are synthetic. The provider is a local simulator. The input adapter is Razorpay shaped but does not call Razorpay APIs or verify a live account. No production customer is contacted and no real money is moved. The real bounded interpreter path is optional, requires an OpenAI compatible environment, and must be run separately from the deterministic final benchmark. The deterministic offline interpreter remains the reproducible default. External regulatory sources remain at their declared provenance tier until the exact primary circular documents are pinned and hashed.
+The frozen MandateGuard benchmark outcomes are synthetic. In that offline path the provider is a local simulator, the input adapter is Razorpay-shaped, and no Razorpay API is called. No production customer is contacted and no real money is moved. RecoveryTruth is a separate optional path: with `rzp_test_` credentials it performs real Razorpay Test Mode reads and may create a Standard Payment Link fallback; it refuses `rzp_live_` keys and is not an AutoPay retry. That Test Mode evidence is currently **WAITING_FOR_TEST_MODE_CREDENTIALS**. The real bounded interpreter path is optional, requires an OpenAI compatible environment, and must be run separately from the deterministic final benchmark. The deterministic offline interpreter remains the reproducible default. External regulatory sources remain at their declared provenance tier until the exact primary circular documents are pinned and hashed.
 
 The current system is intended for a hackathon proof of bounded recovery policy evaluation. It is not a multi tenant payment service, a collections product, a settlement system, or a replacement for Razorpay recovery features.
 

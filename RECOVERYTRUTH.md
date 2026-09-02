@@ -2,7 +2,7 @@
 
 RecoveryTruth is the provider-execution safety layer that sits **after** MandateGuard's policy decision. It does not replace the nine-arm synthetic benchmark and it does not claim that a Razorpay Payment Link is an AutoPay debit retry.
 
-The default MandateGuard benchmark remains deterministic, offline and simulator-backed. RecoveryTruth adds a separate credentialed **Razorpay Test Mode** demonstration of a bounded, customer-initiated fallback collection action.
+The default MandateGuard benchmark remains deterministic, offline and simulator-backed. RecoveryTruth adds a separate credentialed **Razorpay Test Mode** demonstration of a bounded, customer-initiated fallback collection action. That Test Mode path performs real Razorpay Test Mode reads (not simulator reads) and may create a Standard Payment Link fallback; it is not an AutoPay retry. Current evidence status: **WAITING_FOR_TEST_MODE_CREDENTIALS**.
 
 ## The problem it solves
 

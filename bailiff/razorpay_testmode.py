@@ -5,7 +5,8 @@ from datetime import datetime, timezone
 from hashlib import sha256
 import json
 import os
-from typing import Mapping
+from threading import Lock
+from typing import ClassVar, Mapping
 
 import httpx
 
@@ -23,6 +24,14 @@ class RazorpayTestModeClient:
     base_url: str = "https://api.razorpay.com/v1"
     timeout_seconds: float = 10.0
 
+    # Process-local serialization closes the common double-click/two-thread
+    # race before the provider boundary. It is intentionally not presented as
+    # distributed exactly-once: separate processes can still race, so the
+    # deterministic Razorpay reference_id remains the cross-process fence and
+    # duplicate/ambiguous writes are reconciled by provider lookup below.
+    _reference_locks: ClassVar[dict[str, Lock]] = {}
+    _reference_locks_guard: ClassVar[Lock] = Lock()
+
     @classmethod
     def from_env(cls) -> "RazorpayTestModeClient":
         key_id = os.getenv("RAZORPAY_TEST_KEY_ID", "")
@@ -32,6 +41,15 @@ class RazorpayTestModeClient:
         if not key_id.startswith("rzp_test_"):
             raise RazorpayConfigurationError("RecoveryTruth refuses non-test Razorpay credentials")
         return cls(key_id=key_id, key_secret=key_secret)
+
+    @classmethod
+    def _lock_for_reference(cls, reference_id: str) -> Lock:
+        with cls._reference_locks_guard:
+            lock = cls._reference_locks.get(reference_id)
+            if lock is None:
+                lock = Lock()
+                cls._reference_locks[reference_id] = lock
+            return lock
 
     def _request(self, method: str, path: str, **kwargs: object) -> Mapping[str, object]:
         with httpx.Client(auth=(self.key_id, self.key_secret), timeout=self.timeout_seconds) as client:
@@ -99,43 +117,46 @@ class RazorpayTestModeClient:
     def create_payment_link_once(
         self, *, amount_minor: int, currency: str, reference_id: str, description: str
     ) -> Mapping[str, object]:
-        """Create a customer-initiated fallback collection link exactly once.
+        """Create a customer-initiated fallback collection link exactly once logically.
 
-        This is not an AutoPay debit retry. A deterministic unique reference is
-        used as the provider reconciliation key. Network ambiguity and a
-        concurrent duplicate-reference race are reconciled by lookup before
-        the caller is allowed to consider another provider write.
+        This is not an AutoPay debit retry. Calls for the same reference are
+        serialized inside one process. Across processes, the deterministic
+        unique reference is the provider reconciliation key. Network ambiguity
+        and duplicate-reference races are resolved by lookup before the caller
+        is allowed to consider another provider write.
         """
         if amount_minor <= 0:
             raise ValueError("amount_minor must be positive")
         if currency != "INR":
             raise ValueError("RecoveryTruth Test Mode fallback is INR only")
-        existing = self.find_payment_link_by_reference(reference_id)
-        if existing is not None:
-            return existing
-        payload = {
-            "amount": amount_minor,
-            "currency": currency,
-            "reference_id": reference_id,
-            "description": description,
-            "accept_partial": False,
-            "notify": {"sms": False, "email": False},
-            "reminder_enable": False,
-            "notes": {"recovery_reference": reference_id, "system": "RecoveryTruth"},
-        }
-        try:
-            return self._request("POST", "/payment_links", json=payload)
-        except (httpx.TimeoutException, httpx.NetworkError):
-            reconciled = self.find_payment_link_by_reference(reference_id)
-            if reconciled is not None:
-                return reconciled
-            raise
-        except httpx.HTTPStatusError as exc:
-            if exc.response.status_code in {400, 409}:
+
+        with self._lock_for_reference(reference_id):
+            existing = self.find_payment_link_by_reference(reference_id)
+            if existing is not None:
+                return existing
+            payload = {
+                "amount": amount_minor,
+                "currency": currency,
+                "reference_id": reference_id,
+                "description": description,
+                "accept_partial": False,
+                "notify": {"sms": False, "email": False},
+                "reminder_enable": False,
+                "notes": {"recovery_reference": reference_id, "system": "RecoveryTruth"},
+            }
+            try:
+                return self._request("POST", "/payment_links", json=payload)
+            except (httpx.TimeoutException, httpx.NetworkError):
                 reconciled = self.find_payment_link_by_reference(reference_id)
                 if reconciled is not None:
                     return reconciled
-            raise
+                raise
+            except httpx.HTTPStatusError as exc:
+                if exc.response.status_code in {400, 409}:
+                    reconciled = self.find_payment_link_by_reference(reference_id)
+                    if reconciled is not None:
+                        return reconciled
+                raise
 
     @staticmethod
     def payment_evidence(payment: Mapping[str, object], *, authoritative: bool = True) -> ProviderEvidence:

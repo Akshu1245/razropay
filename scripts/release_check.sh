@@ -49,10 +49,12 @@ sha256sum -c SHA256SUMS.txt >/dev/null
 python3 -m compileall -q bailiff tests scripts
 python3 -m pytest -q
 
-# RecoveryTruth and the hardening gate deliberately sit outside the frozen
-# 283-test benchmark count. The historical offline proof therefore stays
-# stable while new provider/concurrency/claim invariants are still mandatory.
+# RecoveryTruth, security regression and the hardening gate deliberately sit
+# outside the frozen 283-test benchmark count. The historical offline proof
+# therefore stays stable while protected-surface, provider/concurrency and
+# claim invariants are still mandatory in every local release check.
 python3 scripts/recoverytruth_check.py
+python3 scripts/security_regression_check.py
 
 python3 -m bailiff.demo
 rm -rf outputs/demo

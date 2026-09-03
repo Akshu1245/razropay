@@ -116,10 +116,16 @@ def run_experiment(
                 for event in events
             ]
             dataset = _dataset_rows(adapted_events, ledger)
+            # This freezes one regime-and-seed dataset, so its manifest must
+            # record exactly the seed that generated it. The five-seed floor
+            # belongs to the experiment-level protocol, not to a per-dataset
+            # manifest; padding the list with unused seeds to clear that floor
+            # would record false provenance.
             manifest = freeze_dataset(
                 dataset_id=f"{regime}_{seed}",
                 dataset=dataset,
-                seeds=(seed, 2029, 3313, 4157, 5011),
+                seeds=(seed,),
+                minimum_seeds=1,
                 generation_config={"regime": regime, "n_per_seed": n_per_seed, "version": RELEASE_VERSION},
             )
             dataset_hashes[f"{regime}:{seed}"] = manifest.dataset_sha256
@@ -285,10 +291,15 @@ def _metric_integrity_failures(rows: list[dict[str, object]]) -> list[str]:
             pooled[arm] = sum(float(row["protected_value_by_denial_inr"]) for row in arm_rows)
             harm_pooled[arm] = sum(float(row["realized_harm_inr"]) for row in arm_rows)
 
-        gated = {arm: value for arm, value in pooled.items() if arm != "B1"}
-        if len(set(gated.values())) <= 1:
+        # Only the reason-gated arms can reveal the degeneracy. B0 protects
+        # everything by never executing, and B1 and RZP are reason-blind, so
+        # including any of them makes this set unequal on every fixture and
+        # the check can never fire.
+        reason_gated_arms = ("B1.5", "B2.25", "B2.5", "B2.75", "B2", "B3")
+        gated = {arm: pooled[arm] for arm in reason_gated_arms if arm in pooled}
+        if gated and len(set(gated.values())) <= 1:
             failures.append(
-                f"{regime}: protected value by denial is identical for every gated arm "
+                f"{regime}: protected value by denial is identical for every reason-gated arm "
                 f"({next(iter(gated.values()), 0.0)} over {cases} cases); latent harm is "
                 f"degenerate with respect to policy, so reason gating alone captures all harm "
                 f"avoidance by construction"

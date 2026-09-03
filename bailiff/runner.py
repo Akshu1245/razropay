@@ -7,7 +7,7 @@ import json
 from pathlib import Path
 from typing import Iterable
 
-from .benchmark import canonical_json, freeze_dataset
+from .benchmark import canonical_json, freeze_dataset, verify_dataset
 from .checker import self_test
 from .fixtures import REGIMES, generate_fixture
 from .metrics import annotate_runs, summarize_runs, summarize_seed_values
@@ -116,11 +116,17 @@ def run_experiment(
                 for event in events
             ]
             dataset = _dataset_rows(adapted_events, ledger)
+            # Each frozen dataset is one (regime, seed) slice, so its manifest
+            # records exactly that seed. The multi-seed requirement lives at the
+            # experiment level (FINAL_SEEDS and summarize_seed_values), not here;
+            # padding this list with seeds that never generated these rows would
+            # make the manifest lie about its own provenance.
             manifest = freeze_dataset(
                 dataset_id=f"{regime}_{seed}",
                 dataset=dataset,
-                seeds=(seed, 2029, 3313, 4157, 5011),
+                seeds=(seed,),
                 generation_config={"regime": regime, "n_per_seed": n_per_seed, "version": RELEASE_VERSION},
+                minimum_seeds=1,
             )
             dataset_hashes[f"{regime}:{seed}"] = manifest.dataset_sha256
             per_arm: dict[str, list[PolicyRun]] = {}
@@ -150,6 +156,9 @@ def run_experiment(
                 })
                 rows.append(summary)
                 evidence.extend(_event_row(run, ledger.sha256()) for run in per_arm[arm])
+            # Prove no arm mutated the frozen slice it consumed. Freezing a
+            # hash and never re-checking it is a seal without a lock.
+            verify_dataset(dataset=_dataset_rows(adapted_events, ledger), manifest=manifest)
 
     for regime in sorted({str(row["regime"]) for row in rows}):
         for seed in sorted({int(row["seed"]) for row in rows if row["regime"] == regime}):

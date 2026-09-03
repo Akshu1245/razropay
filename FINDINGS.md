@@ -22,6 +22,8 @@ Configured harm multiplier: `1.00` times the amount a prohibited action moved
 | R2_TERMINAL | B1.5 | B1.5 | 1.50x harm | ₹2,536.15 | ₹53,037.05 | ₹0.00 | 0.0250 | 8.90 |
 | R3_AMBIGUOUS | B1.5 | B3 | 1.00x harm | ₹3,016.20 | ₹36,801.25 | ₹0.00 | 0.1205 | 29.10 |
 
+Across every guarded seed-regime run in this release, the full guardrail arms recorded **0 independent violations and 0 runs with realized harm out of 120 runs** (B2 and B3, 20 seeds, 3 regimes). This line is computed from `outputs/per_seed.json` at generation time, not typed.
+
 ## Economic thresholds derived from the run
 
 | Regime | B2 versus B1 break even violation cost | B1 to B1.5 marginal recovery cost per violation avoided | B1.5 to B2 marginal recovery cost per violation avoided |

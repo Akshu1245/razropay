@@ -28,6 +28,10 @@ def mean(aggregate: dict, metric: str) -> float:
 def main() -> int:
     manifest = json.loads((OUTPUTS / "manifest.json").read_text())
     aggregates = json.loads((OUTPUTS / "aggregate.json").read_text())
+    per_seed = json.loads((OUTPUTS / "per_seed.json").read_text())
+    guarded_rows = [row for row in per_seed if row["arm"] in ("B2", "B3")]
+    guarded_violation_runs = sum(1 for row in guarded_rows if float(row["violations"]) != 0.0)
+    guarded_harm_runs = sum(1 for row in guarded_rows if float(row["realized_harm_inr"]) != 0.0)
     analysis = json.loads((OUTPUTS / "breakeven.json").read_text()) if (OUTPUTS / "breakeven.json").exists() else build_economic_analysis(manifest, aggregates)
     sensitivity = json.loads((OUTPUTS / "sensitivity.json").read_text())
     by_key = {(row["regime"], row["arm"]): row for row in aggregates}
@@ -68,6 +72,16 @@ def main() -> int:
             f"{money(mean(b2, 'realized_harm_inr'))} | "
             f"{mean(b3, 'abstention_rate'):.4f} | {mean(b3, 'bounded_interpreter_influence_count'):.2f} |"
         )
+
+    lines.extend(
+        [
+            "",
+            f"Across every guarded seed-regime run in this release, the full guardrail arms recorded "
+            f"**{guarded_violation_runs} independent violations and {guarded_harm_runs} runs with realized harm "
+            f"out of {len(guarded_rows)} runs** (B2 and B3, {len(manifest['seeds'])} seeds, {len(manifest['regimes'])} regimes). "
+            "This line is computed from `outputs/per_seed.json` at generation time, not typed.",
+        ]
+    )
 
     lines.extend(
         [

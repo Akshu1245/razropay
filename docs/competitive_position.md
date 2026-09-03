@@ -160,6 +160,28 @@ and auditable runtime receipts.
 > is not always the profitable one, and it reports the exact price at which
 > that flips. That is the product: the measurement, not the policy.
 
+## The field is converging on money truth; the moat is the write boundary
+
+Stronger late-stage Buildathon entries now also reason about conflicting
+sources, stale events and reconciliation — dedup across webhook and REST
+observation of the same logical transition, guards against a stale capture
+event regressing a refunded payment. That development retires any broad
+claim that other entries merely consume stale webhook truth, and this
+project should not make it.
+
+The distinction that survives is narrower and provable: **RecoveryTruth
+establishes authoritative provider truth immediately before the
+money-changing write and independently proves the exact postcondition
+afterward.** The pre-write fence re-reads the exact Order and Payments at
+the write boundary and blocks on any change; the postcondition is verified
+by an independent fetch of the exact captured Payment; and the refusal side
+carries its own provider-backed proof — in the recorded already-paid case,
+`docs/testmode_evidence/testmode_safe_block_zero_write.json` shows Payment
+Links stayed `0 -> 0`, so the blocked recovery object provably never
+existed at the provider. Proving both the completed round trip and the
+zero-write refusal is the combination not yet demonstrated elsewhere in
+this field's public evidence.
+
 ## Disambiguation from same-named entries
 
 At least one other public Buildathon entry independently chose the name

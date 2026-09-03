@@ -59,7 +59,9 @@ OpenEvolve experiments remain outside the submission safety boundary and are not
 
 ## Judge-facing wording
 
-> **Razorpay already recovers payments. MandateGuard/RecoveryTruth proves whether another recovery action is still financially authorized right now — and proves both the action and the refusal against provider state.**
+> **Razorpay already recovers payments. RecoveryTruth establishes authoritative provider truth immediately before the money-changing write and independently proves the exact postcondition afterward — for the action and for the refusal.**
+
+Do not claim that other entries merely consume stale webhook truth; late-stage entries in this field also reason about conflicting sources and reconciliation. The defensible distinction is narrower and provable: the pre-write fence re-reads the provider at the write boundary, the postcondition is verified by an independent fetch of the exact captured Payment, and the refusal side carries its own provider-backed proof. Say it with the evidence beside it: `docs/testmode_evidence/testmode_safe_block_zero_write.json` shows the already-paid case left Payment Links at `0 -> 0` — the recovery object provably never existed.
 
 Keep these limits explicit:
 

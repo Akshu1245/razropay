@@ -68,6 +68,8 @@ If a judge asks what the controls cost, run `python3 scripts/refusal_regret.py`.
 
 The optional RecoveryTruth path uses Razorpay **Test Mode only** and rejects live keys. The concrete execution action is a **Standard Payment Link fallback**. It is customer-initiated and must not be described as an AutoPay retry. Current status: **VERIFIED_TEST_MODE_EVIDENCE_CAPTURED**. The sanitized evidence bundle in `docs/testmode_evidence/` contains the real fallback receipt, captured-payment RecoveryProof, and already-paid SAFE_BLOCK; present those recorded artifacts and nothing invented beyond them.
 
+Do not say that other entries merely trust stale webhooks — stronger entries in this field also reconcile conflicting sources. The claim that holds is narrower: **RecoveryTruth establishes authoritative provider truth immediately before the money-changing write and independently proves the exact postcondition afterward.** Put the refusal evidence directly beside that sentence: in the already-paid case, `testmode_safe_block_zero_write.json` proves Payment Links stayed `0 -> 0`, so the blocked recovery object never existed at the provider.
+
 The final evidence bundle must contain exactly these three demonstrations:
 
 - a recoverable Test Mode case that creates one fallback receipt;

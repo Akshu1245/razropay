@@ -60,6 +60,10 @@ The AI claim is therefore not "the LLM controls recovery." It is:
 
 A compromised or overconfident interpreter still cannot move a revoked mandate past the guardrail.
 
+If a judge asks whether the AI earns its place, do not argue — run `python3 scripts/interpreter_ablation.py`. It prints B2 against B3 on the same frozen aggregate with the same guardrails, so the only difference on screen is the bounded interpreter, and the delta is whatever it is. Structural isolation is also a test, not a promise: the suite walks the interpreter's import graph and fails if it can ever reach a provider module, and asserts the wire request carries no tools and no credentials.
+
+If a judge asks what the controls cost, run `python3 scripts/refusal_regret.py`. It prints every refusal reason with the recoverable value it forgot and the harm-bearing value it protected, including the rows where a control cost more than it protected.
+
 ## The real Test Mode proof
 
 The optional RecoveryTruth path uses Razorpay **Test Mode only** and rejects live keys. The concrete execution action is a **Standard Payment Link fallback**. It is customer-initiated and must not be described as an AutoPay retry. Current status: **VERIFIED_TEST_MODE_EVIDENCE_CAPTURED**. The sanitized evidence bundle in `docs/testmode_evidence/` contains the real fallback receipt, captured-payment RecoveryProof, and already-paid SAFE_BLOCK; present those recorded artifacts and nothing invented beyond them.

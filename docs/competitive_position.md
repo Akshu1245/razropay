@@ -160,6 +160,20 @@ and auditable runtime receipts.
 > is not always the profitable one, and it reports the exact price at which
 > that flips. That is the product: the measurement, not the policy.
 
+## Disambiguation from same-named entries
+
+At least one other public Buildathon entry independently chose the name
+"MandateGuard" — an unsurprising collision, since mandate plus guard is the
+obvious compound for a UPI AutoPay guardrail project. If a judge has seen two
+MandateGuards, this one is identified by what only it does: nine policy arms
+benchmarked on one frozen, hash-recorded outcome ledger; denials proven by
+zero provider calls rather than described; a mutation-tested verification
+suite; swept price curves instead of a single asserted uplift number; and a
+README whose figures regenerate from committed `outputs/` rather than being
+typed. Any claim in this repository can be recomputed from a clean checkout
+with `./scripts/verify_all.sh`; that reproducibility, not the name, is the
+identity of this project.
+
 ## What would weaken this position
 
 Stated so it can be checked rather than discovered:

@@ -124,6 +124,39 @@ def test_a_redelivered_event_is_authentic_but_must_not_be_processed_twice():
     assert second.reason_code == "DUPLICATE_DELIVERY_IGNORED"
 
 
+def test_a_captured_body_replayed_under_a_fresh_event_id_is_still_a_duplicate():
+    """The HMAC covers only the body, so the event-id header is unauthenticated.
+
+    An attacker who observed one genuine delivery does not need to forge a
+    signature to replay it — only to change the unsigned header id. The same
+    signed bytes are the same event, whatever the header claims.
+    """
+    raw, headers = _delivery(event_id="evt_original")
+    gate = _gate()
+    assert gate.verify(raw_body=raw, headers=headers, received_at=NOW).should_process
+    replayed = dict(headers)
+    replayed[EVENT_ID_HEADER] = "evt_attacker_minted"
+    second = gate.verify(raw_body=raw, headers=replayed, received_at=NOW + timedelta(minutes=2))
+    assert second.accepted
+    assert second.duplicate
+    assert not second.should_process
+    assert second.reason_code == "DUPLICATE_DELIVERY_IGNORED"
+
+
+def test_a_non_ascii_signature_header_is_a_mismatch_not_a_crash():
+    """`hmac.compare_digest` raises TypeError on non-ASCII str input.
+
+    The header is attacker controlled, and the gate's contract is that no
+    untrusted payload can crash it, so a non-ASCII signature must land on the
+    ordinary mismatch path.
+    """
+    raw, headers = _delivery(event_id="evt_non_ascii")
+    headers[SIGNATURE_HEADER] = "sig\u00ff\u0100nature"
+    verdict = _gate().verify(raw_body=raw, headers=headers, received_at=NOW)
+    assert not verdict.accepted
+    assert verdict.reason_code == "SIGNATURE_MISMATCH"
+
+
 def test_a_delivery_without_an_event_id_cannot_be_deduplicated_and_is_refused():
     raw, headers = _delivery()
     headers.pop(EVENT_ID_HEADER)
@@ -281,6 +314,32 @@ def test_nothing_is_actionable_after_the_subscription_has_ended():
     assert verdict.accepted
     assert verdict.superseded
     assert verdict.reason_code == "SUPERSEDED_BY_TERMINAL_EVENT"
+
+
+def test_an_out_of_order_cancellation_still_closes_the_subscription():
+    """A cancellation that lost a delivery race is still a cancellation.
+
+    Order is taken from `created_at`, so a cancellation stamped earlier than
+    an already-seen event is superseded as an *action* — but its terminal
+    fact must still be recorded, or every later failure on that subscription
+    stays actionable against a mandate the customer ended.
+    """
+    gate = _gate()
+    assert gate.verify(
+        **_ordered("payment.failed", created_at=NOW + timedelta(hours=1), event_id="e_newer_failure"),
+        received_at=NOW + timedelta(hours=1),
+    ).should_process
+    late_cancel = gate.verify(
+        **_ordered("subscription.cancelled", created_at=NOW, event_id="e_late_cancel"),
+        received_at=NOW + timedelta(hours=1, minutes=5),
+    )
+    assert late_cancel.accepted and not late_cancel.should_process
+    after = gate.verify(
+        **_ordered("payment.failed", created_at=NOW + timedelta(hours=2), event_id="e_after_cancel"),
+        received_at=NOW + timedelta(hours=2),
+    )
+    assert not after.should_process
+    assert after.reason_code == "SUPERSEDED_BY_TERMINAL_EVENT"
 
 
 @pytest.mark.parametrize("permanent", ["subscription.cancelled", "subscription.completed"])

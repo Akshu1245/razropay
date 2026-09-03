@@ -48,6 +48,7 @@ def setup_function(_):
     # WEBHOOK_GATE is a module level singleton so state (seen event ids,
     # per-subscription clocks) persists across tests unless cleared.
     WEBHOOK_GATE._seen_event_ids.clear()
+    WEBHOOK_GATE._seen_body_hashes.clear()
     WEBHOOK_GATE._rejections.clear()
     WEBHOOK_GATE._subscription_clock.clear()
     WEBHOOK_GATE._ended_subscriptions.clear()
@@ -102,6 +103,33 @@ def test_a_verified_revoked_mandate_failure_is_denied_with_zero_provider_calls()
     payload["event"] = "payment.failed"
     payload["created_at"] = int(time.time())
     response = _post(payload, event_id="e_deny")
+    assert response.status_code == 200
+    decision = response.json()["decision"]
+    assert decision["decision"] == "stop"
+    assert decision["provider_call_made"] is False
+    assert decision["provider_call_count"] == 0
+
+
+def test_a_provider_signalled_terminal_failure_is_not_retried_even_when_state_lags():
+    """The route must gate on the diagnosed reason, not only the state field.
+
+    A mandate the customer revoked can arrive with `mandate_state` still
+    reading `active` because the caller's record lags the provider's. The
+    benchmark B2 arm stops on the normalized terminal reason; the route runs
+    the same policy, so it must stop here too — this exact seam once
+    hardcoded a retry proposal and dropped the arm's reason gating entirely.
+    """
+    raw_event = _raw_event(
+        "http_terminal_reason",
+        attempt_count=1,
+        failure_code="U31",
+        description="mandate revoked by customer",
+        normalized_reason="MANDATE_REVOKED_OR_CANCELLED",
+    )
+    payload = to_razorpay_test_payload(raw_event)
+    payload["event"] = "payment.failed"
+    payload["created_at"] = int(time.time())
+    response = _post(payload, event_id="e_terminal_reason")
     assert response.status_code == 200
     decision = response.json()["decision"]
     assert decision["decision"] == "stop"

@@ -1,5 +1,11 @@
 from __future__ import annotations
 
+if not __debug__:
+    raise SystemExit(
+        "this release gate is built on assert statements; running it with "
+        "PYTHONOPTIMIZE or -O would silently disable every check"
+    )
+
 from contextlib import contextmanager
 from datetime import datetime, timedelta, timezone
 import os
@@ -175,6 +181,7 @@ class StubRazorpayClient(RazorpayTestModeClient):
                 "accept_partial": payload["accept_partial"],
                 "status": "created",
                 "payments": None,
+                "notes": dict(payload["notes"]),
             }
             request = httpx.Request("POST", "https://api.razorpay.com/v1/payment_links")
             if self.post_mode == "timeout_after_create":
@@ -199,12 +206,18 @@ class StubRazorpayClient(RazorpayTestModeClient):
                 ]
             return link
         if method == "GET" and path == "/payments/pay_captured_1":
+            # Razorpay propagates the notes set at Payment Link creation onto
+            # the payment made through the link; the recovery reference on the
+            # payment is how capture verification binds without injecting the
+            # expectation into its own check.
+            assert self.link is not None
             return {
                 "id": "pay_captured_1",
                 "order_id": None,
                 "amount": 1000,
                 "currency": "INR",
                 "status": "captured",
+                "notes": dict(self.link.get("notes", {})),
             }
         raise AssertionError(f"unexpected adapter request: {method} {path} {kwargs}")
 

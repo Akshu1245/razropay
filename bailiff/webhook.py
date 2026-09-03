@@ -133,6 +133,10 @@ class WebhookGate:
     secrets: tuple[str, ...]
     max_age: timedelta = DEFAULT_MAX_AGE
     _seen_event_ids: set[str] = field(default_factory=set)
+    # The HMAC covers only the body, so the event-id header is not
+    # authenticated: a captured delivery replayed under a fresh header id is
+    # the same signed bytes. Dedup therefore also keys on the body hash.
+    _seen_body_hashes: set[str] = field(default_factory=set)
     _rejections: list[dict[str, object]] = field(default_factory=list)
     # Highest `created_at` observed per subscription, the subscriptions known
     # to have permanently ended, and the subscriptions currently blocked by a
@@ -162,9 +166,17 @@ class WebhookGate:
         comparison does not leak, through its timing, how many leading
         characters of the signature were correct.
         """
+        try:
+            # A hex digest is always ASCII. `hmac.compare_digest` raises
+            # TypeError on a non-ASCII str argument, and the header is
+            # attacker controlled, so a non-ASCII signature must be an
+            # ordinary mismatch rather than an unhandled exception.
+            signature_bytes = signature.encode("ascii")
+        except UnicodeEncodeError:
+            return None
         for index, secret in enumerate(self.secrets):
-            candidate = self.expected_signature(raw_body, secret)
-            if hmac.compare_digest(candidate, signature):
+            candidate = self.expected_signature(raw_body, secret).encode("ascii")
+            if hmac.compare_digest(candidate, signature_bytes):
                 return "current" if index == 0 else f"previous_{index}"
         return None
 
@@ -219,8 +231,10 @@ class WebhookGate:
         if stale is not None:
             return self._reject(stale, event_id, raw_body)
 
-        duplicate = event_id in self._seen_event_ids
+        body_hash = sha256(raw_body).hexdigest()
+        duplicate = event_id in self._seen_event_ids or body_hash in self._seen_body_hashes
         self._seen_event_ids.add(event_id)
+        self._seen_body_hashes.add(body_hash)
 
         event_name = str(parsed.get("event")) if parsed.get("event") else None
         subscription_id = _subscription_id(parsed)
@@ -241,7 +255,7 @@ class WebhookGate:
             event_name=event_name,
             duplicate=duplicate,
             secret_generation=generation,
-            body_sha256=sha256(raw_body).hexdigest(),
+            body_sha256=body_hash,
             subscription_id=subscription_id,
             superseded=superseded_reason is not None,
         )
@@ -289,16 +303,25 @@ class WebhookGate:
         except (TypeError, ValueError):
             stamp = None
 
+        superseded = False
         if stamp is not None:
             latest = self._subscription_clock.get(subscription_id)
             if latest is not None and stamp < latest:
-                return "SUPERSEDED_BY_NEWER_EVENT"
-            if latest is None or stamp >= latest:
+                superseded = True
+            if not superseded:
                 self._subscription_clock[subscription_id] = stamp
 
+        # A permanent ending closes the subscription no matter where it lands
+        # in the delivery order: an out-of-order cancellation is still a
+        # cancellation, and nothing that arrives later may reopen it. The
+        # reversible pause/resume pair, by contrast, stays strictly ordered —
+        # applying a superseded pause or resume would let an older event
+        # overrule a newer one.
         if event_name in PERMANENTLY_ENDED_EVENTS:
             self._ended_subscriptions.add(subscription_id)
-        elif event_name in RETRY_BLOCKING_EVENTS:
+        if superseded:
+            return "SUPERSEDED_BY_NEWER_EVENT"
+        if event_name in RETRY_BLOCKING_EVENTS:
             self._blocked_subscriptions.add(subscription_id)
         elif event_name == RESUME_EVENT:
             self._blocked_subscriptions.discard(subscription_id)

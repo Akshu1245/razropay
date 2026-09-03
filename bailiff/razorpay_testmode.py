@@ -24,6 +24,13 @@ class RazorpayTestModeClient:
     base_url: str = "https://api.razorpay.com/v1"
     timeout_seconds: float = 10.0
 
+    def __post_init__(self) -> None:
+        # The live-credential refusal must be structural, not a property of
+        # one factory: a caller constructing the client directly gets the
+        # same boundary as `from_env`.
+        if not self.key_id.startswith("rzp_test_"):
+            raise RazorpayConfigurationError("RecoveryTruth refuses non-test Razorpay credentials")
+
     # Process-local serialization closes the common double-click/two-thread
     # race before the provider boundary. It is intentionally not presented as
     # distributed exactly-once: separate processes can still race, so the
@@ -259,10 +266,12 @@ class RazorpayTestModeClient:
 
         provider_payment = dict(self.fetch_payment(payment_id))
         payment_raw_hash = self._raw_hash(provider_payment)
-        bound_payment = dict(provider_payment)
-        bound_payment["reference_id"] = expected_reference_id
+        # The payment must carry the recovery reference itself, via the notes
+        # Razorpay propagates from the link at creation. Injecting the
+        # expected reference here before verifying it would turn the
+        # reference check into a comparison of the expectation with itself.
         proof = verify_captured_payment(
-            bound_payment,
+            provider_payment,
             expected_amount_minor=expected_amount_minor,
             expected_currency=expected_currency,
             expected_reference_id=expected_reference_id,

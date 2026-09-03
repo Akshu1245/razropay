@@ -10,6 +10,7 @@ from bailiff.fixtures import generate_fixture
 from bailiff.interpreter import InterpreterOutput, RealBoundedInterpreter
 from bailiff.policies import run_policy_case
 from bailiff.razorpay_adapter import RazorpayPayloadError, normalize_razorpay_autopay_payload, to_razorpay_test_payload
+from bailiff.razorpay_testmode import RazorpayConfigurationError, RazorpayTestModeClient
 from bailiff.replay import CommonOutcomeLedger
 
 
@@ -74,6 +75,23 @@ def test_razorpay_adapter_rejects_non_inr_payload():
     payload["payload"]["payment"]["entity"]["currency"] = "USD"
     with pytest.raises(RazorpayPayloadError, match="INR"):
         normalize_razorpay_autopay_payload(payload)
+
+
+@pytest.mark.parametrize("key_id", ["rzp_live_abc123", "rzp_partner_abc", ""])
+def test_testmode_client_refuses_non_test_credentials_at_construction(key_id):
+    """The live-key refusal is structural, not a property of one factory.
+
+    `from_env` already refuses non-test keys; a caller constructing the
+    client directly must hit the same boundary, or the refusal is only as
+    strong as the discipline of whoever writes the next call site.
+    """
+    with pytest.raises(RazorpayConfigurationError):
+        RazorpayTestModeClient(key_id=key_id, key_secret="secret")
+
+
+def test_testmode_client_accepts_test_credentials_at_construction():
+    client = RazorpayTestModeClient(key_id="rzp_test_abc123", key_secret="secret")
+    assert client.key_id.startswith("rzp_test_")
 
 
 def test_real_interpreter_uses_schema_and_returns_cost_metadata():

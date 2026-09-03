@@ -15,7 +15,16 @@ from .domain import ActionType, AuthorityEnvelope, CommonOutcome
 from .fixtures import REGIMES, generate_fixture
 from .guardrails import AuditChain, EvaluationContext, GuardrailEngine
 from .metrics import annotate_runs, summarize_runs
-from .policies import ARM_ORDER, CANONICAL_ARM_ORDER, PolicyRun, bounded_interpreter_diagnosis, default_policy, run_policy_case
+from .policies import (
+    ARM_ORDER,
+    CANONICAL_ARM_ORDER,
+    PolicyRun,
+    bounded_interpreter_diagnosis,
+    default_policy,
+    deterministic_diagnosis,
+    proposed_action,
+    run_policy_case,
+)
 from .replay import CommonOutcomeLedger, ReplayProvider
 from .runner import _dataset_rows, _event_row, aggregate_rows
 from .rules import RuleCatalog
@@ -366,13 +375,19 @@ def _decide_and_execute(event) -> dict[str, object]:
         consent_snapshot_hash="sha256:webhook-consent",
         expires_at=datetime.now(timezone.utc) + timedelta(hours=1),
     )
+    # The proposal must come from the same B2 reason gate the benchmark arm
+    # uses. Hardcoding SCHEDULE_RETRY here once dropped the arm's reason
+    # gating entirely: a provider-signalled terminal failure whose
+    # mandate_state field lagged behind was retried by this route while the
+    # benchmark B2 arm refused it.
+    diagnosed_reason, confidence = deterministic_diagnosis(event)
     context = EvaluationContext(
         event=event,
         policy=policy,
-        proposed_action=ActionType.SCHEDULE_RETRY,
+        proposed_action=proposed_action("B2", diagnosed_reason, attempt_count=event.attempt_count),
         authority=authority,
-        diagnosed_reason=event.normalized_failure_reason,
-        confidence=0.95,
+        diagnosed_reason=diagnosed_reason,
+        confidence=confidence,
     )
     decision = engine.evaluate(context)
     result = engine.execute(context=context, decision=decision)

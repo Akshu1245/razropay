@@ -8,7 +8,7 @@ MandateGuard compares bounded recovery policies on the same deterministic schedu
 
 There is no single recommended arm, because the ordering depends entirely on what a prohibited action is assumed to cost. Two pricings are reported. The flat pricing charges a fixed sum per detected breach. The harm pricing charges the money the prohibited action actually moved. The crossover between them is reported rather than hidden, so a reader who disagrees with the project assumption can read their own answer off the swept curve in `outputs/report.md`.
 
-Manifest dataset hash: `725a38d6ffdcadf0ea33fdb81d94b7fa9e7f11de296b86a42188f6153dbed0f7`
+Manifest dataset hash: `8fa596c74ef546beb0ef09bfec885a3509b34af479987b777a429a15bc776bf6`
 Rules hash: `70e2909d26598695f74ae9e4d5c81dabb4c772d1f6d376d6567923cdc8a52506`
 Seeds: `20`
 Cases per seed and regime: `100`
@@ -34,7 +34,7 @@ Configured harm multiplier: `1.00` times the amount a prohibited action moved
 
 A recommendation is conditional, not universal. Changing the violation cost, harm multiplier, human review cost, model cost, fixture regime, or policy rules can change the recommended arm, and the swept curves show exactly where it changes. The intermediate arms are diagnostic relaxations that expose where recovery and safety trade off. They are not presented as production safe defaults.
 
-The honest reading of the tables above is that guardrails do not pay for themselves at every price. Under a flat per breach charge at the configured value, reason gating alone is competitive, because a flat charge is indifferent to the size of the debit it is pricing. The guarded arms win once a prohibited action is charged the money it actually moved. That crossover is the substantive claim, and it is stated as a threshold rather than as a verdict.
+The honest reading of the tables above is that guardrails do not pay for themselves at every price. Under a flat per breach charge at the configured value, reason gating alone is competitive, because a flat charge is indifferent to the size of the debit it is pricing. The guarded arms overtake reason gating as a prohibited action approaches being charged the money it actually moved; the per regime crossover multiplier is in the table above and not every regime crosses at 1.0x. That crossover is the substantive claim, and it is stated as a threshold rather than as a verdict.
 
 The latent harm model is the load bearing assumption. Compliance exposure is drawn independently of the failure reason, so an arm that reads only the reason code cannot capture harm avoidance by construction. An earlier revision of this benchmark did make harm a pure function of the reason code, which guaranteed that reason gating would win before any policy ran. `scripts/check_release.py` now rejects that shape of fixture.
 

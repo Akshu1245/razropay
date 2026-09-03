@@ -3,7 +3,7 @@
 > All amounts below are simulated counterfactuals from the frozen ledger, not production revenue.
 > Violation and human review costs are configurable project assumptions, not Razorpay or NPCI pricing.
 
-Manifest: `725a38d6ffdcadf0ea33fdb81d94b7fa9e7f11de296b86a42188f6153dbed0f7`
+Manifest: `cbf161e2c06c35682b696e2d3bb50c54b27c35ad28aae7a63e85bb9343ef5b4e`
 Seeds: `20`
 Cases per seed and regime: `100`
 Configured violation cost: `₹50.00` per independent violation

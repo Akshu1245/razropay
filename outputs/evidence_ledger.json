@@ -692,7 +692,7 @@
     "final_action": null,
     "ledger_sha256": "e25dead4b1faae34f6d733cecac4d1b1c904d20c33bc51201b4aa1d4f04cccc3",
     "legitimate_recovery_forgone_inr": 0.0,
-    "normalized_failure_reason": "INSUFFICIENT_FUNDS",
+    "normalized_failure_reason": "UNKNOWN_OR_CONFLICTING",
     "policy_id": "pid_b0",
     "policy_provenance": {
       "amount_review_threshold_minor": "PROJECT_POLICY:Experiment authority policy",
@@ -1308,7 +1308,7 @@
     "final_action": null,
     "ledger_sha256": "e25dead4b1faae34f6d733cecac4d1b1c904d20c33bc51201b4aa1d4f04cccc3",
     "legitimate_recovery_forgone_inr": 499.0,
-    "normalized_failure_reason": "MANDATE_REVOKED_OR_CANCELLED",
+    "normalized_failure_reason": "UNKNOWN_OR_CONFLICTING",
     "policy_id": "pid_b0",
     "policy_provenance": {
       "amount_review_threshold_minor": "PROJECT_POLICY:Experiment authority policy",
@@ -1756,7 +1756,7 @@
     "final_action": null,
     "ledger_sha256": "e25dead4b1faae34f6d733cecac4d1b1c904d20c33bc51201b4aa1d4f04cccc3",
     "legitimate_recovery_forgone_inr": 499.0,
-    "normalized_failure_reason": "INSUFFICIENT_FUNDS",
+    "normalized_failure_reason": "UNKNOWN_OR_CONFLICTING",
     "policy_id": "pid_b0",
     "policy_provenance": {
       "amount_review_threshold_minor": "PROJECT_POLICY:Experiment authority policy",
@@ -1868,7 +1868,7 @@
     "final_action": null,
     "ledger_sha256": "e25dead4b1faae34f6d733cecac4d1b1c904d20c33bc51201b4aa1d4f04cccc3",
     "legitimate_recovery_forgone_inr": 2499.0,
-    "normalized_failure_reason": "INSUFFICIENT_FUNDS",
+    "normalized_failure_reason": "UNKNOWN_OR_CONFLICTING",
     "policy_id": "pid_b0",
     "policy_provenance": {
       "amount_review_threshold_minor": "PROJECT_POLICY:Experiment authority policy",
@@ -2260,7 +2260,7 @@
     "final_action": null,
     "ledger_sha256": "e25dead4b1faae34f6d733cecac4d1b1c904d20c33bc51201b4aa1d4f04cccc3",
     "legitimate_recovery_forgone_inr": 199.0,
-    "normalized_failure_reason": "INSUFFICIENT_FUNDS",
+    "normalized_failure_reason": "UNKNOWN_OR_CONFLICTING",
     "policy_id": "pid_b0",
     "policy_provenance": {
       "amount_review_threshold_minor": "PROJECT_POLICY:Experiment authority policy",
@@ -2540,7 +2540,7 @@
     "final_action": null,
     "ledger_sha256": "e25dead4b1faae34f6d733cecac4d1b1c904d20c33bc51201b4aa1d4f04cccc3",
     "legitimate_recovery_forgone_inr": 2499.0,
-    "normalized_failure_reason": "MANDATE_REVOKED_OR_CANCELLED",
+    "normalized_failure_reason": "UNKNOWN_OR_CONFLICTING",
     "policy_id": "pid_b0",
     "policy_provenance": {
       "amount_review_threshold_minor": "PROJECT_POLICY:Experiment authority policy",
@@ -5004,7 +5004,7 @@
     "final_action": null,
     "ledger_sha256": "e25dead4b1faae34f6d733cecac4d1b1c904d20c33bc51201b4aa1d4f04cccc3",
     "legitimate_recovery_forgone_inr": 2499.0,
-    "normalized_failure_reason": "MANDATE_REVOKED_OR_CANCELLED",
+    "normalized_failure_reason": "UNKNOWN_OR_CONFLICTING",
     "policy_id": "pid_b0",
     "policy_provenance": {
       "amount_review_threshold_minor": "PROJECT_POLICY:Experiment authority policy",
@@ -5116,7 +5116,7 @@
     "final_action": null,
     "ledger_sha256": "e25dead4b1faae34f6d733cecac4d1b1c904d20c33bc51201b4aa1d4f04cccc3",
     "legitimate_recovery_forgone_inr": 999.0,
-    "normalized_failure_reason": "MANDATE_REVOKED_OR_CANCELLED",
+    "normalized_failure_reason": "UNKNOWN_OR_CONFLICTING",
     "policy_id": "pid_b0",
     "policy_provenance": {
       "amount_review_threshold_minor": "PROJECT_POLICY:Experiment authority policy",
@@ -6292,7 +6292,7 @@
     "final_action": "schedule_retry",
     "ledger_sha256": "e25dead4b1faae34f6d733cecac4d1b1c904d20c33bc51201b4aa1d4f04cccc3",
     "legitimate_recovery_forgone_inr": 0.0,
-    "normalized_failure_reason": "INSUFFICIENT_FUNDS",
+    "normalized_failure_reason": "UNKNOWN_OR_CONFLICTING",
     "policy_id": "pid_b1",
     "policy_provenance": {
       "amount_review_threshold_minor": "PROJECT_POLICY:Experiment authority policy",
@@ -6908,7 +6908,7 @@
     "final_action": "schedule_retry",
     "ledger_sha256": "e25dead4b1faae34f6d733cecac4d1b1c904d20c33bc51201b4aa1d4f04cccc3",
     "legitimate_recovery_forgone_inr": 0.0,
-    "normalized_failure_reason": "MANDATE_REVOKED_OR_CANCELLED",
+    "normalized_failure_reason": "UNKNOWN_OR_CONFLICTING",
     "policy_id": "pid_b1",
     "policy_provenance": {
       "amount_review_threshold_minor": "PROJECT_POLICY:Experiment authority policy",
@@ -7356,7 +7356,7 @@
     "final_action": "schedule_retry",
     "ledger_sha256": "e25dead4b1faae34f6d733cecac4d1b1c904d20c33bc51201b4aa1d4f04cccc3",
     "legitimate_recovery_forgone_inr": 0.0,
-    "normalized_failure_reason": "INSUFFICIENT_FUNDS",
+    "normalized_failure_reason": "UNKNOWN_OR_CONFLICTING",
     "policy_id": "pid_b1",
     "policy_provenance": {
       "amount_review_threshold_minor": "PROJECT_POLICY:Experiment authority policy",
@@ -7468,7 +7468,7 @@
     "final_action": "schedule_retry",
     "ledger_sha256": "e25dead4b1faae34f6d733cecac4d1b1c904d20c33bc51201b4aa1d4f04cccc3",
     "legitimate_recovery_forgone_inr": 0.0,
-    "normalized_failure_reason": "INSUFFICIENT_FUNDS",
+    "normalized_failure_reason": "UNKNOWN_OR_CONFLICTING",
     "policy_id": "pid_b1",
     "policy_provenance": {
       "amount_review_threshold_minor": "PROJECT_POLICY:Experiment authority policy",
@@ -7860,7 +7860,7 @@
     "final_action": "schedule_retry",
     "ledger_sha256": "e25dead4b1faae34f6d733cecac4d1b1c904d20c33bc51201b4aa1d4f04cccc3",
     "legitimate_recovery_forgone_inr": 0.0,
-    "normalized_failure_reason": "INSUFFICIENT_FUNDS",
+    "normalized_failure_reason": "UNKNOWN_OR_CONFLICTING",
     "policy_id": "pid_b1",
     "policy_provenance": {
       "amount_review_threshold_minor": "PROJECT_POLICY:Experiment authority policy",
@@ -8140,7 +8140,7 @@
     "final_action": "schedule_retry",
     "ledger_sha256": "e25dead4b1faae34f6d733cecac4d1b1c904d20c33bc51201b4aa1d4f04cccc3",
     "legitimate_recovery_forgone_inr": 0.0,
-    "normalized_failure_reason": "MANDATE_REVOKED_OR_CANCELLED",
+    "normalized_failure_reason": "UNKNOWN_OR_CONFLICTING",
     "policy_id": "pid_b1",
     "policy_provenance": {
       "amount_review_threshold_minor": "PROJECT_POLICY:Experiment authority policy",
@@ -10604,7 +10604,7 @@
     "final_action": "schedule_retry",
     "ledger_sha256": "e25dead4b1faae34f6d733cecac4d1b1c904d20c33bc51201b4aa1d4f04cccc3",
     "legitimate_recovery_forgone_inr": 0.0,
-    "normalized_failure_reason": "MANDATE_REVOKED_OR_CANCELLED",
+    "normalized_failure_reason": "UNKNOWN_OR_CONFLICTING",
     "policy_id": "pid_b1",
     "policy_provenance": {
       "amount_review_threshold_minor": "PROJECT_POLICY:Experiment authority policy",
@@ -10716,7 +10716,7 @@
     "final_action": "schedule_retry",
     "ledger_sha256": "e25dead4b1faae34f6d733cecac4d1b1c904d20c33bc51201b4aa1d4f04cccc3",
     "legitimate_recovery_forgone_inr": 0.0,
-    "normalized_failure_reason": "MANDATE_REVOKED_OR_CANCELLED",
+    "normalized_failure_reason": "UNKNOWN_OR_CONFLICTING",
     "policy_id": "pid_b1",
     "policy_provenance": {
       "amount_review_threshold_minor": "PROJECT_POLICY:Experiment authority policy",
@@ -11892,7 +11892,7 @@
     "final_action": null,
     "ledger_sha256": "e25dead4b1faae34f6d733cecac4d1b1c904d20c33bc51201b4aa1d4f04cccc3",
     "legitimate_recovery_forgone_inr": 0.0,
-    "normalized_failure_reason": "INSUFFICIENT_FUNDS",
+    "normalized_failure_reason": "UNKNOWN_OR_CONFLICTING",
     "policy_id": "pid_b1_5",
     "policy_provenance": {
       "amount_review_threshold_minor": "PROJECT_POLICY:Experiment authority policy",
@@ -12508,7 +12508,7 @@
     "final_action": null,
     "ledger_sha256": "e25dead4b1faae34f6d733cecac4d1b1c904d20c33bc51201b4aa1d4f04cccc3",
     "legitimate_recovery_forgone_inr": 499.0,
-    "normalized_failure_reason": "MANDATE_REVOKED_OR_CANCELLED",
+    "normalized_failure_reason": "UNKNOWN_OR_CONFLICTING",
     "policy_id": "pid_b1_5",
     "policy_provenance": {
       "amount_review_threshold_minor": "PROJECT_POLICY:Experiment authority policy",
@@ -12956,7 +12956,7 @@
     "final_action": null,
     "ledger_sha256": "e25dead4b1faae34f6d733cecac4d1b1c904d20c33bc51201b4aa1d4f04cccc3",
     "legitimate_recovery_forgone_inr": 499.0,
-    "normalized_failure_reason": "INSUFFICIENT_FUNDS",
+    "normalized_failure_reason": "UNKNOWN_OR_CONFLICTING",
     "policy_id": "pid_b1_5",
     "policy_provenance": {
       "amount_review_threshold_minor": "PROJECT_POLICY:Experiment authority policy",
@@ -13068,7 +13068,7 @@
     "final_action": null,
     "ledger_sha256": "e25dead4b1faae34f6d733cecac4d1b1c904d20c33bc51201b4aa1d4f04cccc3",
     "legitimate_recovery_forgone_inr": 2499.0,
-    "normalized_failure_reason": "INSUFFICIENT_FUNDS",
+    "normalized_failure_reason": "UNKNOWN_OR_CONFLICTING",
     "policy_id": "pid_b1_5",
     "policy_provenance": {
       "amount_review_threshold_minor": "PROJECT_POLICY:Experiment authority policy",
@@ -13460,7 +13460,7 @@
     "final_action": null,
     "ledger_sha256": "e25dead4b1faae34f6d733cecac4d1b1c904d20c33bc51201b4aa1d4f04cccc3",
     "legitimate_recovery_forgone_inr": 199.0,
-    "normalized_failure_reason": "INSUFFICIENT_FUNDS",
+    "normalized_failure_reason": "UNKNOWN_OR_CONFLICTING",
     "policy_id": "pid_b1_5",
     "policy_provenance": {
       "amount_review_threshold_minor": "PROJECT_POLICY:Experiment authority policy",
@@ -13740,7 +13740,7 @@
     "final_action": null,
     "ledger_sha256": "e25dead4b1faae34f6d733cecac4d1b1c904d20c33bc51201b4aa1d4f04cccc3",
     "legitimate_recovery_forgone_inr": 2499.0,
-    "normalized_failure_reason": "MANDATE_REVOKED_OR_CANCELLED",
+    "normalized_failure_reason": "UNKNOWN_OR_CONFLICTING",
     "policy_id": "pid_b1_5",
     "policy_provenance": {
       "amount_review_threshold_minor": "PROJECT_POLICY:Experiment authority policy",
@@ -16204,7 +16204,7 @@
     "final_action": null,
     "ledger_sha256": "e25dead4b1faae34f6d733cecac4d1b1c904d20c33bc51201b4aa1d4f04cccc3",
     "legitimate_recovery_forgone_inr": 2499.0,
-    "normalized_failure_reason": "MANDATE_REVOKED_OR_CANCELLED",
+    "normalized_failure_reason": "UNKNOWN_OR_CONFLICTING",
     "policy_id": "pid_b1_5",
     "policy_provenance": {
       "amount_review_threshold_minor": "PROJECT_POLICY:Experiment authority policy",
@@ -16316,7 +16316,7 @@
     "final_action": null,
     "ledger_sha256": "e25dead4b1faae34f6d733cecac4d1b1c904d20c33bc51201b4aa1d4f04cccc3",
     "legitimate_recovery_forgone_inr": 999.0,
-    "normalized_failure_reason": "MANDATE_REVOKED_OR_CANCELLED",
+    "normalized_failure_reason": "UNKNOWN_OR_CONFLICTING",
     "policy_id": "pid_b1_5",
     "policy_provenance": {
       "amount_review_threshold_minor": "PROJECT_POLICY:Experiment authority policy",
@@ -17492,7 +17492,7 @@
     "final_action": "schedule_retry",
     "ledger_sha256": "e25dead4b1faae34f6d733cecac4d1b1c904d20c33bc51201b4aa1d4f04cccc3",
     "legitimate_recovery_forgone_inr": 0.0,
-    "normalized_failure_reason": "INSUFFICIENT_FUNDS",
+    "normalized_failure_reason": "UNKNOWN_OR_CONFLICTING",
     "policy_id": "pid_rzp",
     "policy_provenance": {
       "amount_review_threshold_minor": "PROJECT_POLICY:Experiment authority policy",
@@ -18108,7 +18108,7 @@
     "final_action": "schedule_retry",
     "ledger_sha256": "e25dead4b1faae34f6d733cecac4d1b1c904d20c33bc51201b4aa1d4f04cccc3",
     "legitimate_recovery_forgone_inr": 0.0,
-    "normalized_failure_reason": "MANDATE_REVOKED_OR_CANCELLED",
+    "normalized_failure_reason": "UNKNOWN_OR_CONFLICTING",
     "policy_id": "pid_rzp",
     "policy_provenance": {
       "amount_review_threshold_minor": "PROJECT_POLICY:Experiment authority policy",
@@ -18556,7 +18556,7 @@
     "final_action": "schedule_retry",
     "ledger_sha256": "e25dead4b1faae34f6d733cecac4d1b1c904d20c33bc51201b4aa1d4f04cccc3",
     "legitimate_recovery_forgone_inr": 0.0,
-    "normalized_failure_reason": "INSUFFICIENT_FUNDS",
+    "normalized_failure_reason": "UNKNOWN_OR_CONFLICTING",
     "policy_id": "pid_rzp",
     "policy_provenance": {
       "amount_review_threshold_minor": "PROJECT_POLICY:Experiment authority policy",
@@ -18668,7 +18668,7 @@
     "final_action": "schedule_retry",
     "ledger_sha256": "e25dead4b1faae34f6d733cecac4d1b1c904d20c33bc51201b4aa1d4f04cccc3",
     "legitimate_recovery_forgone_inr": 0.0,
-    "normalized_failure_reason": "INSUFFICIENT_FUNDS",
+    "normalized_failure_reason": "UNKNOWN_OR_CONFLICTING",
     "policy_id": "pid_rzp",
     "policy_provenance": {
       "amount_review_threshold_minor": "PROJECT_POLICY:Experiment authority policy",
@@ -19060,7 +19060,7 @@
     "final_action": "schedule_retry",
     "ledger_sha256": "e25dead4b1faae34f6d733cecac4d1b1c904d20c33bc51201b4aa1d4f04cccc3",
     "legitimate_recovery_forgone_inr": 0.0,
-    "normalized_failure_reason": "INSUFFICIENT_FUNDS",
+    "normalized_failure_reason": "UNKNOWN_OR_CONFLICTING",
     "policy_id": "pid_rzp",
     "policy_provenance": {
       "amount_review_threshold_minor": "PROJECT_POLICY:Experiment authority policy",
@@ -19340,7 +19340,7 @@
     "final_action": "schedule_retry",
     "ledger_sha256": "e25dead4b1faae34f6d733cecac4d1b1c904d20c33bc51201b4aa1d4f04cccc3",
     "legitimate_recovery_forgone_inr": 0.0,
-    "normalized_failure_reason": "MANDATE_REVOKED_OR_CANCELLED",
+    "normalized_failure_reason": "UNKNOWN_OR_CONFLICTING",
     "policy_id": "pid_rzp",
     "policy_provenance": {
       "amount_review_threshold_minor": "PROJECT_POLICY:Experiment authority policy",
@@ -21804,7 +21804,7 @@
     "final_action": "schedule_retry",
     "ledger_sha256": "e25dead4b1faae34f6d733cecac4d1b1c904d20c33bc51201b4aa1d4f04cccc3",
     "legitimate_recovery_forgone_inr": 0.0,
-    "normalized_failure_reason": "MANDATE_REVOKED_OR_CANCELLED",
+    "normalized_failure_reason": "UNKNOWN_OR_CONFLICTING",
     "policy_id": "pid_rzp",
     "policy_provenance": {
       "amount_review_threshold_minor": "PROJECT_POLICY:Experiment authority policy",
@@ -21916,7 +21916,7 @@
     "final_action": null,
     "ledger_sha256": "e25dead4b1faae34f6d733cecac4d1b1c904d20c33bc51201b4aa1d4f04cccc3",
     "legitimate_recovery_forgone_inr": 999.0,
-    "normalized_failure_reason": "MANDATE_REVOKED_OR_CANCELLED",
+    "normalized_failure_reason": "UNKNOWN_OR_CONFLICTING",
     "policy_id": "pid_rzp",
     "policy_provenance": {
       "amount_review_threshold_minor": "PROJECT_POLICY:Experiment authority policy",
@@ -23085,8 +23085,8 @@
     "arm": "B2.25",
     "audit_event_count": 2,
     "audit_event_hashes": [
-      "288e1f1f7407749991efc01c99c083a327124dcc306cb567ebf1fe290d9c3371",
-      "4b3471d870a3b52730c1e92a045d7a42e7ea1188031cc1ba4ec20b800b673d2f"
+      "67849552db0731b0a1be5d05fd9dc7c8ea93cb047a95808acf988286f114b9aa",
+      "f14539298896ce6b884b701d130674f022b7ca95abc4febf98b8bbaf047b0c26"
     ],
     "audit_verified": true,
     "bounded_interpreter_influence": false,
@@ -23102,7 +23102,7 @@
     "final_action": "escalate_to_human",
     "ledger_sha256": "e25dead4b1faae34f6d733cecac4d1b1c904d20c33bc51201b4aa1d4f04cccc3",
     "legitimate_recovery_forgone_inr": 0.0,
-    "normalized_failure_reason": "INSUFFICIENT_FUNDS",
+    "normalized_failure_reason": "UNKNOWN_OR_CONFLICTING",
     "policy_id": "pid_b2_25",
     "policy_provenance": {
       "amount_review_threshold_minor": "PROJECT_POLICY:Experiment authority policy",
@@ -23715,8 +23715,8 @@
     "arm": "B2.25",
     "audit_event_count": 2,
     "audit_event_hashes": [
-      "a351f724197d0860e3410470adbd07bffef2465f37ac82f38616dbae6637afbc",
-      "4108e77d9c65ab43b78bd028ea65603ed745c2090a8f3ebc13c3341020f95be1"
+      "6f85e737e80016a1fc6aed8d57765b72941612cd3ded92b015468fb3a35d8953",
+      "7b9a23261930aa0343a2888aee6a6d020a5449a23a384e11caa3593f0f6548ad"
     ],
     "audit_verified": true,
     "bounded_interpreter_influence": false,
@@ -23732,7 +23732,7 @@
     "final_action": "escalate_to_human",
     "ledger_sha256": "e25dead4b1faae34f6d733cecac4d1b1c904d20c33bc51201b4aa1d4f04cccc3",
     "legitimate_recovery_forgone_inr": 499.0,
-    "normalized_failure_reason": "MANDATE_REVOKED_OR_CANCELLED",
+    "normalized_failure_reason": "UNKNOWN_OR_CONFLICTING",
     "policy_id": "pid_b2_25",
     "policy_provenance": {
       "amount_review_threshold_minor": "PROJECT_POLICY:Experiment authority policy",
@@ -24171,8 +24171,8 @@
     "arm": "B2.25",
     "audit_event_count": 2,
     "audit_event_hashes": [
-      "b90df119db539fa776177d2162254db43116537619aad84774deea45c0a9680e",
-      "66ac59dbed8714a0986b8a3d7ffb3d02b2736c5857316fd0f08cbd2df74b94e4"
+      "be1e3e5a2fd67f7760f26411dc8795b1f9cb188a1047b7856a63043f4e91be01",
+      "367627b827e997270011fe513fc718bc27cd586082cd2d6895f44a547177340b"
     ],
     "audit_verified": true,
     "bounded_interpreter_influence": false,
@@ -24188,7 +24188,7 @@
     "final_action": "escalate_to_human",
     "ledger_sha256": "e25dead4b1faae34f6d733cecac4d1b1c904d20c33bc51201b4aa1d4f04cccc3",
     "legitimate_recovery_forgone_inr": 499.0,
-    "normalized_failure_reason": "INSUFFICIENT_FUNDS",
+    "normalized_failure_reason": "UNKNOWN_OR_CONFLICTING",
     "policy_id": "pid_b2_25",
     "policy_provenance": {
       "amount_review_threshold_minor": "PROJECT_POLICY:Experiment authority policy",
@@ -24283,8 +24283,8 @@
     "arm": "B2.25",
     "audit_event_count": 2,
     "audit_event_hashes": [
-      "88af69c46568275189841d3449a363bc3cd695e93d70a78bc94a0677c6a9b5bd",
-      "50a5a51354fe14a985392ad7627e6ef60642306e32618741789a760abf2276f1"
+      "e1792e0605699f87fa0b791b795b56cf72a5a23e8549f2886e4ff73d998da36b",
+      "72c23e3fece2a7d3c1b1f4aa91f33ceab21e2bf5837ff6fd8f2af016bad4d497"
     ],
     "audit_verified": true,
     "bounded_interpreter_influence": false,
@@ -24300,7 +24300,7 @@
     "final_action": "escalate_to_human",
     "ledger_sha256": "e25dead4b1faae34f6d733cecac4d1b1c904d20c33bc51201b4aa1d4f04cccc3",
     "legitimate_recovery_forgone_inr": 2499.0,
-    "normalized_failure_reason": "INSUFFICIENT_FUNDS",
+    "normalized_failure_reason": "UNKNOWN_OR_CONFLICTING",
     "policy_id": "pid_b2_25",
     "policy_provenance": {
       "amount_review_threshold_minor": "PROJECT_POLICY:Experiment authority policy",
@@ -24687,8 +24687,8 @@
     "arm": "B2.25",
     "audit_event_count": 2,
     "audit_event_hashes": [
-      "dc0aabc97af595876128618ac47d4be9b4fb3fceebff21cdc8bd07753486ffe6",
-      "a7e7cc3a53ddc7bc9e1b7e9325fc546d4a995ed8b9f83043c9e511c70dc464b9"
+      "bc412143daa3c89a5538baac2fdaa04eb6d81106abda451f696452c9923b2969",
+      "d2978b51e5432426a19faaf5cfec8e04efb8a262a685b9795b0d21d970f656a0"
     ],
     "audit_verified": true,
     "bounded_interpreter_influence": false,
@@ -24704,7 +24704,7 @@
     "final_action": "escalate_to_human",
     "ledger_sha256": "e25dead4b1faae34f6d733cecac4d1b1c904d20c33bc51201b4aa1d4f04cccc3",
     "legitimate_recovery_forgone_inr": 199.0,
-    "normalized_failure_reason": "INSUFFICIENT_FUNDS",
+    "normalized_failure_reason": "UNKNOWN_OR_CONFLICTING",
     "policy_id": "pid_b2_25",
     "policy_provenance": {
       "amount_review_threshold_minor": "PROJECT_POLICY:Experiment authority policy",
@@ -24971,8 +24971,8 @@
     "arm": "B2.25",
     "audit_event_count": 2,
     "audit_event_hashes": [
-      "5ba6b8eb5f6a0427a621ef85582eb942381d4daf0d7fbdfa629ea7c6020b0f7d",
-      "ec34a86dc3b8323079c0a9b608dafbd7623076c6bdf5a3dd13de2472b9e7ccbe"
+      "2b550081f73e6c392ac8309455c9037817ec130cba40a6f99790c066ef3d9f38",
+      "49d50deb1b1e388600ac4d1b808ebfe2ea100616400bfff8acb290564bed5524"
     ],
     "audit_verified": true,
     "bounded_interpreter_influence": false,
@@ -24988,7 +24988,7 @@
     "final_action": "escalate_to_human",
     "ledger_sha256": "e25dead4b1faae34f6d733cecac4d1b1c904d20c33bc51201b4aa1d4f04cccc3",
     "legitimate_recovery_forgone_inr": 2499.0,
-    "normalized_failure_reason": "MANDATE_REVOKED_OR_CANCELLED",
+    "normalized_failure_reason": "UNKNOWN_OR_CONFLICTING",
     "policy_id": "pid_b2_25",
     "policy_provenance": {
       "amount_review_threshold_minor": "PROJECT_POLICY:Experiment authority policy",
@@ -27483,8 +27483,8 @@
     "arm": "B2.25",
     "audit_event_count": 2,
     "audit_event_hashes": [
-      "2fa200420dfdf61c1ae269b9425b57c23f199a8365deea0ed3379221d34f0d1f",
-      "a1d3018fab8b489e9e461bcaf2fede1d48b128e393c6d145cf98c7a1e0ea5988"
+      "39ec83998a3ea9b84554c510c3b6aae954daf2400e2b940b91da89d618f82a46",
+      "f132f375dcb9deefff7635e0ef70a6db3b6c58bef516616626469161e95ee8cb"
     ],
     "audit_verified": true,
     "bounded_interpreter_influence": false,
@@ -27500,7 +27500,7 @@
     "final_action": "escalate_to_human",
     "ledger_sha256": "e25dead4b1faae34f6d733cecac4d1b1c904d20c33bc51201b4aa1d4f04cccc3",
     "legitimate_recovery_forgone_inr": 2499.0,
-    "normalized_failure_reason": "MANDATE_REVOKED_OR_CANCELLED",
+    "normalized_failure_reason": "UNKNOWN_OR_CONFLICTING",
     "policy_id": "pid_b2_25",
     "policy_provenance": {
       "amount_review_threshold_minor": "PROJECT_POLICY:Experiment authority policy",
@@ -27595,8 +27595,8 @@
     "arm": "B2.25",
     "audit_event_count": 2,
     "audit_event_hashes": [
-      "adf5eb91ec7e8fcc713194e3bb20fdcf0329d13553623dd6d3c547b20bdf9c74",
-      "b2a4d69758a7421248c29cb8c19184add590c0fcc8751b2382497b4978e52545"
+      "d3b3fe1be4e862f71d5e6f5ae0a326b0f7ea4b4d03ee74f443f942b637c2b45c",
+      "aa81b7909aefabb4a6455f8113ab02746b641823e4d96b9f56a3499d24f59016"
     ],
     "audit_verified": true,
     "bounded_interpreter_influence": false,
@@ -27612,7 +27612,7 @@
     "final_action": "escalate_to_human",
     "ledger_sha256": "e25dead4b1faae34f6d733cecac4d1b1c904d20c33bc51201b4aa1d4f04cccc3",
     "legitimate_recovery_forgone_inr": 999.0,
-    "normalized_failure_reason": "MANDATE_REVOKED_OR_CANCELLED",
+    "normalized_failure_reason": "UNKNOWN_OR_CONFLICTING",
     "policy_id": "pid_b2_25",
     "policy_provenance": {
       "amount_review_threshold_minor": "PROJECT_POLICY:Experiment authority policy",
@@ -28783,8 +28783,8 @@
     "arm": "B2.5",
     "audit_event_count": 2,
     "audit_event_hashes": [
-      "288e1f1f7407749991efc01c99c083a327124dcc306cb567ebf1fe290d9c3371",
-      "4b3471d870a3b52730c1e92a045d7a42e7ea1188031cc1ba4ec20b800b673d2f"
+      "67849552db0731b0a1be5d05fd9dc7c8ea93cb047a95808acf988286f114b9aa",
+      "f14539298896ce6b884b701d130674f022b7ca95abc4febf98b8bbaf047b0c26"
     ],
     "audit_verified": true,
     "bounded_interpreter_influence": false,
@@ -28800,7 +28800,7 @@
     "final_action": "escalate_to_human",
     "ledger_sha256": "e25dead4b1faae34f6d733cecac4d1b1c904d20c33bc51201b4aa1d4f04cccc3",
     "legitimate_recovery_forgone_inr": 0.0,
-    "normalized_failure_reason": "INSUFFICIENT_FUNDS",
+    "normalized_failure_reason": "UNKNOWN_OR_CONFLICTING",
     "policy_id": "pid_b2_5",
     "policy_provenance": {
       "amount_review_threshold_minor": "PROJECT_POLICY:Experiment authority policy",
@@ -29407,8 +29407,8 @@
     "arm": "B2.5",
     "audit_event_count": 2,
     "audit_event_hashes": [
-      "a351f724197d0860e3410470adbd07bffef2465f37ac82f38616dbae6637afbc",
-      "4108e77d9c65ab43b78bd028ea65603ed745c2090a8f3ebc13c3341020f95be1"
+      "6f85e737e80016a1fc6aed8d57765b72941612cd3ded92b015468fb3a35d8953",
+      "7b9a23261930aa0343a2888aee6a6d020a5449a23a384e11caa3593f0f6548ad"
     ],
     "audit_verified": true,
     "bounded_interpreter_influence": false,
@@ -29424,7 +29424,7 @@
     "final_action": "escalate_to_human",
     "ledger_sha256": "e25dead4b1faae34f6d733cecac4d1b1c904d20c33bc51201b4aa1d4f04cccc3",
     "legitimate_recovery_forgone_inr": 499.0,
-    "normalized_failure_reason": "MANDATE_REVOKED_OR_CANCELLED",
+    "normalized_failure_reason": "UNKNOWN_OR_CONFLICTING",
     "policy_id": "pid_b2_5",
     "policy_provenance": {
       "amount_review_threshold_minor": "PROJECT_POLICY:Experiment authority policy",
@@ -29861,8 +29861,8 @@
     "arm": "B2.5",
     "audit_event_count": 2,
     "audit_event_hashes": [
-      "b90df119db539fa776177d2162254db43116537619aad84774deea45c0a9680e",
-      "66ac59dbed8714a0986b8a3d7ffb3d02b2736c5857316fd0f08cbd2df74b94e4"
+      "be1e3e5a2fd67f7760f26411dc8795b1f9cb188a1047b7856a63043f4e91be01",
+      "367627b827e997270011fe513fc718bc27cd586082cd2d6895f44a547177340b"
     ],
     "audit_verified": true,
     "bounded_interpreter_influence": false,
@@ -29878,7 +29878,7 @@
     "final_action": "escalate_to_human",
     "ledger_sha256": "e25dead4b1faae34f6d733cecac4d1b1c904d20c33bc51201b4aa1d4f04cccc3",
     "legitimate_recovery_forgone_inr": 499.0,
-    "normalized_failure_reason": "INSUFFICIENT_FUNDS",
+    "normalized_failure_reason": "UNKNOWN_OR_CONFLICTING",
     "policy_id": "pid_b2_5",
     "policy_provenance": {
       "amount_review_threshold_minor": "PROJECT_POLICY:Experiment authority policy",
@@ -29973,8 +29973,8 @@
     "arm": "B2.5",
     "audit_event_count": 2,
     "audit_event_hashes": [
-      "88af69c46568275189841d3449a363bc3cd695e93d70a78bc94a0677c6a9b5bd",
-      "50a5a51354fe14a985392ad7627e6ef60642306e32618741789a760abf2276f1"
+      "e1792e0605699f87fa0b791b795b56cf72a5a23e8549f2886e4ff73d998da36b",
+      "72c23e3fece2a7d3c1b1f4aa91f33ceab21e2bf5837ff6fd8f2af016bad4d497"
     ],
     "audit_verified": true,
     "bounded_interpreter_influence": false,
@@ -29990,7 +29990,7 @@
     "final_action": "escalate_to_human",
     "ledger_sha256": "e25dead4b1faae34f6d733cecac4d1b1c904d20c33bc51201b4aa1d4f04cccc3",
     "legitimate_recovery_forgone_inr": 2499.0,
-    "normalized_failure_reason": "INSUFFICIENT_FUNDS",
+    "normalized_failure_reason": "UNKNOWN_OR_CONFLICTING",
     "policy_id": "pid_b2_5",
     "policy_provenance": {
       "amount_review_threshold_minor": "PROJECT_POLICY:Experiment authority policy",
@@ -30371,8 +30371,8 @@
     "arm": "B2.5",
     "audit_event_count": 2,
     "audit_event_hashes": [
-      "dc0aabc97af595876128618ac47d4be9b4fb3fceebff21cdc8bd07753486ffe6",
-      "a7e7cc3a53ddc7bc9e1b7e9325fc546d4a995ed8b9f83043c9e511c70dc464b9"
+      "bc412143daa3c89a5538baac2fdaa04eb6d81106abda451f696452c9923b2969",
+      "d2978b51e5432426a19faaf5cfec8e04efb8a262a685b9795b0d21d970f656a0"
     ],
     "audit_verified": true,
     "bounded_interpreter_influence": false,
@@ -30388,7 +30388,7 @@
     "final_action": "escalate_to_human",
     "ledger_sha256": "e25dead4b1faae34f6d733cecac4d1b1c904d20c33bc51201b4aa1d4f04cccc3",
     "legitimate_recovery_forgone_inr": 199.0,
-    "normalized_failure_reason": "INSUFFICIENT_FUNDS",
+    "normalized_failure_reason": "UNKNOWN_OR_CONFLICTING",
     "policy_id": "pid_b2_5",
     "policy_provenance": {
       "amount_review_threshold_minor": "PROJECT_POLICY:Experiment authority policy",
@@ -30651,8 +30651,8 @@
     "arm": "B2.5",
     "audit_event_count": 2,
     "audit_event_hashes": [
-      "5ba6b8eb5f6a0427a621ef85582eb942381d4daf0d7fbdfa629ea7c6020b0f7d",
-      "ec34a86dc3b8323079c0a9b608dafbd7623076c6bdf5a3dd13de2472b9e7ccbe"
+      "2b550081f73e6c392ac8309455c9037817ec130cba40a6f99790c066ef3d9f38",
+      "49d50deb1b1e388600ac4d1b808ebfe2ea100616400bfff8acb290564bed5524"
     ],
     "audit_verified": true,
     "bounded_interpreter_influence": false,
@@ -30668,7 +30668,7 @@
     "final_action": "escalate_to_human",
     "ledger_sha256": "e25dead4b1faae34f6d733cecac4d1b1c904d20c33bc51201b4aa1d4f04cccc3",
     "legitimate_recovery_forgone_inr": 2499.0,
-    "normalized_failure_reason": "MANDATE_REVOKED_OR_CANCELLED",
+    "normalized_failure_reason": "UNKNOWN_OR_CONFLICTING",
     "policy_id": "pid_b2_5",
     "policy_provenance": {
       "amount_review_threshold_minor": "PROJECT_POLICY:Experiment authority policy",
@@ -33137,8 +33137,8 @@
     "arm": "B2.5",
     "audit_event_count": 2,
     "audit_event_hashes": [
-      "2fa200420dfdf61c1ae269b9425b57c23f199a8365deea0ed3379221d34f0d1f",
-      "a1d3018fab8b489e9e461bcaf2fede1d48b128e393c6d145cf98c7a1e0ea5988"
+      "39ec83998a3ea9b84554c510c3b6aae954daf2400e2b940b91da89d618f82a46",
+      "f132f375dcb9deefff7635e0ef70a6db3b6c58bef516616626469161e95ee8cb"
     ],
     "audit_verified": true,
     "bounded_interpreter_influence": false,
@@ -33154,7 +33154,7 @@
     "final_action": "escalate_to_human",
     "ledger_sha256": "e25dead4b1faae34f6d733cecac4d1b1c904d20c33bc51201b4aa1d4f04cccc3",
     "legitimate_recovery_forgone_inr": 2499.0,
-    "normalized_failure_reason": "MANDATE_REVOKED_OR_CANCELLED",
+    "normalized_failure_reason": "UNKNOWN_OR_CONFLICTING",
     "policy_id": "pid_b2_5",
     "policy_provenance": {
       "amount_review_threshold_minor": "PROJECT_POLICY:Experiment authority policy",
@@ -33249,8 +33249,8 @@
     "arm": "B2.5",
     "audit_event_count": 2,
     "audit_event_hashes": [
-      "adf5eb91ec7e8fcc713194e3bb20fdcf0329d13553623dd6d3c547b20bdf9c74",
-      "b2a4d69758a7421248c29cb8c19184add590c0fcc8751b2382497b4978e52545"
+      "d3b3fe1be4e862f71d5e6f5ae0a326b0f7ea4b4d03ee74f443f942b637c2b45c",
+      "aa81b7909aefabb4a6455f8113ab02746b641823e4d96b9f56a3499d24f59016"
     ],
     "audit_verified": true,
     "bounded_interpreter_influence": false,
@@ -33266,7 +33266,7 @@
     "final_action": "escalate_to_human",
     "ledger_sha256": "e25dead4b1faae34f6d733cecac4d1b1c904d20c33bc51201b4aa1d4f04cccc3",
     "legitimate_recovery_forgone_inr": 999.0,
-    "normalized_failure_reason": "MANDATE_REVOKED_OR_CANCELLED",
+    "normalized_failure_reason": "UNKNOWN_OR_CONFLICTING",
     "policy_id": "pid_b2_5",
     "policy_provenance": {
       "amount_review_threshold_minor": "PROJECT_POLICY:Experiment authority policy",
@@ -34433,8 +34433,8 @@
     "arm": "B2.75",
     "audit_event_count": 2,
     "audit_event_hashes": [
-      "288e1f1f7407749991efc01c99c083a327124dcc306cb567ebf1fe290d9c3371",
-      "4b3471d870a3b52730c1e92a045d7a42e7ea1188031cc1ba4ec20b800b673d2f"
+      "67849552db0731b0a1be5d05fd9dc7c8ea93cb047a95808acf988286f114b9aa",
+      "f14539298896ce6b884b701d130674f022b7ca95abc4febf98b8bbaf047b0c26"
     ],
     "audit_verified": true,
     "bounded_interpreter_influence": false,
@@ -34450,7 +34450,7 @@
     "final_action": "escalate_to_human",
     "ledger_sha256": "e25dead4b1faae34f6d733cecac4d1b1c904d20c33bc51201b4aa1d4f04cccc3",
     "legitimate_recovery_forgone_inr": 0.0,
-    "normalized_failure_reason": "INSUFFICIENT_FUNDS",
+    "normalized_failure_reason": "UNKNOWN_OR_CONFLICTING",
     "policy_id": "pid_b2_75",
     "policy_provenance": {
       "amount_review_threshold_minor": "PROJECT_POLICY:Experiment authority policy",
@@ -35053,8 +35053,8 @@
     "arm": "B2.75",
     "audit_event_count": 2,
     "audit_event_hashes": [
-      "a351f724197d0860e3410470adbd07bffef2465f37ac82f38616dbae6637afbc",
-      "4108e77d9c65ab43b78bd028ea65603ed745c2090a8f3ebc13c3341020f95be1"
+      "6f85e737e80016a1fc6aed8d57765b72941612cd3ded92b015468fb3a35d8953",
+      "7b9a23261930aa0343a2888aee6a6d020a5449a23a384e11caa3593f0f6548ad"
     ],
     "audit_verified": true,
     "bounded_interpreter_influence": false,
@@ -35070,7 +35070,7 @@
     "final_action": "escalate_to_human",
     "ledger_sha256": "e25dead4b1faae34f6d733cecac4d1b1c904d20c33bc51201b4aa1d4f04cccc3",
     "legitimate_recovery_forgone_inr": 499.0,
-    "normalized_failure_reason": "MANDATE_REVOKED_OR_CANCELLED",
+    "normalized_failure_reason": "UNKNOWN_OR_CONFLICTING",
     "policy_id": "pid_b2_75",
     "policy_provenance": {
       "amount_review_threshold_minor": "PROJECT_POLICY:Experiment authority policy",
@@ -35507,8 +35507,8 @@
     "arm": "B2.75",
     "audit_event_count": 2,
     "audit_event_hashes": [
-      "b90df119db539fa776177d2162254db43116537619aad84774deea45c0a9680e",
-      "66ac59dbed8714a0986b8a3d7ffb3d02b2736c5857316fd0f08cbd2df74b94e4"
+      "be1e3e5a2fd67f7760f26411dc8795b1f9cb188a1047b7856a63043f4e91be01",
+      "367627b827e997270011fe513fc718bc27cd586082cd2d6895f44a547177340b"
     ],
     "audit_verified": true,
     "bounded_interpreter_influence": false,
@@ -35524,7 +35524,7 @@
     "final_action": "escalate_to_human",
     "ledger_sha256": "e25dead4b1faae34f6d733cecac4d1b1c904d20c33bc51201b4aa1d4f04cccc3",
     "legitimate_recovery_forgone_inr": 499.0,
-    "normalized_failure_reason": "INSUFFICIENT_FUNDS",
+    "normalized_failure_reason": "UNKNOWN_OR_CONFLICTING",
     "policy_id": "pid_b2_75",
     "policy_provenance": {
       "amount_review_threshold_minor": "PROJECT_POLICY:Experiment authority policy",
@@ -35619,8 +35619,8 @@
     "arm": "B2.75",
     "audit_event_count": 2,
     "audit_event_hashes": [
-      "88af69c46568275189841d3449a363bc3cd695e93d70a78bc94a0677c6a9b5bd",
-      "50a5a51354fe14a985392ad7627e6ef60642306e32618741789a760abf2276f1"
+      "e1792e0605699f87fa0b791b795b56cf72a5a23e8549f2886e4ff73d998da36b",
+      "72c23e3fece2a7d3c1b1f4aa91f33ceab21e2bf5837ff6fd8f2af016bad4d497"
     ],
     "audit_verified": true,
     "bounded_interpreter_influence": false,
@@ -35636,7 +35636,7 @@
     "final_action": "escalate_to_human",
     "ledger_sha256": "e25dead4b1faae34f6d733cecac4d1b1c904d20c33bc51201b4aa1d4f04cccc3",
     "legitimate_recovery_forgone_inr": 2499.0,
-    "normalized_failure_reason": "INSUFFICIENT_FUNDS",
+    "normalized_failure_reason": "UNKNOWN_OR_CONFLICTING",
     "policy_id": "pid_b2_75",
     "policy_provenance": {
       "amount_review_threshold_minor": "PROJECT_POLICY:Experiment authority policy",
@@ -36017,8 +36017,8 @@
     "arm": "B2.75",
     "audit_event_count": 2,
     "audit_event_hashes": [
-      "dc0aabc97af595876128618ac47d4be9b4fb3fceebff21cdc8bd07753486ffe6",
-      "a7e7cc3a53ddc7bc9e1b7e9325fc546d4a995ed8b9f83043c9e511c70dc464b9"
+      "bc412143daa3c89a5538baac2fdaa04eb6d81106abda451f696452c9923b2969",
+      "d2978b51e5432426a19faaf5cfec8e04efb8a262a685b9795b0d21d970f656a0"
     ],
     "audit_verified": true,
     "bounded_interpreter_influence": false,
@@ -36034,7 +36034,7 @@
     "final_action": "escalate_to_human",
     "ledger_sha256": "e25dead4b1faae34f6d733cecac4d1b1c904d20c33bc51201b4aa1d4f04cccc3",
     "legitimate_recovery_forgone_inr": 199.0,
-    "normalized_failure_reason": "INSUFFICIENT_FUNDS",
+    "normalized_failure_reason": "UNKNOWN_OR_CONFLICTING",
     "policy_id": "pid_b2_75",
     "policy_provenance": {
       "amount_review_threshold_minor": "PROJECT_POLICY:Experiment authority policy",
@@ -36297,8 +36297,8 @@
     "arm": "B2.75",
     "audit_event_count": 2,
     "audit_event_hashes": [
-      "5ba6b8eb5f6a0427a621ef85582eb942381d4daf0d7fbdfa629ea7c6020b0f7d",
-      "ec34a86dc3b8323079c0a9b608dafbd7623076c6bdf5a3dd13de2472b9e7ccbe"
+      "2b550081f73e6c392ac8309455c9037817ec130cba40a6f99790c066ef3d9f38",
+      "49d50deb1b1e388600ac4d1b808ebfe2ea100616400bfff8acb290564bed5524"
     ],
     "audit_verified": true,
     "bounded_interpreter_influence": false,
@@ -36314,7 +36314,7 @@
     "final_action": "escalate_to_human",
     "ledger_sha256": "e25dead4b1faae34f6d733cecac4d1b1c904d20c33bc51201b4aa1d4f04cccc3",
     "legitimate_recovery_forgone_inr": 2499.0,
-    "normalized_failure_reason": "MANDATE_REVOKED_OR_CANCELLED",
+    "normalized_failure_reason": "UNKNOWN_OR_CONFLICTING",
     "policy_id": "pid_b2_75",
     "policy_provenance": {
       "amount_review_threshold_minor": "PROJECT_POLICY:Experiment authority policy",
@@ -38779,8 +38779,8 @@
     "arm": "B2.75",
     "audit_event_count": 2,
     "audit_event_hashes": [
-      "2fa200420dfdf61c1ae269b9425b57c23f199a8365deea0ed3379221d34f0d1f",
-      "a1d3018fab8b489e9e461bcaf2fede1d48b128e393c6d145cf98c7a1e0ea5988"
+      "39ec83998a3ea9b84554c510c3b6aae954daf2400e2b940b91da89d618f82a46",
+      "f132f375dcb9deefff7635e0ef70a6db3b6c58bef516616626469161e95ee8cb"
     ],
     "audit_verified": true,
     "bounded_interpreter_influence": false,
@@ -38796,7 +38796,7 @@
     "final_action": "escalate_to_human",
     "ledger_sha256": "e25dead4b1faae34f6d733cecac4d1b1c904d20c33bc51201b4aa1d4f04cccc3",
     "legitimate_recovery_forgone_inr": 2499.0,
-    "normalized_failure_reason": "MANDATE_REVOKED_OR_CANCELLED",
+    "normalized_failure_reason": "UNKNOWN_OR_CONFLICTING",
     "policy_id": "pid_b2_75",
     "policy_provenance": {
       "amount_review_threshold_minor": "PROJECT_POLICY:Experiment authority policy",
@@ -38891,8 +38891,8 @@
     "arm": "B2.75",
     "audit_event_count": 2,
     "audit_event_hashes": [
-      "adf5eb91ec7e8fcc713194e3bb20fdcf0329d13553623dd6d3c547b20bdf9c74",
-      "b2a4d69758a7421248c29cb8c19184add590c0fcc8751b2382497b4978e52545"
+      "d3b3fe1be4e862f71d5e6f5ae0a326b0f7ea4b4d03ee74f443f942b637c2b45c",
+      "aa81b7909aefabb4a6455f8113ab02746b641823e4d96b9f56a3499d24f59016"
     ],
     "audit_verified": true,
     "bounded_interpreter_influence": false,
@@ -38908,7 +38908,7 @@
     "final_action": "escalate_to_human",
     "ledger_sha256": "e25dead4b1faae34f6d733cecac4d1b1c904d20c33bc51201b4aa1d4f04cccc3",
     "legitimate_recovery_forgone_inr": 999.0,
-    "normalized_failure_reason": "MANDATE_REVOKED_OR_CANCELLED",
+    "normalized_failure_reason": "UNKNOWN_OR_CONFLICTING",
     "policy_id": "pid_b2_75",
     "policy_provenance": {
       "amount_review_threshold_minor": "PROJECT_POLICY:Experiment authority policy",
@@ -40075,8 +40075,8 @@
     "arm": "B2",
     "audit_event_count": 2,
     "audit_event_hashes": [
-      "288e1f1f7407749991efc01c99c083a327124dcc306cb567ebf1fe290d9c3371",
-      "4b3471d870a3b52730c1e92a045d7a42e7ea1188031cc1ba4ec20b800b673d2f"
+      "67849552db0731b0a1be5d05fd9dc7c8ea93cb047a95808acf988286f114b9aa",
+      "f14539298896ce6b884b701d130674f022b7ca95abc4febf98b8bbaf047b0c26"
     ],
     "audit_verified": true,
     "bounded_interpreter_influence": false,
@@ -40092,7 +40092,7 @@
     "final_action": "escalate_to_human",
     "ledger_sha256": "e25dead4b1faae34f6d733cecac4d1b1c904d20c33bc51201b4aa1d4f04cccc3",
     "legitimate_recovery_forgone_inr": 0.0,
-    "normalized_failure_reason": "INSUFFICIENT_FUNDS",
+    "normalized_failure_reason": "UNKNOWN_OR_CONFLICTING",
     "policy_id": "pid_b2",
     "policy_provenance": {
       "amount_review_threshold_minor": "PROJECT_POLICY:Experiment authority policy",
@@ -40693,8 +40693,8 @@
     "arm": "B2",
     "audit_event_count": 2,
     "audit_event_hashes": [
-      "a351f724197d0860e3410470adbd07bffef2465f37ac82f38616dbae6637afbc",
-      "4108e77d9c65ab43b78bd028ea65603ed745c2090a8f3ebc13c3341020f95be1"
+      "6f85e737e80016a1fc6aed8d57765b72941612cd3ded92b015468fb3a35d8953",
+      "7b9a23261930aa0343a2888aee6a6d020a5449a23a384e11caa3593f0f6548ad"
     ],
     "audit_verified": true,
     "bounded_interpreter_influence": false,
@@ -40710,7 +40710,7 @@
     "final_action": "escalate_to_human",
     "ledger_sha256": "e25dead4b1faae34f6d733cecac4d1b1c904d20c33bc51201b4aa1d4f04cccc3",
     "legitimate_recovery_forgone_inr": 499.0,
-    "normalized_failure_reason": "MANDATE_REVOKED_OR_CANCELLED",
+    "normalized_failure_reason": "UNKNOWN_OR_CONFLICTING",
     "policy_id": "pid_b2",
     "policy_provenance": {
       "amount_review_threshold_minor": "PROJECT_POLICY:Experiment authority policy",
@@ -41145,8 +41145,8 @@
     "arm": "B2",
     "audit_event_count": 2,
     "audit_event_hashes": [
-      "b90df119db539fa776177d2162254db43116537619aad84774deea45c0a9680e",
-      "66ac59dbed8714a0986b8a3d7ffb3d02b2736c5857316fd0f08cbd2df74b94e4"
+      "be1e3e5a2fd67f7760f26411dc8795b1f9cb188a1047b7856a63043f4e91be01",
+      "367627b827e997270011fe513fc718bc27cd586082cd2d6895f44a547177340b"
     ],
     "audit_verified": true,
     "bounded_interpreter_influence": false,
@@ -41162,7 +41162,7 @@
     "final_action": "escalate_to_human",
     "ledger_sha256": "e25dead4b1faae34f6d733cecac4d1b1c904d20c33bc51201b4aa1d4f04cccc3",
     "legitimate_recovery_forgone_inr": 499.0,
-    "normalized_failure_reason": "INSUFFICIENT_FUNDS",
+    "normalized_failure_reason": "UNKNOWN_OR_CONFLICTING",
     "policy_id": "pid_b2",
     "policy_provenance": {
       "amount_review_threshold_minor": "PROJECT_POLICY:Experiment authority policy",
@@ -41257,8 +41257,8 @@
     "arm": "B2",
     "audit_event_count": 2,
     "audit_event_hashes": [
-      "88af69c46568275189841d3449a363bc3cd695e93d70a78bc94a0677c6a9b5bd",
-      "50a5a51354fe14a985392ad7627e6ef60642306e32618741789a760abf2276f1"
+      "e1792e0605699f87fa0b791b795b56cf72a5a23e8549f2886e4ff73d998da36b",
+      "72c23e3fece2a7d3c1b1f4aa91f33ceab21e2bf5837ff6fd8f2af016bad4d497"
     ],
     "audit_verified": true,
     "bounded_interpreter_influence": false,
@@ -41274,7 +41274,7 @@
     "final_action": "escalate_to_human",
     "ledger_sha256": "e25dead4b1faae34f6d733cecac4d1b1c904d20c33bc51201b4aa1d4f04cccc3",
     "legitimate_recovery_forgone_inr": 2499.0,
-    "normalized_failure_reason": "INSUFFICIENT_FUNDS",
+    "normalized_failure_reason": "UNKNOWN_OR_CONFLICTING",
     "policy_id": "pid_b2",
     "policy_provenance": {
       "amount_review_threshold_minor": "PROJECT_POLICY:Experiment authority policy",
@@ -41653,8 +41653,8 @@
     "arm": "B2",
     "audit_event_count": 2,
     "audit_event_hashes": [
-      "dc0aabc97af595876128618ac47d4be9b4fb3fceebff21cdc8bd07753486ffe6",
-      "a7e7cc3a53ddc7bc9e1b7e9325fc546d4a995ed8b9f83043c9e511c70dc464b9"
+      "bc412143daa3c89a5538baac2fdaa04eb6d81106abda451f696452c9923b2969",
+      "d2978b51e5432426a19faaf5cfec8e04efb8a262a685b9795b0d21d970f656a0"
     ],
     "audit_verified": true,
     "bounded_interpreter_influence": false,
@@ -41670,7 +41670,7 @@
     "final_action": "escalate_to_human",
     "ledger_sha256": "e25dead4b1faae34f6d733cecac4d1b1c904d20c33bc51201b4aa1d4f04cccc3",
     "legitimate_recovery_forgone_inr": 199.0,
-    "normalized_failure_reason": "INSUFFICIENT_FUNDS",
+    "normalized_failure_reason": "UNKNOWN_OR_CONFLICTING",
     "policy_id": "pid_b2",
     "policy_provenance": {
       "amount_review_threshold_minor": "PROJECT_POLICY:Experiment authority policy",
@@ -41933,8 +41933,8 @@
     "arm": "B2",
     "audit_event_count": 2,
     "audit_event_hashes": [
-      "87ba4b74102a5ebcf4d1368d84008c2c77165030155171ee721223b42a725018",
-      "a3e26e440e8ecc07ccfc9857d48e4e9fe6471fc4af2b7d5c1325a6ffb51d2b37"
+      "288beb704dc0310b397ac83fa1d072d7a84be5f76e9609674d9558df9b94e375",
+      "0210665457a9be1bcc41976e803a3c7ff7b380ca94532281fd6c917c404796ef"
     ],
     "audit_verified": true,
     "bounded_interpreter_influence": false,
@@ -41950,7 +41950,7 @@
     "final_action": null,
     "ledger_sha256": "e25dead4b1faae34f6d733cecac4d1b1c904d20c33bc51201b4aa1d4f04cccc3",
     "legitimate_recovery_forgone_inr": 2499.0,
-    "normalized_failure_reason": "MANDATE_REVOKED_OR_CANCELLED",
+    "normalized_failure_reason": "UNKNOWN_OR_CONFLICTING",
     "policy_id": "pid_b2",
     "policy_provenance": {
       "amount_review_threshold_minor": "PROJECT_POLICY:Experiment authority policy",
@@ -44411,8 +44411,8 @@
     "arm": "B2",
     "audit_event_count": 2,
     "audit_event_hashes": [
-      "2fa200420dfdf61c1ae269b9425b57c23f199a8365deea0ed3379221d34f0d1f",
-      "a1d3018fab8b489e9e461bcaf2fede1d48b128e393c6d145cf98c7a1e0ea5988"
+      "39ec83998a3ea9b84554c510c3b6aae954daf2400e2b940b91da89d618f82a46",
+      "f132f375dcb9deefff7635e0ef70a6db3b6c58bef516616626469161e95ee8cb"
     ],
     "audit_verified": true,
     "bounded_interpreter_influence": false,
@@ -44428,7 +44428,7 @@
     "final_action": "escalate_to_human",
     "ledger_sha256": "e25dead4b1faae34f6d733cecac4d1b1c904d20c33bc51201b4aa1d4f04cccc3",
     "legitimate_recovery_forgone_inr": 2499.0,
-    "normalized_failure_reason": "MANDATE_REVOKED_OR_CANCELLED",
+    "normalized_failure_reason": "UNKNOWN_OR_CONFLICTING",
     "policy_id": "pid_b2",
     "policy_provenance": {
       "amount_review_threshold_minor": "PROJECT_POLICY:Experiment authority policy",
@@ -44523,8 +44523,8 @@
     "arm": "B2",
     "audit_event_count": 2,
     "audit_event_hashes": [
-      "adf5eb91ec7e8fcc713194e3bb20fdcf0329d13553623dd6d3c547b20bdf9c74",
-      "b2a4d69758a7421248c29cb8c19184add590c0fcc8751b2382497b4978e52545"
+      "d3b3fe1be4e862f71d5e6f5ae0a326b0f7ea4b4d03ee74f443f942b637c2b45c",
+      "aa81b7909aefabb4a6455f8113ab02746b641823e4d96b9f56a3499d24f59016"
     ],
     "audit_verified": true,
     "bounded_interpreter_influence": false,
@@ -44540,7 +44540,7 @@
     "final_action": "escalate_to_human",
     "ledger_sha256": "e25dead4b1faae34f6d733cecac4d1b1c904d20c33bc51201b4aa1d4f04cccc3",
     "legitimate_recovery_forgone_inr": 999.0,
-    "normalized_failure_reason": "MANDATE_REVOKED_OR_CANCELLED",
+    "normalized_failure_reason": "UNKNOWN_OR_CONFLICTING",
     "policy_id": "pid_b2",
     "policy_provenance": {
       "amount_review_threshold_minor": "PROJECT_POLICY:Experiment authority policy",
@@ -45711,8 +45711,8 @@
     "arm": "B3",
     "audit_event_count": 2,
     "audit_event_hashes": [
-      "3fe318a37fa25f686eb1db54ac7c5fd011491c1585a33099cd89a311c1b0e9ac",
-      "50da9f0f5dcad73445a957261cfafefb834ca0a8e79fc8842796cb7559c774d7"
+      "73182ec27a48fd4d4f83826ca0dc7778995a26034dcbddbb9628267535e4abf5",
+      "9176ed60ac3aa3f91df0e2aba4b00bc163d4e687e1cf0d655161358e27281c1a"
     ],
     "audit_verified": true,
     "bounded_interpreter_influence": true,
@@ -45728,7 +45728,7 @@
     "final_action": null,
     "ledger_sha256": "e25dead4b1faae34f6d733cecac4d1b1c904d20c33bc51201b4aa1d4f04cccc3",
     "legitimate_recovery_forgone_inr": 0.0,
-    "normalized_failure_reason": "INSUFFICIENT_FUNDS",
+    "normalized_failure_reason": "UNKNOWN_OR_CONFLICTING",
     "policy_id": "pid_b3",
     "policy_provenance": {
       "amount_review_threshold_minor": "PROJECT_POLICY:Experiment authority policy",
@@ -46330,8 +46330,8 @@
     "arm": "B3",
     "audit_event_count": 2,
     "audit_event_hashes": [
-      "16c82c7cddc8580b502ecd6f76b17ac0f2fac9df6d1316145951bdc58b072798",
-      "99bc47e77be954ebec2aa56a4e36e6ddb789a0209250e4fa394736c01f9bdd91"
+      "df26d9e6df1999e257232a7a93706a7075ca1419720c46d4e4606b02596d02b1",
+      "bb2fa450f0c0bd90396ffab80df4e0b9498860361b0a68575e07d73286c46822"
     ],
     "audit_verified": true,
     "bounded_interpreter_influence": true,
@@ -46347,7 +46347,7 @@
     "final_action": "stop_recovery",
     "ledger_sha256": "e25dead4b1faae34f6d733cecac4d1b1c904d20c33bc51201b4aa1d4f04cccc3",
     "legitimate_recovery_forgone_inr": 499.0,
-    "normalized_failure_reason": "MANDATE_REVOKED_OR_CANCELLED",
+    "normalized_failure_reason": "UNKNOWN_OR_CONFLICTING",
     "policy_id": "pid_b3",
     "policy_provenance": {
       "amount_review_threshold_minor": "PROJECT_POLICY:Experiment authority policy",
@@ -46784,8 +46784,8 @@
     "arm": "B3",
     "audit_event_count": 2,
     "audit_event_hashes": [
-      "499b3356b227c14cd7a02697e84f2e13bd39fd3362dffa93dea057cd6cf61d21",
-      "434a9e3f1b271dce4fef0548ff561c7eb221bf779db8b1c083d080ce811da955"
+      "64379bd1c1e9908ee3a783fcca777ff33953af41353b7de85ab4c77bbbddd899",
+      "2136648de38ab8cb261fd2dc159dcb8d9809119e98ee8cb97fbca7313ac8e942"
     ],
     "audit_verified": true,
     "bounded_interpreter_influence": true,
@@ -46801,7 +46801,7 @@
     "final_action": "schedule_retry",
     "ledger_sha256": "e25dead4b1faae34f6d733cecac4d1b1c904d20c33bc51201b4aa1d4f04cccc3",
     "legitimate_recovery_forgone_inr": 0.0,
-    "normalized_failure_reason": "INSUFFICIENT_FUNDS",
+    "normalized_failure_reason": "UNKNOWN_OR_CONFLICTING",
     "policy_id": "pid_b3",
     "policy_provenance": {
       "amount_review_threshold_minor": "PROJECT_POLICY:Experiment authority policy",
@@ -46899,8 +46899,8 @@
     "arm": "B3",
     "audit_event_count": 2,
     "audit_event_hashes": [
-      "2710ed7c88d5e1111e2f97cba21bff6d972ba5fbbe950e069baef5ff6914f3ea",
-      "b4c4e3d9bb2107d6272f26d1992bde6bc3afaf95f6b8a454e29dbbdf24228a8d"
+      "bcbace92af04b26d1beb49051d5874ecf811800704579e0f948688a9ac70d7cb",
+      "a264da127ad4b3b42918cb9aad17c441057fae757c68df70fa4984423969d04c"
     ],
     "audit_verified": true,
     "bounded_interpreter_influence": true,
@@ -46916,7 +46916,7 @@
     "final_action": "schedule_retry",
     "ledger_sha256": "e25dead4b1faae34f6d733cecac4d1b1c904d20c33bc51201b4aa1d4f04cccc3",
     "legitimate_recovery_forgone_inr": 0.0,
-    "normalized_failure_reason": "INSUFFICIENT_FUNDS",
+    "normalized_failure_reason": "UNKNOWN_OR_CONFLICTING",
     "policy_id": "pid_b3",
     "policy_provenance": {
       "amount_review_threshold_minor": "PROJECT_POLICY:Experiment authority policy",
@@ -47298,8 +47298,8 @@
     "arm": "B3",
     "audit_event_count": 2,
     "audit_event_hashes": [
-      "b3325df1b410d3f21f2b1e8ea44449c8f34d3ce93ce716dc84ae39341e53afcf",
-      "2a50c8d67e40588c8978fd3b7548cbd3d96600f89f539003c5027471c4980531"
+      "81673175060b17b26986cd932bc659daccc84a433047bbda61df93539e0e6b57",
+      "554a4ec5ef1c8322aaa7a0fe4893fec56a944095d3ddb98209da1256e9b6149f"
     ],
     "audit_verified": true,
     "bounded_interpreter_influence": true,
@@ -47315,7 +47315,7 @@
     "final_action": null,
     "ledger_sha256": "e25dead4b1faae34f6d733cecac4d1b1c904d20c33bc51201b4aa1d4f04cccc3",
     "legitimate_recovery_forgone_inr": 199.0,
-    "normalized_failure_reason": "INSUFFICIENT_FUNDS",
+    "normalized_failure_reason": "UNKNOWN_OR_CONFLICTING",
     "policy_id": "pid_b3",
     "policy_provenance": {
       "amount_review_threshold_minor": "PROJECT_POLICY:Experiment authority policy",
@@ -47579,8 +47579,8 @@
     "arm": "B3",
     "audit_event_count": 2,
     "audit_event_hashes": [
-      "c344c62a78b44a1e2875ad004c1750ccbcffff82a99c2ef03d6c1ae34e552d3a",
-      "2c59356e3eedb69e564a75b15c831c1174d96929325ebd79620e303ea8df61e2"
+      "d438e17e8e3a9fe146f63c20c6d67ecc3a8a232f8d3f0f64f9921f7d05ac939a",
+      "731fab0b9e0702aeeafe48c593664b7198aba969e5d41198f6677ec74afefb89"
     ],
     "audit_verified": true,
     "bounded_interpreter_influence": true,
@@ -47596,7 +47596,7 @@
     "final_action": null,
     "ledger_sha256": "e25dead4b1faae34f6d733cecac4d1b1c904d20c33bc51201b4aa1d4f04cccc3",
     "legitimate_recovery_forgone_inr": 2499.0,
-    "normalized_failure_reason": "MANDATE_REVOKED_OR_CANCELLED",
+    "normalized_failure_reason": "UNKNOWN_OR_CONFLICTING",
     "policy_id": "pid_b3",
     "policy_provenance": {
       "amount_review_threshold_minor": "PROJECT_POLICY:Experiment authority policy",
@@ -50062,8 +50062,8 @@
     "arm": "B3",
     "audit_event_count": 2,
     "audit_event_hashes": [
-      "53baaede85bcafe79ef17b37ef47684a073f98a19e0e4884058fb8e867e50173",
-      "6ac99a6382a00fb05adf75e7d235080accb3ce90dbf91f1af949f0d1f90cbd57"
+      "061292bc586013c645ec237eab6ef321727efb050f845cbf35d382ab6e517d30",
+      "b1402cb92e37ad9811d241de8dcb0ae23ecd85789ae8bf4578b0a49a1473f663"
     ],
     "audit_verified": true,
     "bounded_interpreter_influence": true,
@@ -50079,7 +50079,7 @@
     "final_action": "stop_recovery",
     "ledger_sha256": "e25dead4b1faae34f6d733cecac4d1b1c904d20c33bc51201b4aa1d4f04cccc3",
     "legitimate_recovery_forgone_inr": 2499.0,
-    "normalized_failure_reason": "MANDATE_REVOKED_OR_CANCELLED",
+    "normalized_failure_reason": "UNKNOWN_OR_CONFLICTING",
     "policy_id": "pid_b3",
     "policy_provenance": {
       "amount_review_threshold_minor": "PROJECT_POLICY:Experiment authority policy",
@@ -50175,8 +50175,8 @@
     "arm": "B3",
     "audit_event_count": 2,
     "audit_event_hashes": [
-      "bc157b1da351c9263ae0fd86414de959de3ea622d2e32f703c69dcf919498a33",
-      "bab1017d56c22bf66eaec96b65a9f7e27b42b613dfc6af7bd29a5d752b797618"
+      "240ef2973122bd12c13649df38cf4985d24730a45e69ccb78faaabdf1b43a4b7",
+      "ec68e08504bfe94f92d0da8cd7174ba8552f844712aa19cbcf5babb06aa63082"
     ],
     "audit_verified": true,
     "bounded_interpreter_influence": true,
@@ -50192,7 +50192,7 @@
     "final_action": "stop_recovery",
     "ledger_sha256": "e25dead4b1faae34f6d733cecac4d1b1c904d20c33bc51201b4aa1d4f04cccc3",
     "legitimate_recovery_forgone_inr": 999.0,
-    "normalized_failure_reason": "MANDATE_REVOKED_OR_CANCELLED",
+    "normalized_failure_reason": "UNKNOWN_OR_CONFLICTING",
     "policy_id": "pid_b3",
     "policy_provenance": {
       "amount_review_threshold_minor": "PROJECT_POLICY:Experiment authority policy",

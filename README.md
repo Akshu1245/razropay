@@ -250,6 +250,13 @@ python3 -m pip install -e '.[ui]'
 streamlit run app.py
 ```
 
+The same UI ships as a self-contained container for judging without a local Python environment — it carries only the generated evidence and the code to display it, needs no secret, and writes nothing. See [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) for free public hosting options (Hugging Face Spaces, Streamlit Community Cloud).
+
+```bash
+docker build -t mandateguard-lab .
+docker run --rm -p 8501:8501 mandateguard-lab
+```
+
 The UI shares its palette and its arm colouring with the generated charts through `bailiff.chartstyle`, so an arm is the same colour on screen as it is in `frontier.png`: blue is fully guarded, oxblood is ungated, neutral ink is a diagnostic relaxation. Colour is never decoration here, it encodes how much authority an arm gave up. The Case Timeline shows one case as nine rows of receipts rather than nine columns of captions, because the decisive column is whether a provider call happened at all. The Failure Lab runs the demo live and marks each runtime contract satisfied or not against the line the runtime actually emitted.
 
 If Streamlit is unavailable, use `./scripts/demo.sh` and the generated Markdown report instead. The UI is a presentation layer for the deterministic synthetic benchmark and local provider simulator, not a live payment console.
@@ -291,13 +298,15 @@ The sequence below leads with prevention rather than recovery, deliberately. The
 7. The economic break even analysis and findings document showing recovered INR, legitimate recovery forgone, protected value, realized harm, efficiency, violations, abstention, net value, and per seed spread.
 8. The generated sensitivity chart showing which arm wins as the price of a prohibited action is swept, and the crossover at which the fully guarded arms overtake reason gating alone.
 9. `ROBUSTNESS.md`, which reports where these conclusions survive a hostile fixture and where they do not.
+10. `python3 scripts/interpreter_ablation.py` — the "does the AI earn its place" question answered mechanically: B2 and B3 on the same frozen aggregate, same guardrails, same execution boundary, so the only difference left is the bounded interpreter. Whatever the delta is, it is printed, not asserted.
+11. `python3 scripts/refusal_regret.py` — every refusal reason with the recoverable value it forgot and the harm-bearing value it protected, including the rows where a control cost more than it protected. A system that publishes its own regret table is harder to accuse of grading itself.
 
 ## Verification
 
 Four gates, in increasing strength. The first two are fast enough to run on every change; the last two are what should be run before submitting.
 
 ```bash
-./scripts/test.sh              # 292 tests: unit, contract, adversarial, property based
+./scripts/test.sh              # 297 tests: unit, contract, adversarial, property based
 python3 scripts/mutation_check.py   # does the suite actually catch the bugs it names
 ./scripts/release_check.sh     # packaging, determinism, generated artefacts
 ./scripts/verify_all.sh        # all of the above plus the fixture assumption sweep

@@ -128,7 +128,9 @@ class CommonOutcomeLedger:
                 email=True,
                 opted_out=digest[5] % 11 == 0,
             )
-            recoverable = bank_state in {"available", "temporary_failure"} and customer_state == "willing"
+            # Must match the payout precondition in `execute` exactly; a looser
+            # label makes forgone recovery count value that could never pay out.
+            recoverable = bank_state == "available" and customer_state == "willing"
             outcomes.append(
                 CommonOutcome(
                     case_id=case_id,

@@ -208,3 +208,35 @@ def test_harm_states_are_mostly_invisible_to_reason_gating() -> None:
         "peak_window_execution",
     }
     assert set(states) <= set(HARM_PROBABILITY_BY_STATE)
+
+
+# ---------------------------------------------------------------------------
+# Defect 4: the recoverable label was looser than the provider payout.
+#
+# The fixture once marked a case recoverable for any transient looking reason
+# with a willing customer, while ReplayProvider only pays out when the latent
+# bank state is available AND the customer is willing. Roughly forty percent
+# of "recoverable" INR could never have paid out, so legitimate recovery
+# forgone charged denials for money the simulator would never have returned.
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize("regime", sorted(REGIMES))
+def test_recoverable_label_matches_the_provider_payout(regime: str) -> None:
+    """A case is labelled recoverable iff a retry sent to the provider recovers it."""
+    from bailiff.domain import ActionType
+    from bailiff.replay import ReplayProvider
+
+    events, ledger = generate_fixture(regime, SEED, N)
+    provider = ReplayProvider(ledger)
+    for event in events:
+        outcome = ledger.get(event.recovery_case_id)
+        result = provider.execute(
+            event=event,
+            action=ActionType.SCHEDULE_RETRY,
+            idempotency_key=f"payout_contract:{event.recovery_case_id}",
+        )
+        assert result.recovered == (outcome.latent_recoverable_minor > 0), (
+            f"{event.recovery_case_id}: recoverable label and provider payout disagree "
+            f"(bank={outcome.latent_bank_state}, customer={outcome.latent_customer_state})"
+        )

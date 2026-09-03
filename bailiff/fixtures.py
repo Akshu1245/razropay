@@ -178,11 +178,12 @@ def generate_fixture(regime: str, seed: int, n: int = 100) -> tuple[list[Recover
             FailureReason.UNKNOWN_OR_CONFLICTING: "unknown",
         }[reason]
         customer_state = "unwilling" if reason == FailureReason.CUSTOMER_OPTED_OUT else rng.choice(("willing", "willing", "unknown"))
-        recoverable = reason in {
-            FailureReason.INSUFFICIENT_FUNDS,
-            FailureReason.BANK_TIMEOUT_OR_TEMPORARY_FAILURE,
-            FailureReason.UNKNOWN_OR_CONFLICTING,
-        } and not terminal and customer_state == "willing"
+        # Recoverable is defined by the exact payout precondition ReplayProvider
+        # enforces (bank available AND customer willing). If the label were any
+        # looser, `legitimate_recovery_forgone_inr` would count value the
+        # simulator could never have returned, overstating the cost of every
+        # denial. The two definitions must never drift apart.
+        recoverable = bank_state == "available" and customer_state == "willing"
         # ------------------------------------------------------------------
         # Compliance exposure is drawn INDEPENDENTLY of the failure reason.
         #

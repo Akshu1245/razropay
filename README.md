@@ -306,7 +306,7 @@ The sequence below leads with prevention rather than recovery, deliberately. The
 Four gates, in increasing strength. The first two are fast enough to run on every change; the last two are what should be run before submitting.
 
 ```bash
-./scripts/test.sh              # 297 tests: unit, contract, adversarial, property based
+./scripts/test.sh              # 299 tests: unit, contract, adversarial, property based
 python3 scripts/mutation_check.py   # does the suite actually catch the bugs it names
 ./scripts/release_check.sh     # packaging, determinism, generated artefacts
 ./scripts/verify_all.sh        # all of the above plus the fixture assumption sweep
@@ -345,6 +345,8 @@ The contract is therefore drawn where it can be kept. Verification never regener
 **Fixture assumption sweep** (`scripts/fixture_sensitivity.py`, generating `ROBUSTNESS.md`). The sharpest attack on this project is not a bug: it is that the harm model was chosen by the same person who wanted the guardrails to look good. The assumptions are therefore swept across fifteen settings, deliberately including settings hostile to the design, and every conclusion is reported at every setting. The result is not a clean sweep and is not presented as one. See `ROBUSTNESS.md`.
 
 ## Honest limitations
+
+The frozen benchmark licenses one kind of claim and not another. It supports "arm A trades recovery against prohibited value differently than arm B, under a declared fixture whose compliance exposure is drawn independently of the failure reason" — a controlled comparison. It never supports a real-world effect size, and no result in this repository should be quoted as one. Where this project grounds itself outside its own simulator is deliberately the **execution and refusal axis**, not the estimation axis: real Razorpay Test Mode execution behind a pre-write fence, an independently verified captured-payment postcondition, and a recorded already-paid refusal that provably created nothing (`0 -> 0`). An entry that validates estimation on external data and an entry that proves execution and denial against the real provider are answering the same "it's all your own simulator" objection on different axes; this repository claims only its own.
 
 The frozen MandateGuard benchmark outcomes are synthetic. In that offline path the provider is a local simulator, the input adapter is Razorpay-shaped, and no Razorpay API is called. No production customer is contacted and no real money is moved. RecoveryTruth is a separate optional path: with `rzp_test_` credentials it performs real Razorpay Test Mode reads and may create a Standard Payment Link fallback; it refuses `rzp_live_` keys and is not an AutoPay retry. That Test Mode evidence is currently **VERIFIED_TEST_MODE_EVIDENCE_CAPTURED**. The real bounded interpreter path is optional, requires an OpenAI compatible environment, and must be run separately from the deterministic final benchmark. The deterministic offline interpreter remains the reproducible default. External regulatory sources remain at their declared provenance tier until the exact primary circular documents are pinned and hashed.
 

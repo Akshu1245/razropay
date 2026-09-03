@@ -182,6 +182,31 @@ existed at the provider. Proving both the completed round trip and the
 zero-write refusal is the combination not yet demonstrated elsewhere in
 this field's public evidence.
 
+## Rigor is no longer rare; the combination still is
+
+Late in the field's public window, evaluation-first entries appeared in this
+exact mandate niche: matched-world multi-arm harnesses, hashed frozen
+configs, oracle ceilings, sealed test splits with committed hashes, paired
+bootstrap confidence intervals, and self-published negative findings. One
+strong general entry additionally validated its targeting estimation on a
+large public randomized dataset. The claim "nobody else evaluates rigorously"
+is therefore retired; this project should not make it.
+
+What remains defensible is the combination no public rival holds at once:
+nine policy arms spanning an entire relaxation frontier plus Razorpay's own
+published schedule as a reason-blind reference arm; financial metrics defined
+by whether a provider call happened, immune to the stop-spelling defect class;
+a fixture whose latent harm is drawn independently of the failure reason, so
+reason gating cannot win by construction — enforced by a release gate; swept
+price curves as a reporting requirement rather than a single asserted lift;
+a mutation-tested verification suite (found in no surveyed rival); and
+external grounding on the execution-and-refusal axis — Test Mode execution
+behind a pre-write fence, independently verified postcondition, and the
+recorded `0 -> 0` zero-write refusal. Estimation grounded on external data
+and execution proven against the real provider answer the same objection on
+different axes; only the second exists in this repository, and it should be
+claimed precisely as that.
+
 ## Disambiguation from same-named entries
 
 At least one other public Buildathon entry independently chose the name

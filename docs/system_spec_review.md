@@ -61,7 +61,7 @@ The third finding was presentational rather than a defect. The entire economic r
 ## Remaining honest limitations
 
 The offline input adapter is Razorpay shaped and does not call Razorpay APIs; its provider is a synthetic local simulator. Separately, RecoveryTruth's Test Mode path does perform real Razorpay Test Mode reads and a Standard Payment Link fallback when credentials exist. No production customer is contacted and no production money is moved. Test Mode status is VERIFIED_TEST_MODE_EVIDENCE_CAPTURED.
- The API is in memory and does not provide production authentication or durable storage. The visual interface is a planned presentation layer rather than a completed production dashboard. The benchmark is a synthetic counterfactual evaluation, not a claim about observed Razorpay revenue. Violation and human review prices are project assumptions, not provider pricing.
+ The API is in memory and does not provide production authentication or durable storage. The visual interface is a read only evidence presentation layer over generated outputs, not a production dashboard. The benchmark is a synthetic counterfactual evaluation, not a claim about observed Razorpay revenue. Violation and human review prices are project assumptions, not provider pricing.
 
 B3 is not presented as superior by default. If the bounded interpreter ties B2, the result is shown honestly. The point is that it cannot bypass authority, not that an AI call must win every synthetic regime.
 

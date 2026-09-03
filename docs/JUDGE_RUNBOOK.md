@@ -62,7 +62,7 @@ A compromised or overconfident interpreter still cannot move a revoked mandate p
 
 ## The real Test Mode proof
 
-The optional RecoveryTruth path uses Razorpay **Test Mode only** and rejects live keys. The concrete execution action is a **Standard Payment Link fallback**. It is customer-initiated and must not be described as an AutoPay retry. Current status: **VERIFIED_TEST_MODE_EVIDENCE_CAPTURED**. Do not present receipts, Payment IDs, or RecoveryProof until a real Test Mode run exists.
+The optional RecoveryTruth path uses Razorpay **Test Mode only** and rejects live keys. The concrete execution action is a **Standard Payment Link fallback**. It is customer-initiated and must not be described as an AutoPay retry. Current status: **VERIFIED_TEST_MODE_EVIDENCE_CAPTURED**. The sanitized evidence bundle in `docs/testmode_evidence/` contains the real fallback receipt, captured-payment RecoveryProof, and already-paid SAFE_BLOCK; present those recorded artifacts and nothing invented beyond them.
 
 The final evidence bundle must contain exactly these three demonstrations:
 
@@ -109,7 +109,7 @@ Show that harm pricing is an assumption, then show the sensitivity crossover ins
 
 **3:45–4:30 — Test Mode evidence**
 
-If status is **VERIFIED_TEST_MODE_EVIDENCE_CAPTURED**, do not show invented receipts. Say the offline path is a local simulator, Test Mode is a separate real Razorpay Test Mode path (Standard Payment Link fallback, not AutoPay retry), and evidence is waiting on `rzp_test_` keys. If artifacts exist, show the fallback receipt, the `SAFE_BLOCK`, and the `RecoveryProof`. Say explicitly: "This is a Standard Payment Link fallback in Test Mode, not an AutoPay retry."
+Status is **VERIFIED_TEST_MODE_EVIDENCE_CAPTURED**, so show the recorded artifacts in `docs/testmode_evidence/`: the fallback receipt, the `SAFE_BLOCK`, and the `RecoveryProof`. Say the offline path is a local simulator and Test Mode is a separate real Razorpay Test Mode path. Say explicitly: "This is a Standard Payment Link fallback in Test Mode, not an AutoPay retry."
 
 **4:30–5:00 — Product fit and close**
 

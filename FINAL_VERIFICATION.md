@@ -8,13 +8,13 @@ The offline MandateGuard benchmark remains the reproducible default and does not
 
 Verified characteristics:
 
-- **283 tests passed** on the frozen suite.
+- **292 tests passed** on the frozen suite.
 - **14/14 mutations caught**.
 - RecoveryTruth offline acceptance passes: financial truth, exact order binding, provider-read fail-closed behavior, in-flight block, expiring authority, write fence, logical exactly-once behavior, timeout/duplicate reconciliation, ambiguous/malformed post-write handling, and captured-payment proof contract.
 - Security regression acceptance passes: authority identity binding, denied-decision reuse prevention, provider identity echo, and webhook fail-closed handling.
 - The release checker passes against the frozen sampled/full evidence hashes.
 - The fixture assumption sweep completes all **15/15** settings; B3 dominates B2 in **35/45** regime observations under the shipped robustness protocol.
-- The hardening layer adds mechanical claims validation, B2→B3 ablation, refusal-regret accounting, concurrent same-reference fallback protection, and a read-only provider-proof contract without changing the historical 283-test count.
+- The hardening layer adds mechanical claims validation, B2→B3 ablation, refusal-regret accounting, concurrent same-reference fallback protection, and a read-only provider-proof contract without changing the frozen benchmark suite; the suite later grew to 292 tests when the ingress replay, non-ASCII signature, out-of-order cancellation, route-level reason gating, and live-credential refusal defects were fixed with regression tests.
 
 The benchmark rupee values remain **synthetic counterfactuals** over a generated ledger. They are not production revenue and are not presented as observed Razorpay recovery numbers.
 

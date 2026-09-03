@@ -50,7 +50,7 @@ python3 -m compileall -q bailiff tests scripts
 python3 -m pytest -q
 
 # RecoveryTruth, security regression and the hardening gate deliberately sit
-# outside the frozen 283-test benchmark count. The historical offline proof
+# outside the frozen benchmark suite count. The historical offline proof
 # therefore stays stable while protected-surface, provider/concurrency and
 # claim invariants are still mandatory in every local release check.
 python3 scripts/recoverytruth_check.py

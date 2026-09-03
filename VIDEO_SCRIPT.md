@@ -78,7 +78,7 @@ Say:
 
 > This is Razorpay Test Mode only; live keys are refused. The concrete recovery action here is a standard customer-initiated Payment Link fallback. It is **not** an AutoPay retry. Immediately before the write, RecoveryTruth re-reads the current Order and Payments. If the payment is already paid, still in flight, conflicting or unknown, it blocks instead of creating a second recovery action.
 
-If Test Mode has not been run yet, **do not fake this section**. Status is **VERIFIED_TEST_MODE_EVIDENCE_CAPTURED**. State that the adapter and offline contract harness are implemented, that Test Mode means real Razorpay Test Mode reads plus a Standard Payment Link fallback (not AutoPay retry), and that no receipt, Payment ID, or RecoveryProof exists until `rzp_test_` keys are supplied and the run is captured.
+Status is **VERIFIED_TEST_MODE_EVIDENCE_CAPTURED**: the sanitized four-artifact bundle in `docs/testmode_evidence/` holds a real Test Mode Payment Link fallback receipt, a captured-payment `RecoveryProof`, an already-paid `SAFE_BLOCK`, and the zero-new-fallback proof. Show those artifacts rather than describing them, and say on camera that Test Mode means real Razorpay Test Mode reads plus a Standard Payment Link fallback — not an AutoPay retry — and that no live key is ever accepted.
 
 ## 3:25–4:10 — Refusal Report + sensitivity
 

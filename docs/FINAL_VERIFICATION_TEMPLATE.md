@@ -33,7 +33,7 @@ Record exact observed results:
 - 60-second demo: `PASS/FAIL`
 - deep verification: `PASS/FAIL`
 
-Expected historical baseline before the final freeze is 283 tests and 14/14 mutations, but this document must record the **final observed run**, not assume those numbers.
+Expected historical baseline before the final freeze is 292 tests and 14/14 mutations, but this document must record the **final observed run**, not assume those numbers.
 
 ## 3. Judge demo proof
 

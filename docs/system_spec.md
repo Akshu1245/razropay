@@ -292,11 +292,11 @@ The project is submission ready only when all of these are true:
 13. README metrics are generated from output files and contain no unresolved tokens.
 14. The final report includes incremental recovered, legitimate forgone, protected value, realized harm, efficiency, violations, abstention, net value under both pricings, break even analysis, the swept price curves and their crossovers, frontier arms, and spread.
 15. Legitimate recovery forgone is monotone in policy strictness, protected value by denial discriminates between arms, no fully guarded arm records nonzero realized harm, and the ungated baseline does record prohibited execution.
-15. The shipped evidence is a deterministic sample with a manifest, while full evidence is generated locally and excluded from release.
-16. The frontier chart and generated FINDINGS.md are reproducible from the final aggregate outputs. The frontier plots incremental recovery against realized harm rather than against violation counts, because a flat count is indifferent to the size of the debit it counts, and it marks dominated arms explicitly.
-17. The video shows the actual final commit and generated outputs.
-18. The Razorpay shaped adapter preserves provider signal and payload hash without claiming a live API call.
-19. The optional real interpreter path uses schema validation, records model usage and cost, exposes no provider tools, and fails closed to ABSTAIN.
+16. The shipped evidence is a deterministic sample with a manifest, while full evidence is generated locally and excluded from release.
+17. The frontier chart and generated FINDINGS.md are reproducible from the final aggregate outputs. The frontier plots incremental recovery against realized harm rather than against violation counts, because a flat count is indifferent to the size of the debit it counts, and it marks dominated arms explicitly.
+18. The video shows the actual final commit and generated outputs.
+19. The Razorpay shaped adapter preserves provider signal and payload hash without claiming a live API call.
+20. The optional real interpreter path uses schema validation, records model usage and cost, exposes no provider tools, and fails closed to ABSTAIN.
 
 ## 19. Build order
 

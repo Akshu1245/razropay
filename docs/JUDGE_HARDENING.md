@@ -1,6 +1,6 @@
 # Judge hardening layer
 
-This layer strengthens MandateGuard without changing the frozen nine-arm benchmark or its 283-test count.
+This layer strengthens MandateGuard without changing the frozen nine-arm benchmark or its frozen test suite count.
 
 The additions are intentionally proof-oriented rather than feature-oriented:
 
@@ -29,7 +29,7 @@ The gate verifies:
 - a barrier-released two-thread fallback race resolves to one process-local provider mutation and one logical Payment Link;
 - if Test Mode artifacts are present, the complete bundle must prove successful fallback, captured-payment RecoveryProof and already-paid zero-write SAFE_BLOCK.
 
-`scripts/release_check.sh` invokes this after the original frozen checks. It is deliberately outside the 283-test historical benchmark count, just like RecoveryTruth.
+`scripts/release_check.sh` invokes this after the original frozen checks. It is deliberately outside the frozen benchmark suite count, just like RecoveryTruth.
 
 ## Judge-facing commands
 

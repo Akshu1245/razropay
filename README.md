@@ -55,7 +55,7 @@ Everything downstream proves that an *action* was authorised. None of it is wort
 | Replay window | A delivery far outside its window, or stamped in the future, is refused |
 | Evidence | A refused delivery is recorded with its reason and body hash. A silent drop is indistinguishable from a bug |
 
-A payload that fails verification is never normalised, never diagnosed and never scored. `tests/test_webhook_ingress.py` attacks this boundary 39 ways: forged and absent signatures, bodies tampered after signing, signatures replayed onto a different payload, retired secrets, malformed bodies under a valid signature, header case games, and the ordering inversions above.
+A payload that fails verification is never normalised, never diagnosed and never scored. `tests/test_webhook_ingress.py` attacks this boundary 42 ways: forged and absent signatures, bodies tampered after signing, signatures replayed onto a different payload, a captured body replayed under a freshly minted event-id header, non-ASCII signature headers, retired secrets, malformed bodies under a valid signature, header case games, and the ordering inversions above.
 
 See [Razorpay's webhook validation docs](https://razorpay.com/docs/webhooks/validate-test/) for the contract this implements.
 
@@ -297,7 +297,7 @@ The sequence below leads with prevention rather than recovery, deliberately. The
 Four gates, in increasing strength. The first two are fast enough to run on every change; the last two are what should be run before submitting.
 
 ```bash
-./scripts/test.sh              # 283 tests: unit, contract, adversarial, property based
+./scripts/test.sh              # 292 tests: unit, contract, adversarial, property based
 python3 scripts/mutation_check.py   # does the suite actually catch the bugs it names
 ./scripts/release_check.sh     # packaging, determinism, generated artefacts
 ./scripts/verify_all.sh        # all of the above plus the fixture assumption sweep

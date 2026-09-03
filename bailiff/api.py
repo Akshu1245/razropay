@@ -30,8 +30,10 @@ class ExperimentCreate(BaseModel):
     regime: str = "R1_TRANSIENT"
     seed: int = 1701
     n: int = Field(default=100, ge=1, le=5000)
+    # Derived from the canonical arm order so a new arm cannot leave the API
+    # default silently rejecting its own documented request shape.
     policy_ids: list[str] = Field(
-        default_factory=lambda: ["pid_b0", "pid_b1", "pid_b1_5", "pid_b2_25", "pid_b2_5", "pid_b2_75", "pid_b2", "pid_b3"]
+        default_factory=lambda: [f"pid_{arm.replace('.', '_').lower()}" for arm in CANONICAL_ARM_ORDER]
     )
 
 
@@ -142,6 +144,13 @@ def _run_frozen(record: ExperimentRecord) -> None:
                 row["net_value_inr"] = round(
                     row["incremental_recovered_inr"]
                     - float(row["violation_cost_inr"])
+                    - float(row["human_review_cost_inr"])
+                    - float(row["model_cost_inr"]),
+                    4,
+                )
+                row["net_value_harm_priced_inr"] = round(
+                    row["incremental_recovered_inr"]
+                    - float(row["harm_cost_inr"])
                     - float(row["human_review_cost_inr"])
                     - float(row["model_cost_inr"]),
                     4,

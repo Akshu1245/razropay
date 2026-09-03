@@ -259,8 +259,22 @@ class RazorpayTestModeClient:
 
         provider_payment = dict(self.fetch_payment(payment_id))
         payment_raw_hash = self._raw_hash(provider_payment)
+        notes = provider_payment.get("notes")
+        own_reference = str(
+            provider_payment.get("reference_id")
+            or (notes.get("recovery_reference", "") if isinstance(notes, Mapping) else "")
+        )
+        # If the fetched payment carries its own reference, it must match; it is
+        # never overwritten, otherwise the payment-level reference check would
+        # pass by construction. When the payment carries none (the Payments API
+        # does not echo a link's reference), the binding is the verified chain
+        # above: the link carries the expected reference and names this payment
+        # as its only captured payment.
+        if own_reference and own_reference != expected_reference_id:
+            raise ValueError("captured payment carries a different recovery reference")
         bound_payment = dict(provider_payment)
-        bound_payment["reference_id"] = expected_reference_id
+        if not own_reference:
+            bound_payment["reference_id"] = expected_reference_id
         proof = verify_captured_payment(
             bound_payment,
             expected_amount_minor=expected_amount_minor,

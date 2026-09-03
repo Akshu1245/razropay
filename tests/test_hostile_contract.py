@@ -229,3 +229,75 @@ def test_runner_evidence_has_same_ledger_hash_for_every_arm():
         seed_hashes = {row["ledger_sha256"] for row in evidence if row["case_id"].startswith(f"R1_TRANSIENT_{seed}_")}
         assert len(seed_hashes) == 1
     assert all(row["audit_verified"] for row in evidence)
+
+
+def _testmode_client_with(link: dict, payment: dict):
+    """A RazorpayTestModeClient whose provider reads are canned fixtures."""
+    from bailiff.razorpay_testmode import RazorpayTestModeClient
+
+    class _Stub(RazorpayTestModeClient):
+        def fetch_payment_link(self, payment_link_id: str):
+            return link
+
+        def fetch_payment(self, payment_id: str):
+            return payment
+
+    return _Stub(key_id="rzp_test_stub", key_secret="stub")
+
+
+_TESTMODE_LINK = {
+    "id": "plink_stub00000001",
+    "reference_id": "recovery_ref_1",
+    "amount": 9900,
+    "currency": "INR",
+    "accept_partial": False,
+    "status": "paid",
+    "payments": [{"payment_id": "pay_stub000000001", "payment_link_id": "plink_stub00000001", "status": "captured", "amount": 9900}],
+}
+
+
+def test_testmode_payment_reference_contradiction_is_refused():
+    """A fetched payment carrying a DIFFERENT recovery reference must fail.
+
+    The payment-level reference check once overwrote the fetched payment's
+    reference with the expected one before verifying it, which made that check
+    pass by construction. A contradicting provider-side reference must raise.
+    """
+    import pytest as _pytest
+
+    payment = {
+        "id": "pay_stub000000001",
+        "status": "captured",
+        "amount": 9900,
+        "currency": "INR",
+        "notes": {"recovery_reference": "recovery_ref_SOMEONE_ELSE"},
+    }
+    client = _testmode_client_with(_TESTMODE_LINK, payment)
+    with _pytest.raises(ValueError, match="different recovery reference"):
+        client.verify_payment_link_capture(
+            payment_link_id="plink_stub00000001",
+            expected_amount_minor=9900,
+            expected_currency="INR",
+            expected_reference_id="recovery_ref_1",
+        )
+
+
+def test_testmode_payment_without_own_reference_binds_through_the_verified_link():
+    """A payment that carries no reference is bound by the verified link chain."""
+    payment = {
+        "id": "pay_stub000000001",
+        "status": "captured",
+        "amount": 9900,
+        "currency": "INR",
+        "notes": {},
+    }
+    client = _testmode_client_with(_TESTMODE_LINK, payment)
+    proof, evidence_hash = client.verify_payment_link_capture(
+        payment_link_id="plink_stub00000001",
+        expected_amount_minor=9900,
+        expected_currency="INR",
+        expected_reference_id="recovery_ref_1",
+    )
+    assert proof.payment_id == "pay_stub000000001"
+    assert proof.reference_id == "recovery_ref_1"
+    assert len(evidence_hash) == 64

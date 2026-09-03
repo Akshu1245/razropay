@@ -273,7 +273,11 @@ def _baseline_run(
             decision=decision.decision.value,
             reasons=decision.reason_codes,
             provider_call_made=True,
-            metadata={"arm": arm, "postcondition_state": result.postcondition_state},
+            metadata={
+                "arm": arm,
+                "idempotency_key": key,
+                "postcondition_state": result.postcondition_state,
+            },
         )
         decision = replace(decision, provider_call_made=True, provider_call_id=result.provider_call_id)
     else:

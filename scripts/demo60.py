@@ -350,7 +350,7 @@ def main() -> int:
     # This count is checked, not decorative: tests/test_demo60.py fails the
     # suite if it drifts from the real collected test count or the real
     # mutation list length, so it cannot go stale silently again.
-    print("  283 tests, 46 red team attacks, 14/14 mutations caught")
+    print("  294 tests, 46 red team attacks, 14/14 mutations caught")
     print(f"\n  {DIM}Synthetic ledger, local provider simulator, Razorpay shaped input.")
     print(f"  No Razorpay API is called and no figure here is production revenue.{OFF}")
     print(RULE)

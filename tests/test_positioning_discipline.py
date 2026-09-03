@@ -72,6 +72,7 @@ STALE_COUNT_STRINGS = [
     "198 test",
     "209 test",
     "210 test",
+    "283 tests",
     "8/8 mutation",
     "eight deliberately reintroduced",
     "eight known defects",
@@ -139,6 +140,34 @@ def test_no_shipped_document_asserts_a_forbidden_claim(claim):
         if claim in line and not any(marker in line for marker in PROHIBITION_MARKERS)
     ]
     assert not offenders, f"forbidden claim {claim!r} is asserted in {offenders}"
+
+
+# Every document that describes the arms in a table must have a row for every
+# canonical arm. RZP was once present in the canonical order and the prose but
+# absent from the role/behavior tables of three shipped documents, which is
+# exactly the kind of drift a reviewer reads as a nine arm story with eight
+# arms behind it.
+ARM_TABLE_DOCS = [
+    "README.md",
+    "ARCHITECTURE.md",
+    "docs/system_spec.md",
+    "docs/system_spec_review.md",
+]
+
+
+@pytest.mark.parametrize("name", ARM_TABLE_DOCS)
+def test_every_canonical_arm_has_a_row_in_the_arm_table(name):
+    import re
+
+    from bailiff.policies import CANONICAL_ARM_ORDER
+
+    text = (ROOT / name).read_text(encoding="utf-8")
+    missing = [
+        arm
+        for arm in CANONICAL_ARM_ORDER
+        if not re.search(rf"^\|\s*`?{re.escape(arm)}`?\s*\|", text, flags=re.MULTILINE)
+    ]
+    assert not missing, f"{name} arm table has no row for {missing}"
 
 
 def test_the_competitive_position_document_exists():

@@ -28,6 +28,7 @@ The repository has been reviewed from the perspective of a hostile judge, an eng
 | B0 | No intervention control | No action | None | Measures recoverable value left untouched |
 | B1 | Ungated retry baseline | Retry without deterministic gate | No diagnosis | Shows the recovery and violation cost of naive retrying |
 | B1.5 | Deterministic retry only | Retry only for normalized transient reasons, still ungated | Deterministic reason | Separates reason awareness from full guardrails |
+| RZP | Fixed retry reference policy | Retry on the documented schedule regardless of reason | None by design | Benchmarks a published purely temporal schedule against reason aware policies |
 | B2.25 | Timing frontier | Timing gate with named project policy relaxations | Deterministic reason | Exposes the recovery and violation tradeoff from timing alone |
 | B2.5 | Timing plus attempt frontier | Timing, retry gap, and attempt gate | Deterministic reason | Exposes the incremental effect of attempt controls |
 | B2.75 | Timing plus attempt plus consent frontier | Timing, retry gap, attempt, and consent gates | Deterministic reason | Exposes the incremental effect of consent controls |

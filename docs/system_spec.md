@@ -37,6 +37,7 @@ B0, B1, B1.5, RZP, B2.25, B2.5, B2.75, B2, B3
 | B0 | No intervention | None | None | Measures total recoverable counterfactual left untouched |
 | B1 | Ungated retry baseline | No reason inspection | None | Establishes the value and harm of naive retrying |
 | B1.5 | Deterministic retry only | Normalized reason | None | Tests whether reason aware retry alone improves over B1 |
+| RZP | Fixed retry reference policy | None by design | Documented attempt budget only | Benchmarks Razorpay's published card retry schedule as a reason blind temporal reference |
 | B2.25 | Timing frontier | Normalized reason | Timing only | Exposes the effect of relaxing project policy gates |
 | B2.5 | Timing plus attempt frontier | Normalized reason | Timing, retry gap, attempt budget | Exposes the incremental effect of attempt controls |
 | B2.75 | Timing plus attempt plus consent frontier | Normalized reason | Timing, retry gap, attempt budget, consent and opt out | Exposes the incremental effect of consent controls |

@@ -34,9 +34,9 @@ If asked what would change my mind: another independently reproducible policy ev
 
 The benchmark is synthetic and offline, and every rupee number in it is a counterfactual benchmark value, not observed merchant revenue.
 
-What is executable and falsifiable: webhook HMAC validation, attacked 39 ways in tests; replay/order controls; deterministic authority attenuation; guardrails; provider-call accounting; abstention; timeout handling; audit verification; and the independent checker. The baseline suite currently contains 283 tests and a 14/14 mutation check; the final verification record must quote the final frozen run rather than assume those numbers.
+What is executable and falsifiable: webhook HMAC validation, attacked 39 ways in tests; replay/order controls; deterministic authority attenuation; guardrails; provider-call accounting; abstention; timeout handling; audit verification; and the independent checker. The baseline suite currently contains 294 tests and a 14/14 mutation check; the final verification record must quote the final frozen run rather than assume those numbers.
 
-Separately, RecoveryTruth has a Razorpay **Test Mode only** execution path. Its concrete write is a **Standard Payment Link fallback**, not an AutoPay retry. That proof is currently VERIFIED_TEST_MODE_EVIDENCE_CAPTURED. Once keys exist, the final submission should show one real fallback receipt, one real `SAFE_BLOCK_ALREADY_PAID` or `SAFE_BLOCK_IN_FLIGHT`, and a captured-payment `RecoveryProof`. Do not invent those artifacts.
+Separately, RecoveryTruth has a Razorpay **Test Mode only** execution path. Its concrete write is a **Standard Payment Link fallback**, not an AutoPay retry. That proof is currently VERIFIED_TEST_MODE_EVIDENCE_CAPTURED: `docs/testmode_evidence/` holds one real fallback receipt, one real safe block with a zero-write proof, and a captured-payment `RecoveryProof`. Cite those captured files; do not invent artifacts beyond them.
 
 ## "What does the RecoveryProof actually prove?"
 

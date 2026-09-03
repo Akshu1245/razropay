@@ -109,7 +109,7 @@ Show that harm pricing is an assumption, then show the sensitivity crossover ins
 
 **3:45–4:30 — Test Mode evidence**
 
-If status is **VERIFIED_TEST_MODE_EVIDENCE_CAPTURED**, do not show invented receipts. Say the offline path is a local simulator, Test Mode is a separate real Razorpay Test Mode path (Standard Payment Link fallback, not AutoPay retry), and evidence is waiting on `rzp_test_` keys. If artifacts exist, show the fallback receipt, the `SAFE_BLOCK`, and the `RecoveryProof`. Say explicitly: "This is a Standard Payment Link fallback in Test Mode, not an AutoPay retry."
+Status is **VERIFIED_TEST_MODE_EVIDENCE_CAPTURED** and the artifacts are in `docs/testmode_evidence/`. Say the offline path is a local simulator and Test Mode is a separate real Razorpay Test Mode path (Standard Payment Link fallback, not AutoPay retry). Show the captured fallback receipt, the `SAFE_BLOCK`, and the `RecoveryProof` from that folder — never an invented receipt. Say explicitly: "This is a Standard Payment Link fallback in Test Mode, not an AutoPay retry."
 
 **4:30–5:00 — Product fit and close**
 

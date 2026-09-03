@@ -52,6 +52,7 @@ The order is part of the evidence contract and must remain unchanged.
 | `B0` | No intervention control | Does not attempt recovery |
 | `B1` | Ungated retry baseline | Retries without reason or guardrail inspection |
 | `B1.5` | Deterministic retry only | Retries only normalized transient reasons |
+| `RZP` | Fixed retry reference policy | Razorpay's documented card retry schedule run reason blind as a benchmark arm |
 | `B2.25` | Timing frontier | Uses timing while relaxing other project gates; diagnostic only |
 | `B2.5` | Timing and attempt frontier | Adds retry gap and attempt budget; diagnostic only |
 | `B2.75` | Timing, attempt, and consent frontier | Adds consent controls; diagnostic only |

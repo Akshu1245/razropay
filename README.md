@@ -109,7 +109,7 @@ The arm ordering is not a property of the policies alone. It is a joint property
 
 The flat pricing charges a fixed sum per independently detected breach, regardless of the amount at stake. The harm pricing charges the money the prohibited action actually moved, times a configured multiplier whose default of 1.0 is a lower bound rather than an estimate, because a prohibited debit must at minimum be reversed. `scripts/make_sensitivity_chart.py` sweeps both prices across a grid and `outputs/sensitivity.json` records which arm wins at each point, so a reader who rejects the project default can read their own answer off the curve.
 
-The substantive economic claim is a threshold, not a verdict: under a flat per breach charge, reason gating alone is competitive, because a flat charge is indifferent to the size of the debit it prices. The fully guarded arms win once a prohibited action is charged the money it moved.
+The substantive economic claim is a threshold, not a verdict: under a flat per breach charge, reason gating alone is competitive, because a flat charge is indifferent to the size of the debit it prices. The fully guarded arms overtake reason gating as a prohibited action approaches the money it moved — at the 1.0x multiplier in the transient and ambiguous regimes, and at 1.5x in the terminal regime, where reason gating already avoids most of the harm. The exact crossover per regime is in `outputs/sensitivity.json`.
 
 ### How latent harm is generated
 
@@ -130,6 +130,7 @@ B0, B1, B1.5, RZP, B2.25, B2.5, B2.75, B2, B3
 | B0 | No intervention control | Stops without attempting recovery |
 | B1 | Ungated retry baseline | Retries without reading the failure reason or applying guardrails |
 | B1.5 | Deterministic retry only | Retries only normalized transient reasons; stops for terminal or ambiguous reasons; no interpreter |
+| RZP | Fixed retry reference policy | Implements Razorpay's documented card retry schedule as a reason blind benchmark arm; retries until the documented attempt budget is spent |
 | B2.25 | Timing frontier | Applies timing while relaxing project policy gates for diagnosis, consent, attempt, mandate, pre debit, expiry, and amount review; diagnostic only |
 | B2.5 | Timing plus attempt frontier | Adds retry gap and attempt budget to the B2.25 profile; diagnostic only |
 | B2.75 | Timing plus attempt plus consent frontier | Adds consent and opt out gates; still relaxes other full profile controls; diagnostic only |
@@ -297,7 +298,7 @@ The sequence below leads with prevention rather than recovery, deliberately. The
 Four gates, in increasing strength. The first two are fast enough to run on every change; the last two are what should be run before submitting.
 
 ```bash
-./scripts/test.sh              # 283 tests: unit, contract, adversarial, property based
+./scripts/test.sh              # 294 tests: unit, contract, adversarial, property based
 python3 scripts/mutation_check.py   # does the suite actually catch the bugs it names
 ./scripts/release_check.sh     # packaging, determinism, generated artefacts
 ./scripts/verify_all.sh        # all of the above plus the fixture assumption sweep

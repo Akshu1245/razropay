@@ -2,6 +2,22 @@
 
 This is the final verification record for the submission. It deliberately separates the **frozen synthetic benchmark** from the **real Razorpay Test Mode provider proof**. The historical archive verification is preserved unchanged in `docs/OFFLINE_VERIFICATION_BASELINE.md`.
 
+## 0. Final observed run
+
+The complete deep gate (`./scripts/verify_all.sh`: full suite, mutation gate with baseline control, release check including full benchmark regeneration, fixture assumption sweep, closing full-manifest checksum verification) was executed from a clean `git clone` checkout, not the working tree.
+
+- Verified tree: commit `791e033` on `cursor/hardening-fixes-a925` (this record file and the manifest line covering it are the only changes after that tree; no code, evidence, or benchmark artifact changed after the verified commit)
+- Run timestamp (UTC): 2026-09-03
+- Python: 3.12.3; OS/runner: Linux 6.12.94+ x86_64
+- pytest: 299 passed / 0 failed / 0 skipped
+- mutation check: baseline green, 14/14 caught
+- deep verification: PASS, all four stages; `SHA256SUMS.txt` verified after the full workflow
+- clean-checkout regeneration: every generated JSON, `outputs/report.md`, `FINDINGS.md`, and `ROBUSTNESS.md` byte-identical to the committed artifacts
+- manifest: 116 entries; dataset hash `cbf161e2c06c35682b696e2d3bb50c54b27c35ad28aae7a63e85bb9343ef5b4e`; rules hash `70e2909d26598695f74ae9e4d5c81dabb4c772d1f6d376d6567923cdc8a52506`; 20 seeds, 3 regimes
+- guarded-arm record, computed from `outputs/per_seed.json`: 0 independent violations and 0 realized-harm runs across all 120 guarded seed-regime runs
+
+The evidence re-freeze in this branch changed only recorded reason labels and the dataset manifest hash after an adapter labeling fix; every benchmark value was verified identical field-by-field against the prior freeze before the new freeze was accepted.
+
 ## 1. Frozen offline proof
 
 The offline MandateGuard benchmark remains the reproducible default and does not call Razorpay APIs.

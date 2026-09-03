@@ -86,7 +86,9 @@ class RealBoundedInterpreter:
             "error_source": event.failure_payload.get("error_source"),
             "error_step": event.failure_payload.get("error_step"),
             "error_description": event.failure_payload.get("error_description"),
-            "normalized_project_reason": event.normalized_failure_reason,
+            # The fixture's normalized reason is deliberately withheld: it is the
+            # label the interpreter exists to infer, and passing it would leak
+            # ground truth into the model prompt.
             "amount_minor": event.amount_minor,
             "currency": event.currency,
             "attempt_count": event.attempt_count,

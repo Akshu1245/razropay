@@ -96,6 +96,20 @@ def test_real_interpreter_uses_schema_and_returns_cost_metadata():
     assert request["response_format"]["type"] == "json_schema"
 
 
+def test_real_interpreter_signal_withholds_the_normalized_reason():
+    """The model must infer the reason; the fixture's own label never enters the prompt.
+
+    Passing `normalized_failure_reason` to the interpreter would leak ground
+    truth into the model prompt and make every real-mode diagnosis suspect.
+    """
+    events, _ = generate_fixture("R3_AMBIGUOUS", 1701, 25)
+    for raw in events:
+        event = normalize_razorpay_autopay_payload(to_razorpay_test_payload(raw))
+        signal = RealBoundedInterpreter._event_signal(event)
+        assert "normalized_project_reason" not in signal
+        assert event.normalized_failure_reason not in {str(value) for value in signal.values()}
+
+
 def test_real_interpreter_output_abstains_before_provider_call():
     events, ledger = generate_fixture("R3_AMBIGUOUS", 1701, 1)
     event = normalize_razorpay_autopay_payload(to_razorpay_test_payload(events[0]))

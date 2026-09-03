@@ -94,6 +94,81 @@ def test_testmode_client_accepts_test_credentials_at_construction():
     assert client.key_id.startswith("rzp_test_")
 
 
+# -- structural proof that the interpreter cannot reach the provider --------
+#
+# "The bounded interpreter has no provider tools" is asserted in prose all
+# over this repository. These two tests turn the assertion into a property:
+# the interpreter module's import graph mechanically cannot reach any module
+# that talks to a provider, and the wire request it builds carries no tool,
+# function, or credential field. A future edit that gives the interpreter a
+# provider path fails here before it passes review.
+
+_PROVIDER_MODULES = {
+    "replay",            # local provider simulator
+    "razorpay_testmode",  # real Test Mode client
+    "recovery_runtime",  # RecoveryTruth execution runtime
+    "recovery_truth",    # provider evidence and write fence
+    "guardrails",        # execution engine that owns the provider handle
+    "state",             # case store the engine mutates
+    "webhook",           # ingress gate
+    "api",               # HTTP surface
+    "policies",          # policy arms that construct providers
+}
+
+
+def _bailiff_imports(module_name: str) -> set[str]:
+    import ast
+    from pathlib import Path
+
+    source = (Path(__file__).resolve().parents[1] / "bailiff" / f"{module_name}.py").read_text()
+    found: set[str] = set()
+    for node in ast.walk(ast.parse(source)):
+        if isinstance(node, ast.ImportFrom):
+            if node.level > 0:
+                found.add((node.module or "").split(".")[0])
+            elif (node.module or "").startswith("bailiff"):
+                parts = node.module.split(".")
+                found.add(parts[1] if len(parts) > 1 else "")
+        elif isinstance(node, ast.Import):
+            for alias in node.names:
+                if alias.name.startswith("bailiff."):
+                    found.add(alias.name.split(".")[1])
+    return {name for name in found if name}
+
+
+def test_the_interpreter_import_graph_cannot_reach_a_provider():
+    seen: set[str] = set()
+    frontier = ["interpreter"]
+    while frontier:
+        module = frontier.pop()
+        if module in seen:
+            continue
+        seen.add(module)
+        for imported in _bailiff_imports(module):
+            assert imported not in _PROVIDER_MODULES, (
+                f"bailiff/{module}.py imports bailiff/{imported}.py, which gives the "
+                "bounded interpreter a structural path to provider execution"
+            )
+            frontier.append(imported)
+
+
+def test_the_interpreter_wire_request_carries_no_tools_or_credentials():
+    events, _ = generate_fixture("R3_AMBIGUOUS", 1701, 1)
+    fake = _FakeClient('{"reason": "UNKNOWN_OR_CONFLICTING", "confidence": 0.4}')
+    interpreter = RealBoundedInterpreter(model="test-model", client=fake)
+    interpreter(events[0])
+
+    (request,) = fake.completions.calls
+    for forbidden in ("tools", "tool_choice", "functions", "function_call"):
+        assert forbidden not in request, f"interpreter request must never carry {forbidden}"
+    serialized = str(request).lower()
+    for leak in ("key_secret", "rzp_test_", "rzp_live_", "authorization"):
+        assert leak not in serialized, f"interpreter request must never carry {leak}"
+    schema = request["response_format"]["json_schema"]["schema"]
+    assert set(schema["properties"]) == {"reason", "confidence"}
+    assert schema["additionalProperties"] is False
+
+
 def test_real_interpreter_uses_schema_and_returns_cost_metadata():
     events, _ = generate_fixture("R3_AMBIGUOUS", 1701, 1)
     event = normalize_razorpay_autopay_payload(to_razorpay_test_payload(events[0]))

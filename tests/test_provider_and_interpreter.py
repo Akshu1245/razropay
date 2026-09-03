@@ -69,6 +69,43 @@ def test_razorpay_shaped_payload_round_trip_preserves_provider_signal():
     assert ledger.get(adapted.recovery_case_id).case_id == original.recovery_case_id
 
 
+def test_every_fixture_reason_survives_the_adapter_round_trip_exactly():
+    """The recorded reason mix must be the fixture's reason mix.
+
+    Before `unknown_or_conflicting` was exact-mapped, the keyword fallback
+    relabelled over a quarter of the ambiguous regime's recorded reasons —
+    the regime nominally 40% ambiguous shipped evidence showing 13%. Arm
+    behaviour never drifted (the payload conflict flag drives diagnosis),
+    but evidence that disagrees with the fixture that generated it is the
+    kind of defect this project exists to refuse.
+    """
+    for regime in ("R1_TRANSIENT", "R2_TERMINAL", "R3_AMBIGUOUS"):
+        events, _ = generate_fixture(regime, 1701, 50)
+        for event in events:
+            adapted = normalize_razorpay_autopay_payload(to_razorpay_test_payload(event))
+            assert adapted.normalized_failure_reason == event.normalized_failure_reason, (
+                f"{regime}: adapter relabelled {event.normalized_failure_reason} "
+                f"to {adapted.normalized_failure_reason} for {event.failure_code}"
+            )
+
+
+def test_adapter_keyword_fallback_prefers_the_terminal_reading():
+    """A description matching both readings must stop recovery, not retry it.
+
+    The two mistakes are not symmetric: misreading a terminal failure as
+    retryable debits an account that must not be debited; the reverse only
+    forgoes one retry.
+    """
+    from bailiff.razorpay_adapter import _normalized_reason
+
+    both = _normalized_reason(
+        "some_unmapped_code", "XX01", "insufficient balance after account closed"
+    )
+    assert both == "ACCOUNT_CLOSED_OR_BLOCKED"
+    revoked = _normalized_reason(None, None, "balance low and mandate revoked by customer")
+    assert revoked == "MANDATE_REVOKED_OR_CANCELLED"
+
+
 def test_razorpay_adapter_rejects_non_inr_payload():
     events, _ = generate_fixture("R1_TRANSIENT", 1701, 1)
     payload = to_razorpay_test_payload(events[0])

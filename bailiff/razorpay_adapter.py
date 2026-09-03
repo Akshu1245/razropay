@@ -33,6 +33,15 @@ _REASON_MAP = {
     "payment_risk_check_failed": FailureReason.RISK_OR_FRAUD_REJECTED.value,
     "risk_rejected": FailureReason.RISK_OR_FRAUD_REJECTED.value,
     "customer_opted_out": FailureReason.CUSTOMER_OPTED_OUT.value,
+    # An explicitly ambiguous provider reason must stay ambiguous through the
+    # round trip. Before this entry existed, the keyword fallback quietly
+    # relabelled a large share of the ambiguous regime's recorded reasons
+    # (the fixture's conflicting descriptions matched retryable keywords),
+    # so the shipped evidence understated the ambiguity mix the regime is
+    # named for. Arm behaviour was unaffected — diagnosis is driven by the
+    # payload conflict flag — but recorded evidence must not disagree with
+    # the fixture that generated it.
+    "unknown_or_conflicting": FailureReason.UNKNOWN_OR_CONFLICTING.value,
 }
 
 
@@ -113,15 +122,20 @@ def _normalized_reason(error_reason: object, error_code: object, description: ob
     reason_text = str(error_reason or "").strip().lower()
     if reason_text in _REASON_MAP:
         return _REASON_MAP[reason_text]
+    # Keyword fallback for payloads whose provider reason is not exact-mapped.
+    # Terminal readings are checked before retryable ones: a description that
+    # mentions both a closed account and an insufficient balance must land on
+    # the reading that stops recovery, because the cost of the two mistakes is
+    # not symmetric.
     text = " ".join(str(value).lower() for value in (error_reason, error_code, description) if value)
-    if "insufficient" in text or "balance" in text:
-        return FailureReason.INSUFFICIENT_FUNDS.value
     if "mandate" in text and ("revok" in text or "cancel" in text):
         return FailureReason.MANDATE_REVOKED_OR_CANCELLED.value
     if "account" in text and ("closed" in text or "block" in text):
         return FailureReason.ACCOUNT_CLOSED_OR_BLOCKED.value
     if "risk" in text or "fraud" in text:
         return FailureReason.RISK_OR_FRAUD_REJECTED.value
+    if "insufficient" in text or "balance" in text:
+        return FailureReason.INSUFFICIENT_FUNDS.value
     if "timeout" in text or "technical" in text or "server" in text or "unavailable" in text:
         return FailureReason.BANK_TIMEOUT_OR_TEMPORARY_FAILURE.value
     return FailureReason.UNKNOWN_OR_CONFLICTING.value

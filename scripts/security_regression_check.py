@@ -1,5 +1,11 @@
 from __future__ import annotations
 
+if not __debug__:
+    raise SystemExit(
+        "this release gate is built on assert statements; running it with "
+        "PYTHONOPTIMIZE or -O would silently disable every check"
+    )
+
 from dataclasses import replace
 from datetime import datetime, timedelta, timezone
 

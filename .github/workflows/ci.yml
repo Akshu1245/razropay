@@ -35,7 +35,12 @@ jobs:
           MANDATEGUARD_OFFLINE: "1"
       - name: README and report integrity
         run: |
-          ! grep -nE '\{\{|\}\}' README.md outputs/report.md
+          # `! command` is exempt from bash errexit, so the inverted grep must
+          # be an explicit branch or this step can never fail.
+          if grep -nE '\{\{|\}\}' README.md outputs/report.md; then
+            echo "unresolved template tokens found" >&2
+            exit 1
+          fi
           test -f RECOVERYTRUTH.md
           test -f SUBMISSION_READINESS.md
           test -f outputs/manifest.json

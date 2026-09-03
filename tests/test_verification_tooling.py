@@ -70,6 +70,38 @@ def test_mutation_check_covers_the_safety_critical_modules():
         assert required in covered, f"no mutation exercises {required}"
 
 
+def test_mutation_scratch_copy_carries_everything_the_suite_needs(tmp_path):
+    """The scratch copy must be able to go green with no mutation applied.
+
+    An earlier revision excluded `outputs/` from the copy while keeping
+    `SHA256SUMS.txt`, so the chart checksum tests failed in every scratch
+    copy and every mutation was reported "caught" whether or not any test
+    could detect it. The baseline control run in `main()` is the full
+    defence; this test keeps its precondition from silently regressing.
+    """
+    mutation_check = _load("mutation_check")
+    target = mutation_check.copy_tree(tmp_path)
+    for required in (
+        "SHA256SUMS.txt",
+        "outputs/manifest.json",
+        "outputs/aggregate.json",
+        "outputs/architecture.png",
+        "outputs/frontier.png",
+        "outputs/sensitivity.png",
+        "tests/test_chart_checksum_policy.py",
+    ):
+        assert (target / required).exists(), (
+            f"{required} is missing from the mutation scratch copy, so the "
+            "suite cannot pass unmutated and every mutation verdict is vacuous"
+        )
+    assert "def main" in (ROOT / "scripts" / "mutation_check.py").read_text()
+    source = (ROOT / "scripts" / "mutation_check.py").read_text()
+    assert "BASELINE FAILED" in source, (
+        "mutation_check.py must run a baseline control: without it a scratch "
+        "copy that fails for an unrelated reason marks every mutation caught"
+    )
+
+
 def test_fixture_sweep_restores_the_baseline_assumptions():
     """The sweep mutates module globals. Leaking them would corrupt later runs."""
     from bailiff import fixtures

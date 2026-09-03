@@ -98,14 +98,14 @@ MUTATIONS = [
     Mutation(
         name="webhook_signature_not_verified",
         path="bailiff/webhook.py",
-        old="            if hmac.compare_digest(candidate, signature):",
+        old="            if hmac.compare_digest(candidate, signature_bytes):",
         new="            if True or hmac.compare_digest(candidate, signature):",
         breaks="a forged webhook could drive the recovery agent",
     ),
     Mutation(
         name="webhook_duplicate_not_detected",
         path="bailiff/webhook.py",
-        old="        duplicate = event_id in self._seen_event_ids",
+        old="        duplicate = event_id in self._seen_event_ids or body_hash in self._seen_body_hashes",
         new="        duplicate = False",
         breaks="a redelivered event could be acted on twice",
     ),
@@ -162,25 +162,49 @@ def run_suite(target: Path) -> tuple[bool, str]:
         text=True,
         env={"PATH": "/usr/bin:/bin:/usr/local/bin", "PYTHONPATH": str(target)},
     )
-    return result.returncode == 0, (result.stdout + result.stderr).strip().splitlines()[-1:][0] if result.stdout else ""
+    combined = (result.stdout + result.stderr).strip()
+    tail = combined.splitlines()[-1] if combined else ""
+    return result.returncode == 0, tail
+
+
+def copy_tree(destination: Path) -> Path:
+    # outputs/ must be present in the scratch copy: the chart checksum tests
+    # verify shipped artefacts against SHA256SUMS.txt, and a copy without them
+    # fails the suite before any mutation is applied. Only the local-only
+    # generated evidence is excluded.
+    target = destination / "repo"
+    shutil.copytree(
+        ROOT,
+        target,
+        ignore=shutil.ignore_patterns(
+            "generated", ".git", "__pycache__", "*.egg-info", ".pytest_cache",
+            "recovered_minimax_artifacts", "build", "dist",
+        ),
+    )
+    return target
 
 
 def main() -> int:
+    # Baseline control: a mutation is only proven caught if the identical
+    # scratch copy passes with no mutation applied. Without this control a
+    # copy that fails for an unrelated reason marks every mutation "caught".
+    with tempfile.TemporaryDirectory() as tmp:
+        baseline = copy_tree(Path(tmp))
+        passed, tail = run_suite(baseline)
+        if not passed:
+            print("BASELINE FAILED: the unmutated scratch copy does not pass the suite,")
+            print("so no mutation verdict below would mean anything.")
+            print(f"  last line: {tail}")
+            return 1
+    print("Baseline control passed: the unmutated scratch copy is green.")
+
     print(f"Checking {len(MUTATIONS)} mutations against the test suite.\n")
     survivors: list[Mutation] = []
     unapplied: list[Mutation] = []
 
     for mutation in MUTATIONS:
         with tempfile.TemporaryDirectory() as tmp:
-            target = Path(tmp) / "repo"
-            shutil.copytree(
-                ROOT,
-                target,
-                ignore=shutil.ignore_patterns(
-                    "outputs", ".git", "__pycache__", "*.egg-info", ".pytest_cache",
-                    "recovered_minimax_artifacts", "build", "dist",
-                ),
-            )
+            target = copy_tree(Path(tmp))
             source = target / mutation.path
             text = source.read_text()
             if mutation.old not in text:

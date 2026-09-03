@@ -131,3 +131,10 @@ def self_test() -> None:
     })
     clean_decision = positive_controls()[0][2]
     assert violations(clean_event, clean_decision) == ()
+
+
+if __name__ == "__main__":
+    if not __debug__:
+        raise SystemExit("checker self test requires assertions; do not run with -O")
+    self_test()
+    print("independent checker positive controls passed")

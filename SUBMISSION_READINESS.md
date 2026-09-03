@@ -6,7 +6,7 @@ This file is the current submission-status source of truth. **VERIFIED** means t
 
 **Offline submission path: VERIFIED AND FROZEN.**
 
-The frozen MandateGuard benchmark remains the same 283-test, 14/14-mutation proof. Its rupee values are synthetic counterfactuals over a generated ledger and do not claim production revenue. The historical archive verification is preserved in `docs/OFFLINE_VERIFICATION_BASELINE.md`.
+The frozen MandateGuard benchmark is a 294-test, 14/14-mutation proof. Its rupee values are synthetic counterfactuals over a generated ledger and do not claim production revenue. The historical archive verification is preserved in `docs/OFFLINE_VERIFICATION_BASELINE.md`.
 
 **Credentialed provider path: VERIFIED IN RAZORPAY TEST MODE.**
 
@@ -72,7 +72,7 @@ Keep these limits explicit:
 
 ## Current submission status
 
-- Offline 283-test proof: **GREEN / FROZEN**
+- Offline 294-test proof: **GREEN / FROZEN**
 - Mutation proof: **14/14 CAUGHT**
 - RecoveryTruth acceptance: **GREEN**
 - Security regression acceptance: **GREEN**

@@ -1,0 +1,2 @@
+MandateGuard final PR verification trigger.
+This path is excluded from shipped release evidence by scripts/make_checksum_manifest.py.

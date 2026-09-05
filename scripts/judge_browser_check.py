@@ -88,8 +88,12 @@ def verify_primary_flow(page: Page, base_url: str) -> None:
     expect(page.locator("#policy-table tr")).to_have_count(9)
     expect(page.locator("#price-curve .price-point")).to_have_count(9)
 
-    # Error handling: abort a fresh batch request. Existing evidence must remain visible.
-    page.route("**/api/demo/batch", lambda route: route.abort())
+    # Error handling: return malformed JSON. Existing evidence must remain visible,
+    # without manufacturing a browser-level network error in the acceptance log.
+    page.route(
+        "**/api/demo/batch",
+        lambda route: route.fulfill(status=200, content_type="application/json", body="{not-json"),
+    )
     page.get_by_role("button", name="Run recovery demonstration").click()
     expect(page.locator("#run-state")).to_contain_text("Demonstration could not be refreshed.", timeout=15_000)
     expect(recover).to_contain_text("Recovered")

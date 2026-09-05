@@ -79,11 +79,11 @@ Known failures use deterministic rules. B3 consults a bounded interpreter only f
 
 The runtime checks mandate state, consent, retry budget, timing, pre-debit notice and amount authority. External rules retain provenance in `bailiff/rules.json`. Unpinned requirements are reported requirements or project policy, not claims of regulatory certification.
 
-Raw webhook bytes are authenticated with HMAC-SHA256 before normalization. Duplicate and stale deliveries are ignored. `tests/test_webhook_ingress.py` attacks this boundary. An unknown provider timeout requires human review before further automated action. Audit chains are tamper-evident, not immutable.
+Raw webhook bytes are authenticated with HMAC-SHA256 before normalization. Duplicate and stale deliveries are ignored. `tests/test_webhook_ingress.py` attacks this boundary 42 ways. An unknown provider timeout requires human review before further automated action. Audit chains are tamper-evident, not immutable.
 
 ## Why this fits Razorpay
 
-Razorpay already ships recovery products. MandateGuard is a narrow recovery prototype with a reusable evaluation and evidence layer. It does not claim that Razorpay lacks recovery or that this prototype outperforms production systems.
+Razorpay already ships recovery products. MandateGuard is a narrow recovery prototype, not a recovery engine deployed on production merchants. It does not claim that Razorpay lacks recovery or that this prototype outperforms production systems.
 
 The proposed integration point is an evidence-backed recovery configuration workflow: compare candidate policies on the same outcomes, execute only within permission, and show why each action or refusal occurred. `docs/competitive_position.md` separates published capabilities from the proposed contribution.
 

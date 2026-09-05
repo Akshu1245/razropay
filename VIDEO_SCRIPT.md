@@ -22,9 +22,9 @@ Point briefly to the five-question decision contract: what failed, what next, wh
 
 “This runs the 100-case batch and the three decisive examples through the shared Python engine. The batch is synthetic and uses a local provider simulator; no customer is contacted and no real AutoPay debit is executed.”
 
-Point to the five batch numbers.
+Point to the batch summary, including awaiting outcomes.
 
-“The recovered INR comes from successful simulated provider postconditions, not a predicted recovery score. I also show payments recovered, cases stopped, cases requiring review, and recoverable value forgone. Controls have a cost, so I do not hide it.”
+“The recovered INR comes from successful simulated provider postconditions, not a predicted recovery score. I also show payments recovered, cases stopped, cases requiring review, awaiting outcomes, and recoverable value forgone. Controls have a cost, so I do not hide it.”
 
 ## 1:20–2:35 — Three decisions judges should remember
 
@@ -62,7 +62,9 @@ Point to **Ask a human before another action**.
 
 “The bounded interpreter can return a label and confidence. It has no payment tools and cannot restore a revoked mandate, raise an amount limit, or bypass consent and retry controls. Low-confidence interpretation abstains before the provider.”
 
-“If asked about model performance: the repeatable default uses deterministic offline interpretation, and the optional captured real-model artifact proves an integration path only. I do not claim production AI uplift from it.”
+**Action:** Expand **What does the interpreter actually add?**
+
+“This compares the deterministic policy with the offline interpreter stub on identical frozen outcomes. It shows the simulated recovery difference and harm in all three failure mixes. The separate saved real-model call proves integration, not measured accuracy or production uplift.”
 
 ## 3:20–4:00 — Separate Razorpay Test Mode proof
 

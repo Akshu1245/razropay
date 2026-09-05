@@ -24,30 +24,17 @@ The required claim remains:
 
 The bounded interpreter still has no provider tools and cannot authorize money movement.
 
-## Verification status
+## Verification and follow-up status
 
-The previously recorded **308-test / 14-mutation** result in `FINAL_VERIFICATION.md` is historical evidence for the handoff revision, not proof that this new UI revision passes.
+The merged judge-experience revision `28bc8e35606057a9ea47efaf5010c1f689c763f3` passed [clean-checkout CI](https://github.com/Akshu1245/razropay/actions/runs/33944266970): 308 tests and all 14 mutation checks. The [browser verification run](https://github.com/Akshu1245/razropay/actions/runs/33943893074) passed required test, demo and evaluation scripts, desktop/mobile flows, downloads and receipt tamper checks; its tested source tree was identical to that merge.
 
-The judge-experience branch must earn its own clean-checkout verification before submission. Record the exact current results for:
+The follow-up adds the missing awaiting-outcome count, an explicit B2/B3 offline-interpreter comparison, an accurate interpretation-score label, and a fix for changing the selected boundary case while an earlier response is pending. The extended browser acceptance script verifies that delayed responses cannot overwrite another case. See the latest CI run for verification of this follow-up; earlier results are not a substitute.
 
-- `scripts/test.sh`
-- `scripts/demo.sh`
-- `scripts/evaluate.sh`
-- browser flow at desktop and 390-pixel mobile width
-- the three primary cases
-- receipt verification and tamper detection
-- export behavior
-- JavaScript syntax and browser errors
-- manifest/checksum integrity
+## Publication and owner actions
 
-Do not rewrite the historical verification record as if those checks have already passed.
+Code is in the Akshu1245/razropay repository. At the latest check on 5 September 2026 it remained private, and GitHub Pages was not enabled. Public access and deployment are deferred at the owner's request. Local verification does not establish a public demo.
 
-## Publication status at handoff to this revision
-
-- Repository visibility was still **private** when this work began.
-- `main` was still at handoff commit `1f3a1b1175bc633cbf40181e3c5ccca9c8f84a6f` before the judge-experience branch was created.
-- The existing GitHub Pages deployment for that handoff commit had failed; local correctness did not establish a public demo.
-- Repository visibility must not be changed without owner approval.
+The owner still needs to record and upload the five-minute video, confirm judge access to the repository/demo, and submit the application. Repository visibility must not be changed without owner approval.
 
 ## Production limits remain
 

@@ -1,0 +1,84 @@
+name: judge-experience-verification
+
+on:
+  push:
+    branches: ["judge-experience-polish"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  verify-judge-experience:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - name: Checkout exact revision
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install project and browser test dependency
+        run: |
+          python -m pip install -e '.[test]'
+          python -m pip install playwright
+          python -m playwright install --with-deps chromium
+
+      - name: JavaScript syntax
+        run: node --check public/app.js
+
+      - name: Required test command
+        run: ./scripts/test.sh
+
+      - name: Required demo command
+        run: ./scripts/demo.sh
+        env:
+          MANDATEGUARD_OFFLINE: "1"
+
+      - name: Required evaluation command
+        run: ./scripts/evaluate.sh
+        env:
+          MANDATEGUARD_OFFLINE: "1"
+
+      - name: Regenerate judge evidence and checksum candidate
+        run: |
+          python scripts/build_showcase.py
+          python scripts/make_checksum_manifest.py
+          sha256sum -c SHA256SUMS.txt >/dev/null
+          echo "generated showcase and checksum candidate verify in this clean checkout"
+
+      - name: Start Python and static evidence servers
+        run: |
+          python -m uvicorn api.index:app --host 127.0.0.1 --port 8765 > browser-artifacts-api.log 2>&1 &
+          echo $! > /tmp/mandateguard-api.pid
+          python -m http.server 8090 --directory public > browser-artifacts-static.log 2>&1 &
+          echo $! > /tmp/mandateguard-static.pid
+          for i in $(seq 1 40); do
+            if curl --fail --silent http://127.0.0.1:8765/api/health >/dev/null && curl --fail --silent http://127.0.0.1:8090/evidence.json >/dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "servers did not become ready" >&2
+          cat browser-artifacts-api.log >&2 || true
+          cat browser-artifacts-static.log >&2 || true
+          exit 1
+
+      - name: Browser judge flow
+        run: python scripts/judge_browser_check.py
+
+      - name: Show regenerated working-tree status
+        if: always()
+        run: git status --short
+
+      - name: Upload browser evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: judge-browser-evidence
+          path: |
+            browser-artifacts/
+            browser-artifacts-api.log
+            browser-artifacts-static.log
+          if-no-files-found: warn

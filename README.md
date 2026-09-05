@@ -31,7 +31,7 @@ MandateGuard evaluates a failed payment and makes one of three decisions:
 
 > **AI interprets unclear failure information; deterministic controls decide whether an action is allowed.**
 
-MandateGuard does not try to replace Razorpay's existing recovery products. It demonstrates a **trust, safety, and evidence layer around recovery policy**.
+Razorpay already ships recovery; MandateGuard does not try to replace it. It demonstrates a **trust, safety, and evidence layer around recovery policy**.
 
 ---
 
@@ -62,6 +62,13 @@ Recommended flow:
 7. Expand **Advanced policy evaluation** for the complete benchmark.
 
 > Demo INR values are synthetic. The public demo does not contact customers or execute a real AutoPay debit.
+
+### 60-second terminal fallback
+
+```bash
+pip install -r requirements.txt
+python scripts/demo60.py
+```
 
 ---
 
@@ -99,6 +106,8 @@ The deterministic layer checks:
 - case and mandate identity.
 
 The AI interpreter has **no provider tools**. It can help normalize ambiguous failure information, but it cannot restore a mandate, increase limits, refill attempts, extend authority, or bypass consent.
+
+Raw webhook bytes are authenticated before normalization, and `tests/test_webhook_ingress.py` **attacks this boundary 42 ways**.
 
 ---
 
@@ -282,6 +291,8 @@ bash scripts/verify_all.sh
 ```
 
 On Windows, use Git Bash/WSL for the `.sh` scripts or run the Python checks directly.
+
+`SHA256SUMS.txt` binds the shipped release files so unexpected changes can be detected during verification.
 
 ---
 

@@ -38,11 +38,13 @@ def main():
         f"The final evaluation covers **{len(manifest['seeds']) * len(manifest['regimes']) * manifest['n_per_seed'] * len(manifest['arms']):,} policy decisions** across **{len(manifest['seeds'])} seeds**, **{len(manifest['regimes'])} regimes**, and **{len(manifest['arms'])} policies**.",
         "<!-- END GENERATED SUBMISSION METRICS -->",
     ]
-    readme = ROOT / "README.md"
-    text = readme.read_text(encoding="utf-8")
-    start = text.index("<!-- BEGIN GENERATED SUBMISSION METRICS -->")
-    end = text.index("<!-- END GENERATED SUBMISSION METRICS -->") + len("<!-- END GENERATED SUBMISSION METRICS -->")
-    readme.write_text(text[:start] + "\n".join(lines) + text[end:], encoding="utf-8", newline="\n")
+    for name in ("README.md", "SUBMISSION_READINESS.md"):
+        document = ROOT / name
+        text = document.read_text(encoding="utf-8")
+        start = text.index("<!-- BEGIN GENERATED SUBMISSION METRICS -->")
+        end = text.index("<!-- END GENERATED SUBMISSION METRICS -->") + len("<!-- END GENERATED SUBMISSION METRICS -->")
+        document.write_text(text[:start] + "\n".join(lines) + text[end:], encoding="utf-8", newline="\n")
+
 
 
 if __name__ == "__main__":

@@ -48,8 +48,8 @@ SHIPPED_DOCS = [
     "VIDEO_SCRIPT.md",
     "docs/competitive_position.md",
     "docs/problem_evidence.md",
-    "docs/submission_checklist.md",
-    "docs/system_spec.md",
+    "SUBMISSION_READINESS.md",
+    "docs/DEPLOYMENT.md",
     "docs/panel_qa.md",
 ]
 
@@ -84,7 +84,7 @@ STALE_COUNT_STRINGS = [
 ]
 
 STALE_COUNT_SURFACE = SHIPPED_DOCS + [
-    "docs/system_spec_review.md",
+    "docs/JUDGE_RUNBOOK.md",
     "docs/panel_qa.md",
     "app.py",
     "scripts/demo60.py",

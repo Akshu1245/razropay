@@ -216,9 +216,9 @@ These are not hidden as “CI noise”; they are exactly the kind of failure mod
 
 ## 10. Verification matrix
 
-The release gate for the final submission requires:
+The cleaned release `27c977a` passed [full CI including Docker and mutation checks](https://github.com/Akshu1245/razropay/actions/runs/33947513116) and [browser verification](https://github.com/Akshu1245/razropay/actions/runs/33947513122). The table records that verified baseline. The report-generation follow-up must pass the same gates on its own commit before merge.
 
-| Gate | Expected result |
+| Gate | Observed baseline result |
 |---|---|
 | Unit/property/adversarial suite | 308 tests pass |
 | Independent checker positive controls | pass |

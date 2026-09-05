@@ -1,113 +1,113 @@
 # MandateGuard — canonical five-minute submission video
 
-Use the local Python-backed workspace at `http://127.0.0.1:8765`. The header must say **Python engine connected** before calling the demonstration live. If it says **Recorded engine evidence**, say exactly that; do not imply fresh Python execution.
+Use the Python-backed workspace at `http://127.0.0.1:8765`. The header must say **Python engine connected** before calling the demonstration live. If it says **Recorded engine evidence**, say exactly that; do not imply fresh Python execution.
 
-The batch figures are synthetic. The separate Razorpay artifact is Test Mode evidence. A Standard Payment Link fallback is not an AutoPay retry, and a created link is not proof of captured payment.
+The batch figures are synthetic. Razorpay Test Mode evidence is separate. A Standard Payment Link fallback is not an AutoPay retry, and a created link is not proof of captured payment.
 
-**Do not open with a recovery number.** The story starts with the merchant decision problem, then shows recovery and the cost of restraint together.
+**Do not open with a recovery number.**
 
-## 0:00–0:35 — The merchant decision problem
+## 0:00–0:35 — The decision problem
 
-**Screen:** Top of the MandateGuard workspace.
+**Screen:** top of the MandateGuard workspace.
 
 “A scheduled UPI AutoPay payment fails. The next step is not always retry. A temporary failure may be recoverable, a revoked mandate must stop, and an unknown provider result must be reviewed before another automated action.”
 
 “MandateGuard helps merchants recover failed scheduled UPI AutoPay payments, with explicit controls for when to retry, when to stop, and when to ask a human—with evidence for every decision.”
 
-Point briefly to the five-question decision contract: what failed, what next, why allowed, what happened, and where the evidence is.
+Point to the five-question decision contract.
 
-## 0:35–1:20 — Run the recovery demonstration
+## 0:35–1:15 — Run the batch
 
-**Action:** Click **Run recovery demonstration**.
+**Action:** click **Run recovery demonstration**.
 
-“This runs the 100-case batch and the three decisive examples through the shared Python engine. The batch is synthetic and uses a local provider simulator; no customer is contacted and no real AutoPay debit is executed.”
+“This runs a fixed 100-case synthetic batch and the three decisive examples through the shared Python engine. No customer is contacted and no real AutoPay debit is executed.”
 
-Point to the batch summary, including awaiting outcomes.
+Point to the summary.
 
-“The recovered INR comes from successful simulated provider postconditions, not a predicted recovery score. I also show payments recovered, cases stopped, cases requiring review, awaiting outcomes, and recoverable value forgone. Controls have a cost, so I do not hide it.”
+“Recovered INR is counted from successful simulated provider postconditions, not from a prediction. I also show payments recovered, stopped cases, human review, unknown outcomes and legitimate recovery forgone. Controls have a cost, so I show it.”
 
-## 1:20–2:35 — Three decisions judges should remember
+## 1:15–2:25 — Three decisions
 
-### A. Eligible failure
+### Eligible failure
 
 Point to **Retry is permitted**.
 
-“This failure is recoverable and the configured authority checks allow the bounded action. The card shows the full path: failure, diagnosis, controls, provider action and recovered postcondition.”
+“The failure is recoverable and authority checks permit one bounded action.”
 
-**Action:** Open its decision receipt.
+Open the receipt.
 
-“The receipt includes the provider-call evidence, idempotency data, postcondition and audit chain.”
+“The receipt carries the call identifier, idempotency evidence, postcondition and audit chain.”
 
-**Action:** Click **Verify audit chain + tamper check**.
+Run **Verify audit chain + tamper check**.
 
-“The browser recomputes the hashes. The shipped receipt verifies, and changing the first decision breaks the chain. This is tamper-evident evidence, not immutable storage.”
+“The shipped chain verifies. Editing an earlier decision breaks verification. This is tamper-evident, not immutable.”
 
-### B. Revoked mandate
+### Revoked mandate
 
 Point to **Stop before the provider**.
 
-“The failure itself can look retryable, but the mandate is revoked. Authority ends there. The actual engine result is zero provider calls.”
+“This can look retryable from the failure reason alone, but the mandate is revoked. Authority ends here, and the actual result is zero provider calls.”
 
-### C. Unknown provider timeout
+### Unknown timeout
 
 Point to **Ask a human before another action**.
 
-“One provider call happened, but the postcondition is unknown. MandateGuard does not call that a failure and retry blindly. The case moves to human review before another automated action.”
+“One provider call was attempted, but the postcondition is unknown. MandateGuard does not call that a normal failure and retry blindly. It holds the case for review first.”
 
-## 2:35–3:20 — Explain the AI boundary
+## 2:25–3:05 — AI boundary
 
-**Screen:** AI boundary section.
+**Screen:** AI boundary.
 
 “AI interprets unclear failure information; deterministic controls decide whether an action is allowed.”
 
-“The bounded interpreter can return a label and confidence. It has no payment tools and cannot restore a revoked mandate, raise an amount limit, or bypass consent and retry controls. Low-confidence interpretation abstains before the provider.”
+“The interpreter can normalize an ambiguous reason and confidence. It has no payment tools and cannot restore a mandate, raise an amount limit, refill retry attempts or bypass consent. Low confidence abstains before the provider.”
 
-**Action:** Expand **What does the interpreter actually add?**
+Expand the interpreter comparison briefly.
 
-“This compares the deterministic policy with the offline interpreter stub on identical frozen outcomes. It shows the simulated recovery difference and harm in all three failure mixes. The separate saved real-model call proves integration, not measured accuracy or production uplift.”
+“The repeatable benchmark uses the offline interpreter. The saved real-model artifact proves integration, not production accuracy or measured uplift.”
 
-## 3:20–4:00 — Separate Razorpay Test Mode proof
+## 3:05–3:45 — Razorpay Test Mode proof
 
 **Screen:** Razorpay Test Mode evidence.
 
-“This evidence is separate from the synthetic batch. RecoveryTruth captured a Razorpay Test Mode Standard Payment Link fallback and then independently verified the captured payment. Creating the link alone is not counted as recovered money.”
+“This is separate from the synthetic batch. RecoveryTruth captured a Razorpay Test Mode Standard Payment Link fallback and then independently verified the captured payment. Creating the link alone is not counted as recovered money.”
 
 Point to the already-paid proof.
 
-“In the already-paid case, the saved evidence shows Payment Links stayed zero to zero. No new fallback collection object was created.”
+“In the already-paid case, the evidence shows no new fallback write.”
 
-“These are saved Test Mode artifacts shown read-only here, not a fresh provider call from this viewer.”
+## 3:45–4:25 — Evaluation without hiding trade-offs
 
-## 4:00–4:40 — Advanced evaluation without hiding the trade-off
+Expand **Advanced policy evaluation**.
 
-**Action:** Expand **Advanced policy evaluation**.
+“All nine policies consume the same frozen outcomes. Recovery and prohibited execution are compared on the same cases.”
 
-“All nine canonical policies consume the same frozen outcomes. The comparison shows both simulated recovery and prohibited value executed.”
+Point to the price sweep.
 
-Point to the complete price sweep.
-
-“There is no universal winning policy. The preferred arm changes with the assumed cost of a prohibited action. The relaxed frontier arms are diagnostic, not safe production defaults.”
+“There is no universal winning policy. The preferred arm changes with the assumed cost of an unsafe action. The relaxed frontier arms are diagnostic, not production defaults.”
 
 “RZP is only a fixed temporal reference derived from a published card schedule. It is not Razorpay's current Intelligent UPI Retry Engine.”
 
-## 4:40–5:00 — Close on the product boundary
+## 4:25–4:45 — What broke
+
+“During development, the first judge UI was too research-heavy, static mode logged a health 404, a provider timeout needed a real unknown state, and the deep verifier was mutating evidence it later checksummed. Those failures became browser, integrity and release gates instead of being hidden.”
+
+## 4:45–5:00 — Close
 
 Return to the closing card.
 
 “The idea is focused: recover when authority is clear, stop when it ends, escalate uncertainty, and leave evidence.”
 
-“For production, this would still need durable state and scheduling, merchant authentication and tenant isolation, approved provider execution, cross-process reconciliation, and validation on permissioned merchant failures.”
-
 “MandateGuard: recover deliberately. Stop when authority ends. Escalate uncertainty. Leave evidence.”
 
 ## Recording checklist
 
-- Keep the browser at 100% zoom and use the local Python-backed workspace.
-- Rehearse once so the video ends before five minutes.
-- Do not spend time reading policy codes aloud.
+- Browser at 100% zoom; use the verified Python-backed workspace.
+- Rehearse once and stay under five minutes.
+- Do not read policy codes aloud.
 - Never call synthetic INR merchant revenue.
 - Never call the Payment Link fallback an AutoPay retry.
-- Never count link creation as proof of captured payment.
+- Never count link creation as captured payment.
 - Never call the audit chain tamper-proof or immutable.
-- Never claim AI uplift or production model accuracy that has not been measured.
-- Leave the source repository and demo URL visible only after you have verified the exact submitted links in a signed-out browser.
+- Never claim production AI uplift or accuracy that has not been measured.
+- Verify repository, demo and video URLs in a signed-out browser before submission.

@@ -1,8 +1,8 @@
-# Judge runbook
+# Judge Runbook
 
-## Fast path: understand MandateGuard in under three minutes
+## Fast path — understand MandateGuard in under three minutes
 
-Python 3.11 or newer:
+Python 3.11+:
 
 ```bash
 pip install -r requirements.txt
@@ -12,59 +12,62 @@ python -m uvicorn api.index:app --host 127.0.0.1 --port 8765
 Open `http://127.0.0.1:8765`. The header should say **Python engine connected**.
 
 1. Click **Run recovery demonstration**.
-2. Read the three decision cards:
-   - **Retry is permitted** — eligible recoverable failure, one permitted provider action and a receipt.
+2. Read the three case cards:
+   - **Retry is permitted** — eligible failure, one bounded provider action.
    - **Stop before the provider** — revoked mandate, zero provider calls.
-   - **Ask a human before another action** — provider timeout, one attempted call with unknown outcome, then human review.
-3. Open the eligible case receipt and click **Verify audit chain + tamper check**.
-4. Read the batch summary. It includes simulated revenue recovered, payments recovered, stopped cases, human review and **recoverable value forgone**.
-5. Read the **AI boundary** and the separate **Razorpay Test Mode evidence**.
-6. Expand **Advanced policy evaluation** only if you want the nine-arm benchmark and complete swept price curve.
+   - **Ask a human before another action** — attempted call, unknown postcondition, no blind repeat.
+3. Open the eligible receipt and click **Verify audit chain + tamper check**.
+4. Read the batch summary, especially recovery **and recoverable value forgone**.
+5. Read the AI boundary.
+6. Inspect the separate Razorpay Test Mode evidence.
+7. Expand **Advanced policy evaluation** only if you want all nine arms and the complete price sweep.
 
 The batch INR is synthetic. The Razorpay proof is saved Test Mode evidence. A Standard Payment Link fallback is not an AutoPay retry, and creating a link is not proof of captured payment.
 
 ## What the primary action executes
 
-`public/` is the judge-facing product. `api/index.py` serves it and exposes bounded demo endpoints. Those endpoints call `bailiff/showcase.py`, which uses the shared engine rather than a presentation-only mock.
+`public/` is the canonical product. `api/index.py` serves it and exposes bounded demo endpoints that call `bailiff/showcase.py`.
 
-The main demonstration executes:
+The primary demonstration executes:
 
-- the fixed 100-case batch across all nine canonical arms on one frozen outcome ledger;
+- a fixed 100-case synthetic batch;
 - the eligible recoverable scenario;
-- the revoked-mandate scenario; and
+- the revoked-mandate scenario;
 - the unknown-timeout scenario.
 
-Static hosting cannot execute Python. In that mode the header says **Recorded engine evidence**, and the primary action replays `public/evidence.json` rather than pretending to run live code.
+The API does not load provider credentials or call a real payment provider. Static hosting cannot execute Python; in static mode the header says **Recorded engine evidence** and the action replays `public/evidence.json`.
 
-## Evidence checks
+## Four proofs worth opening
 
-### Decision receipt
+### 1. Zero-call denial
 
-A permitted provider action includes idempotency data, a provider-call identifier, postcondition and audit events. Denied or abstained paths show zero provider calls. The browser verification recomputes the shipped hash chain and confirms that an edited decision fails verification.
+Open the revoked-mandate case. A safe denial requires `provider_calls = 0`.
 
-### Unknown timeout
+### 2. Unknown write outcome
 
-The timeout case is intentionally different from a denial. One provider action was attempted; the postcondition is unknown. The case is held in human review and cannot be followed by another automated action until resolved.
+Open the timeout case. One action was attempted, but the postcondition is unknown. The case is held for human review before another automated action.
 
-### AI boundary
+### 3. Receipt tamper check
 
-Use this exact explanation:
+Open the eligible receipt and run browser verification. The shipped chain verifies; editing an earlier decision breaks verification. The chain is tamper-evident, not immutable.
 
-> AI interprets unclear failure information; deterministic controls decide whether an action is allowed.
+### 4. Razorpay Test Mode capture
 
-B3 has no provider tools and cannot authorize money movement. The deterministic guardrails remain the execution authority. The repeatable default interpreter is offline and deterministic. Optional saved real-model evidence does not establish production accuracy or uplift.
+The provider section is saved read-only evidence separate from the synthetic batch. It contains a Test Mode Standard Payment Link fallback, independent captured-payment verification, and an already-paid zero-write case.
 
-### Razorpay Test Mode proof
+## AI explanation
 
-The provider section is read-only saved evidence, separate from the synthetic batch. It contains:
+Use this exact sentence:
 
-- a Test Mode Standard Payment Link fallback;
-- independently verified captured-payment evidence bound to that recovery case; and
-- an already-paid zero-write case.
+> **AI interprets unclear failure information; deterministic controls decide whether an action is allowed.**
 
-## Advanced reproducibility
+B3 has no provider tools. The interpreter can normalize ambiguous failure information and confidence; it cannot authorize payment action, widen authority, restore a mandate or bypass deterministic controls. Low-confidence output abstains before the provider.
 
-Required submission commands from a clean checkout:
+The repeatable benchmark uses an offline deterministic interpreter. Optional saved real-model evidence proves integration, not production accuracy or measured uplift.
+
+## Reproduce
+
+Required:
 
 ```bash
 ./scripts/test.sh
@@ -72,26 +75,37 @@ Required submission commands from a clean checkout:
 ./scripts/evaluate.sh
 ```
 
-Deeper evidence checks:
+Full evidence verification:
 
 ```bash
 ./scripts/verify_all.sh
 python scripts/recoverytruth_check.py
 python scripts/security_regression_check.py
+python scripts/hardening_check.py
 python scripts/interpreter_ablation.py
 python scripts/refusal_regret.py
 ```
 
-Important artifacts:
+Container smoke path:
 
-- `FINAL_VERIFICATION.md` — observed verification record.
-- `outputs/report.md` — generated benchmark report.
+```bash
+docker build -t mandateguard .
+docker run --rm -p 8765:8765 mandateguard
+```
+
+## Evidence map
+
+- `SUBMISSION_READINESS.md` — canonical final submission report and verification matrix.
+- `ARCHITECTURE.md` — authority, execution, evaluation and production boundaries.
+- `outputs/report.md` — generated benchmark appendix.
 - `outputs/sensitivity.json` — complete price sweep.
 - `ROBUSTNESS.md` — fixture-assumption sensitivity.
-- `ARCHITECTURE.md` — authority and evidence boundaries.
-- `MARKET_READY_ARCHITECTURE.md` — explicit production gaps.
-- `VIDEO_SCRIPT.md` — canonical five-minute narration.
+- `RECOVERYTRUTH.md` — Razorpay Test Mode provider-proof boundary.
+- `docs/competitive_position.md` — public competitive research and caveats.
+- `docs/problem_evidence.md` — problem-evidence sampling and limitations.
+- `docs/panel_qa.md` — short technical answers.
+- `VIDEO_SCRIPT.md` — canonical five-minute pitch.
 
-## What not to claim
+## Do not claim
 
-Do not claim production revenue, production readiness, regulatory certification, a production AutoPay retry integration, a universal winning policy, Razorpay production-engine equivalence, tamper-proof storage, or measured AI uplift that is not supported by the artifacts.
+Do not claim production revenue, production readiness, regulatory certification, a production AutoPay retry integration, a universal winning policy, equivalence to Razorpay's production retry engine, immutable evidence, or measured AI uplift that the artifacts do not support.

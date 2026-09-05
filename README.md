@@ -31,7 +31,7 @@ MandateGuard evaluates a failed payment and makes one of three decisions:
 
 > **AI interprets unclear failure information; deterministic controls decide whether an action is allowed.**
 
-Razorpay already ships recovery; MandateGuard does not try to replace it. It demonstrates a **trust, safety, and evidence layer around recovery policy**.
+Razorpay already ships recovery; MandateGuard is **not a recovery engine** intended to replace it. It demonstrates a **trust, safety, and evidence layer around recovery policy**.
 
 ---
 
@@ -293,6 +293,8 @@ bash scripts/verify_all.sh
 On Windows, use Git Bash/WSL for the `.sh` scripts or run the Python checks directly.
 
 `SHA256SUMS.txt` binds the shipped release files so unexpected changes can be detected during verification.
+
+Rendered chart PNGs are **not byte reproducible across environments** because font and rendering stacks can differ. The checksum manifest verifies the shipped chart bytes; regenerated semantic JSON/report evidence remains the reproducible basis.
 
 ---
 

@@ -30,6 +30,19 @@ cd "$(dirname "$0")/.."
 SHIPPED_CHARTS=(outputs/architecture.png outputs/frontier.png outputs/sensitivity.png)
 _CHART_HASHES_BEFORE="$(sha256sum "${SHIPPED_CHARTS[@]}")"
 
+# The hostile fixture sweep deliberately writes its report artifacts. Deep
+# verification is documented as non-mutating, so preserve the shipped copies
+# and restore them after the sweep before checking the release manifest.
+_SWEEP_TMP="$(mktemp -d)"
+cp ROBUSTNESS.md "$_SWEEP_TMP/ROBUSTNESS.md"
+cp outputs/fixture_sensitivity.json "$_SWEEP_TMP/fixture_sensitivity.json"
+_restore_sweep_outputs() {
+  cp "$_SWEEP_TMP/ROBUSTNESS.md" ROBUSTNESS.md
+  cp "$_SWEEP_TMP/fixture_sensitivity.json" outputs/fixture_sensitivity.json
+  rm -rf "$_SWEEP_TMP"
+}
+trap _restore_sweep_outputs EXIT
+
 echo "==> 1/4  full test suite"
 ./scripts/test.sh
 
@@ -45,6 +58,11 @@ echo
 echo "==> 4/4  fixture assumption sweep"
 python3 scripts/fixture_sensitivity.py --seeds "${SWEEP_SEEDS:-5}" --n "${SWEEP_N:-100}"
 
+# Restore the shipped report artifacts immediately. The sweep result has
+# already been exercised and printed; the release tree must remain unchanged.
+_restore_sweep_outputs
+trap - EXIT
+
 echo
 echo "==> chart immutability guard"
 if [[ "$(sha256sum "${SHIPPED_CHARTS[@]}")" != "$_CHART_HASHES_BEFORE" ]]; then
@@ -58,18 +76,8 @@ echo "shipped chart PNGs unchanged by verification (3/3)"
 
 echo
 echo "==> shipped artefact integrity"
-# The sweep in stage 4 rewrites ROBUSTNESS.md and outputs/fixture_sensitivity.json.
-# At the default parameters it rewrites them byte for byte identically (verified
-# across two Matplotlib versions), so the manifest still holds. A deliberately
-# non-default sweep produces different — and legitimately different — content,
-# so the strict check is skipped there rather than reported as corruption.
-if [[ "${SWEEP_SEEDS:-5}" == "5" && "${SWEEP_N:-100}" == "100" ]]; then
-  sha256sum -c SHA256SUMS.txt >/dev/null
-  echo "SHA256SUMS.txt verifies after the full verification workflow (all files)"
-else
-  echo "skipped: non-default sweep (SWEEP_SEEDS/SWEEP_N) legitimately rewrites"
-  echo "         ROBUSTNESS.md and outputs/fixture_sensitivity.json"
-fi
+sha256sum -c SHA256SUMS.txt >/dev/null
+echo "SHA256SUMS.txt verifies after the full verification workflow (all files)"
 
 echo
 echo "All four verification stages passed."

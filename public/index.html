@@ -4,9 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="description" content="MandateGuard helps merchants recover failed scheduled UPI AutoPay payments with explicit controls and evidence for every decision.">
-<meta name="theme-color" content="#153c35">
+<meta name="theme-color" content="#012652">
 <title>MandateGuard · Scheduled UPI AutoPay recovery</title>
 <link rel="icon" type="image/svg+xml" href="./logo.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;650;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="./style.css">
 </head>
 <body>
@@ -16,6 +19,7 @@
     <img src="./logo.svg" width="42" height="42" alt="">
     <span><strong>MandateGuard</strong><small>Scheduled UPI AutoPay recovery</small></span>
   </a>
+  <span class="rzp-tag">Built for <b>Razorpay</b> AI Buildathon</span>
   <nav class="top-nav" aria-label="Primary navigation">
     <a href="#demonstration">Demonstration</a>
     <a href="#evidence">Evidence</a>
@@ -28,23 +32,21 @@
 <section class="hero" id="top">
   <div class="hero-copy">
     <p class="eyebrow">RAZORPAY AI BUILDATHON · TRACK 03</p>
-    <h1>Recover failed scheduled UPI AutoPay payments <span>without guessing what to do next.</span></h1>
-    <p class="hero-lead">MandateGuard helps merchants recover failed scheduled UPI AutoPay payments, with explicit controls for when to retry, when to stop, and when to ask a human—with evidence for every decision.</p>
+    <h1>Recover failed scheduled UPI AutoPay payments</h1>
+    <p class="hero-lead">MandateGuard gives merchants explicit controls for when to retry, when to stop, and when to ask a human, with inspectable evidence for every recovery decision.</p>
     <div class="hero-actions">
       <button class="button primary large" id="run-demo">Run recovery demonstration</button>
-      <a class="button secondary large" href="#cases">See the three decision cases</a>
+      <a class="button secondary large" href="#cases">Inspect decision cases</a>
     </div>
-    <div class="scope-note"><span class="status-dot"></span><strong>Synthetic batch evaluation</strong><span>Batch INR is simulated. No customer is contacted and no real AutoPay debit is executed.</span></div>
+    <div class="scope-note"><span class="status-dot"></span><strong>Scheduled INR UPI AutoPay only</strong><span>Batch INR is synthetic. No customer is contacted and no real AutoPay debit is executed.</span></div>
   </div>
   <aside class="hero-panel" aria-label="How MandateGuard decides">
-    <p class="eyebrow">THE DECISION CONTRACT</p>
-    <ol class="promise-list">
-      <li><span>1</span><div><strong>What failed?</strong><small>Normalize the scheduled debit failure.</small></div></li>
-      <li><span>2</span><div><strong>What should happen next?</strong><small>Interpret the failure and propose a bounded next step.</small></div></li>
-      <li><span>3</span><div><strong>Why is it allowed?</strong><small>Deterministic controls check mandate, consent, notice and retry limits.</small></div></li>
-      <li><span>4</span><div><strong>What actually happened?</strong><small>Provider-call evidence and postcondition decide the financial metric.</small></div></li>
-      <li><span>5</span><div><strong>Where is the evidence?</strong><small>Every case carries an inspectable audit receipt.</small></div></li>
-    </ol>
+    <p class="eyebrow">THE THREE-DECISION CONTRACT</p>
+    <div class="decision-preview">
+      <div class="preview-row retry"><span>Retry</span><strong>One bounded simulated provider call</strong><small>Recovered only after the postcondition confirms recovery.</small></div>
+      <div class="preview-row stop"><span>Stop</span><strong>Revoked mandate, zero provider calls</strong><small>Authority ends before the payment provider is touched.</small></div>
+      <div class="preview-row review"><span>Human review</span><strong>One attempted call, unknown postcondition</strong><small>No blind repeat after timeout uncertainty.</small></div>
+    </div>
   </aside>
 </section>
 
@@ -52,6 +54,17 @@
 <div id="run-state" class="run-state" role="status" aria-live="polite">
   <span class="run-state-dot"></span><strong>Ready.</strong><span>Recorded evidence will be shown immediately; localhost can execute the same Python engine on demand.</span>
 </div>
+
+<section class="judge-path" aria-label="Judge path">
+  <p class="eyebrow">JUDGE PATH</p>
+  <ol>
+    <li><b>Run demo</b><span>Replay or execute the shared engine.</span></li>
+    <li><b>Inspect cases</b><span>Retry, stop and review decisions.</span></li>
+    <li><b>Verify receipt</b><span>Browser recomputes audit hashes.</span></li>
+    <li><b>Compare trade-offs</b><span>Recovery beside forgone value.</span></li>
+    <li><b>Inspect proof</b><span>Separate Razorpay Test Mode evidence.</span></li>
+  </ol>
+</section>
 
 <section class="section" id="demonstration">
   <div class="section-heading">
@@ -148,7 +161,7 @@
         <label>Failure mix<select id="regime"><option value="R1_TRANSIENT">Mostly transient</option><option value="R2_TERMINAL">Mostly terminal</option><option value="R3_AMBIGUOUS">Ambiguous signals</option></select></label>
         <label>Pricing model<select id="price-model"><option value="harm_multiplier_curve">Harm multiplier</option><option value="violation_cost_curve">Flat cost per violation</option></select></label>
       </div>
-      <div class="evaluation-card"><div class="section-heading compact-heading"><div><h3>Recovery vs prohibited value executed</h3><p class="muted">Means per 100-case batch across 20 seeds. Teal is simulated recovery; red is realized prohibited value.</p></div></div><div id="policy-bars"></div></div>
+      <div class="evaluation-card"><div class="section-heading compact-heading"><div><h3>Recovery vs prohibited value executed</h3><p class="muted">Means per 100-case batch across 20 seeds. Blue is simulated recovery; red is realized prohibited value.</p></div></div><div id="policy-bars"></div></div>
       <div class="evaluation-card"><div class="section-heading compact-heading"><div><h3>Complete price sweep</h3><p class="muted">The preferred arm changes as the assumed cost changes.</p></div></div><div id="price-curve"></div></div>
       <div class="evaluation-card"><h3>All nine canonical arms</h3><div class="table-scroll"><table><thead><tr><th>Policy</th><th>Plain-language role</th><th>Recovered INR</th><th>Recoverable value forgone</th><th>Prohibited value executed</th><th>Violations</th></tr></thead><tbody id="policy-table"></tbody></table></div></div>
       <p class="muted">B2.25, B2.5 and B2.75 deliberately relax controls for diagnosis and are not safe production defaults. RZP is a fixed reference derived from a published card schedule; it is not Razorpay's current Intelligent UPI Retry Engine.</p>

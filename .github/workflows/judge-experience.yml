@@ -41,12 +41,12 @@ jobs:
         env:
           MANDATEGUARD_OFFLINE: "1"
 
-      - name: Regenerate judge evidence and checksum candidate
+      - name: Regenerate judge evidence and verify checksum candidate
         run: |
           python scripts/build_showcase.py
-          python scripts/make_checksum_manifest.py
-          sha256sum -c SHA256SUMS.txt >/dev/null
-          echo "generated showcase and checksum candidate verify in this clean checkout"
+          python scripts/make_checksum_manifest.py > /tmp/SHA256SUMS.candidate
+          sha256sum -c /tmp/SHA256SUMS.candidate >/dev/null
+          echo "freshly generated showcase and checksum candidate verify in this clean checkout"
 
       - name: Start Python and static evidence servers
         run: |

@@ -35,6 +35,12 @@ Open `http://127.0.0.1:8765` and confirm the header says **Python engine connect
 
 On Windows, `run_showcase.bat` launches the same judge-facing application.
 
+Terminal-only fallback:
+
+```bash
+python scripts/demo60.py
+```
+
 ## What the system proves
 
 | Question | Inspectable answer |
@@ -164,7 +170,9 @@ python scripts/mutation_check.py
 bash scripts/verify_all.sh
 ```
 
-`evaluate.sh` regenerates benchmark data, charts and findings. `build_showcase.py` exports browser evidence and regenerates only the numeric README block above. `SHA256SUMS.txt` binds the shipped release files. Rendered PNG bytes can differ across Matplotlib/font environments, so verification preserves shipped charts while generation remains a separate step.
+`evaluate.sh` regenerates benchmark data, charts and findings. `build_showcase.py` exports browser evidence and regenerates only the numeric README block above. `SHA256SUMS.txt` binds the shipped release files.
+
+Rendered chart PNGs are **not byte reproducible across environments** because Matplotlib, FreeType and font fallback can change rendered bytes. The manifest verifies the shipped PNG bytes; verification preserves them. Chart regeneration is a separate generation step and semantic JSON/report evidence remains reproducible.
 
 ## Evidence map
 

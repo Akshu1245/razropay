@@ -23,7 +23,6 @@ RUN pip install --no-cache-dir -e .
 COPY api ./api
 COPY public ./public
 COPY outputs ./outputs
-COPY docs/testmode_evidence ./docs/testmode_evidence
 
 EXPOSE 8765
 

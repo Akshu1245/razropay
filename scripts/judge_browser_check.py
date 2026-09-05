@@ -8,6 +8,7 @@ and a static public/ server to be running.
 from __future__ import annotations
 
 import argparse
+import json
 from pathlib import Path
 
 from playwright.sync_api import Page, expect, sync_playwright
@@ -62,6 +63,30 @@ def verify_primary_flow(page: Page, base_url: str) -> None:
     expect(timeout).to_contain_text("Human review")
     expect(timeout).to_contain_text("1")
     expect(timeout).to_contain_text("Postcondition unknown")
+
+    # Every case must be accounted for, including calls without a confirmed result.
+    expect(page.locator("#stats .stat-card")).to_have_count(6)
+    expect(page.locator("#stats")).to_contain_text("Awaiting outcome")
+    expect(page.locator("#interpreter-comparison tr")).to_have_count(3)
+    expect(page.locator(".ai-card")).to_contain_text("offline interpreter stub")
+
+    # A late response must stay attached to the case that requested it.
+    page.locator(".boundary-panel > summary").click()
+    pending = []
+    page.route("**/api/demo/scenario", lambda route: pending.append(route))
+    page.locator("#run-boundary").click()
+    page.wait_for_function("document.querySelector('#run-boundary').disabled")
+    page.locator('[data-boundary="notice"]').click()
+    recorded = json.loads(Path("public/evidence.json").read_text(encoding="utf-8"))
+    assert len(pending) == 1
+    pending[0].fulfill(json=recorded["scenarios"]["ambiguous"])
+    expect(page.locator("#run-boundary")).to_be_enabled()
+    expect(page.locator("#boundary-title")).to_have_text(recorded["scenarios"]["notice"]["title"])
+    page.locator('[data-boundary="ambiguous"]').click()
+    expect(page.locator("#boundary-title")).to_have_text(recorded["scenarios"]["ambiguous"]["title"])
+    expect(page.locator("#boundary-mode")).to_contain_text("JUST EXECUTED")
+    page.unroute("**/api/demo/scenario")
+    page.locator(".boundary-panel > summary").click()
 
     recover.get_by_role("button", name="View decision receipt").click()
     expect(page.locator("#receipt-dialog")).to_be_visible()

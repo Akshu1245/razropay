@@ -97,6 +97,13 @@
       <span><b>Same downstream controls</b> as the guarded deterministic arm</span>
       <span><b>Abstention is allowed</b> when interpretation is uncertain</span>
     </div>
+    <details>
+      <summary>What does the interpreter actually add?</summary>
+      <p>This reproducible comparison uses the same frozen cases and controls. B2 is deterministic; B3 adds the <strong>offline interpreter stub</strong>. These results measure the simulated policy difference, not live-model accuracy or production uplift.</p>
+      <div class="table-scroll"><table><thead><tr><th scope="col">Failure mix</th><th scope="col">B2 recovered</th><th scope="col">B3 recovered</th><th scope="col">Difference</th><th scope="col">Harm B2 / B3</th></tr></thead><tbody id="interpreter-comparison"></tbody></table></div>
+      <p class="muted">Simulated INR, means per 100-case batch over 20 seeds. A separate saved model call demonstrates integration, not an accuracy benchmark. See the full policy comparison and price sweep before choosing an arm.</p>
+      <a class="text-button" href="#evaluation">Explore the full evaluation</a>
+    </details>
     <details><summary>Inspect captured optional real-model evidence</summary><pre id="model-evidence"></pre></details>
   </div>
   <div class="provider-card">

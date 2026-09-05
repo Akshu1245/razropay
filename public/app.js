@@ -14,6 +14,7 @@ const exemplarKeys=['recover','revoked','timeout'];
 const boundaryKeys=['optout','notice','ambiguous','forged'];
 let evidence,batch,currentReceipt,apiAvailable=false,activeStatus='all',page=0,selectedBoundary='ambiguous',boundaryScenario;
 let scenarios={};
+const liveScenarios=new Set();
 let toastTimer;
 
 function toast(message){
@@ -58,6 +59,7 @@ function renderBatch(){
     ['Payments recovered',String(counts.Recovered),counts.Recovered+' of '+batch.n+' cases reached a recovered postcondition',false],
     ['Cases stopped',String(counts.Stopped),'No provider action on these stopped cases',false],
     ['Cases requiring review',String(counts['Human review']),'Uncertainty is held before another automated action',false],
+    ['Awaiting outcome',String(counts['Awaiting outcome']),'Provider called; recovery is not yet confirmed',false],
     ['Recoverable value forgone',money(summary.legitimate_recovery_forgone_inr),'Synthetic latent recovery blocked by controls',false]
   ];
   $('stats').innerHTML=cards.map(card=>'<div class="stat-card '+(card[3]?'primary':'')+'"><div class="stat-label">'+esc(card[0])+'</div><div class="stat-value">'+esc(card[1])+'</div><div class="stat-detail">'+esc(card[2])+'</div></div>').join('');
@@ -129,10 +131,10 @@ function renderBoundaryList(){
   document.querySelectorAll('[data-boundary]').forEach(button=>button.addEventListener('click',()=>{
     selectedBoundary=button.dataset.boundary;
     boundaryScenario=scenarios[selectedBoundary] || evidence.scenarios[selectedBoundary];
-    renderBoundaryList();renderBoundary(false);
+    renderBoundaryList();renderBoundary();
   }));
 }
-function renderBoundary(live=false){
+function renderBoundary(live=liveScenarios.has(selectedBoundary)){
   const scenario=boundaryScenario || evidence.scenarios[selectedBoundary];
   if(!scenario) return;
   const row=scenario.receipt;
@@ -187,7 +189,7 @@ function openReceipt(row,fallback){
   $('receipt-title').textContent=receiptName(row,fallback);
   const facts=[
     ['Outcome',status(row)],['Recovered · simulated',money(row.recovered_inr)],['Provider calls',row.provider_call_count],['Mandate state',human(row.mandate_state)],
-    ['Diagnosis',human(row.diagnosed_reason)],['Confidence',Math.round(Number(row.confidence||0)*100)+'%'],['Postcondition',row.provider_postcondition_state?human(row.provider_postcondition_state):'No provider action'],['Recoverable value forgone',money(row.legitimate_recovery_forgone_inr)]
+    ['Diagnosis',human(row.diagnosed_reason)],['Interpretation score · not measured accuracy',Math.round(Number(row.confidence||0)*100)+'%'],['Postcondition',row.provider_postcondition_state?human(row.provider_postcondition_state):'No provider action'],['Recoverable value forgone',money(row.legitimate_recovery_forgone_inr)]
   ];
   $('receipt-content').innerHTML='<div class="receipt-facts">'+facts.map(f=>'<div><small>'+esc(f[0])+'</small><strong>'+esc(f[1])+'</strong></div>').join('')+'</div>'+
     '<h3>Audit timeline</h3><div class="trace">'+row.audit_events.map(event=>'<div class="trace-item"><span>'+event.sequence+'</span><div><strong>'+esc(human(event.event_type))+'</strong><p>'+esc(event.reason_codes.join(' · '))+'</p><p>Provider call: '+esc(event.provider_call_made)+'</p></div></div>').join('')+'</div>'+
@@ -244,6 +246,12 @@ function renderProof(){
     '<div class="proof-mini">'+badge(zero?'Zero-write verified':'Evidence incomplete')+'<div class="amount">'+blocked.payment_links_before+' → '+blocked.payment_links_after+'</div><h3>Already paid</h3><p>No new fallback collection object was created.</p></div>';
   $('proof-json').textContent=JSON.stringify(p.artifacts,null,2);
   $('model-evidence').textContent=JSON.stringify(evidence.real_interpreter_evidence,null,2);
+  $('interpreter-comparison').innerHTML=evidence.manifest.regimes.map(regime=>{
+    const b2=evidence.aggregate.find(row=>row.regime===regime&&row.arm==='B2');
+    const b3=evidence.aggregate.find(row=>row.regime===regime&&row.arm==='B3');
+    const delta=b3.incremental_recovered_inr.mean-b2.incremental_recovered_inr.mean;
+    return '<tr><th scope="row">'+esc(human(regime.replace(/^R\d+_/,'')))+'</th><td>'+money(b2.incremental_recovered_inr.mean)+'</td><td>'+money(b3.incremental_recovered_inr.mean)+'</td><td>'+(delta>0?'+':'')+money(delta)+'</td><td>'+money(b2.realized_harm_inr.mean)+' / '+money(b3.realized_harm_inr.mean)+'</td></tr>';
+  }).join('');
 }
 $('export-proof').addEventListener('click',()=>download(evidence.provider_proofs,'mandateguard-captured-razorpay-testmode-evidence.json'));
 
@@ -287,9 +295,12 @@ $('run-demo').addEventListener('click',runDemonstration);
 $('export-batch').addEventListener('click',()=>batch&&download(batch,'mandateguard-batch-evidence.json'));
 $('run-boundary').addEventListener('click',async()=>{
   const button=$('run-boundary');button.disabled=true;
+  const key=selectedBoundary;
   try{
-    boundaryScenario=apiAvailable?await request('scenario',{scenario:selectedBoundary}):clone(evidence.scenarios[selectedBoundary]);
-    scenarios[selectedBoundary]=boundaryScenario;renderBoundary(apiAvailable);
+    const result=apiAvailable?await request('scenario',{scenario:key}):clone(evidence.scenarios[key]);
+    scenarios[key]=result;
+    if(apiAvailable) liveScenarios.add(key);
+    if(selectedBoundary===key){boundaryScenario=result;renderBoundary();}
     toast(apiAvailable?'Boundary check executed by Python.':'Recorded boundary evidence replayed.');
   }catch(error){toast(error.message+'. Previous boundary evidence remains visible.');}
   finally{button.disabled=false;button.textContent=apiAvailable?'Run boundary check':'Replay recorded boundary check';}

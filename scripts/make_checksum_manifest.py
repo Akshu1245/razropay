@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from hashlib import sha256
 from pathlib import Path
+import sys
 
 ROOT = Path(__file__).resolve().parents[1]
 EXCLUDED_PARTS = {
@@ -42,6 +43,7 @@ def manifest_text() -> str:
 
 
 def main() -> int:
+    sys.stdout.reconfigure(newline="\n")
     print(manifest_text(), end="")
     return 0
 

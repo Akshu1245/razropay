@@ -314,7 +314,7 @@ def main() -> int:
     if evidence_path.exists():
         import json as _json
 
-        evidence = _json.loads(evidence_path.read_text())
+        evidence = _json.loads(evidence_path.read_text(encoding="utf-8"))
         result = evidence.get("result", {})
         line("mode", "REAL bounded interpreter (optional, captured run)")
         line("model", str(result.get("model")))
@@ -350,7 +350,7 @@ def main() -> int:
     # This count is checked, not decorative: tests/test_demo60.py fails the
     # suite if it drifts from the real collected test count or the real
     # mutation list length, so it cannot go stale silently again.
-    print("  299 tests, 46 red team attacks, 14/14 mutations caught")
+    print("  308 tests, 46 red team attacks, 14/14 mutations caught")
     print(f"\n  {DIM}Synthetic ledger, local provider simulator, Razorpay shaped input.")
     print(f"  No Razorpay API is called and no figure here is production revenue.{OFF}")
     print(RULE)

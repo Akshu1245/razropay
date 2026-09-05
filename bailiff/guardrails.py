@@ -162,6 +162,10 @@ class GuardrailEngine:
             decision = Decision.STOP
             final_action = None
             reasons.append("CASE_TERMINAL")
+        elif record.state == CaseState.HUMAN_REVIEW:
+            decision = Decision.ESCALATE
+            final_action = ActionType.ESCALATE_TO_HUMAN
+            reasons.append("HUMAN_REVIEW_PENDING")
         elif full_guardrails and event.mandate_state.lower() not in {"active", "enabled"}:
             decision = Decision.STOP
             final_action = None

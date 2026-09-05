@@ -1,121 +1,91 @@
-# MandateGuard — 5 minute submission video
+# MandateGuard — five-minute submission video
 
-## One sentence the judges should remember
+Use this script. The shorter script formerly embedded in the submission pack is retired.
 
-> **Razorpay already recovers. MandateGuard is the harness in front of that engine: before a retry configuration goes live, prove what it recovers, what it refuses, and that every refusal made zero provider calls.**
+**Remember:** Recover failed subscriptions. Prove every action.
 
-Do not position MandateGuard as a replacement for Intelligent Retry, Intelligent Revenue-Protect, or Agent Studio. The product is the evaluation and refusal-proof layer around recovery policy.
+Do not open with a recovery number. Open with the merchant's problem, then immediately demonstrate the batch. Keep the cursor deliberate and the screen at 100% zoom. Use the local Python-backed dashboard at `http://127.0.0.1:8765` so “Run” executes the engine.
 
-## 0:00–0:25 — Open on the question
+## 0:00–0:25 — A concrete problem
 
-Say:
+**Screen:** Recovery overview.
 
-> Razorpay already has recovery. The hard question is not whether we can retry a failed payment. It is whether a recovery policy can prove, before deployment, what it will recover, what it will refuse, and that every prohibited action stopped before the provider boundary.
+“A subscription payment fails. Retrying might save it. But the customer might have cancelled, or the bank might still be processing it. MandateGuard finds the right next step for scheduled UPI AutoPay failures, executes within permission, and gives every decision a receipt.”
 
-Then state scope immediately:
+“This dashboard uses a synthetic batch and local provider simulator. These are not merchant revenue figures.”
 
-> The benchmark numbers I am about to show are synthetic counterfactual INR over a frozen generated ledger. They are not Razorpay merchant revenue.
+## 0:25–1:15 — Show recovery across a batch
 
-**Do not open with a recovery number.** Open with the refusal question and the scope statement above.
+**Action:** Click **Run recovery batch**. Point to recovery, human review, and calls on stopped cases.
 
-## 0:25–1:25 — The 60 second proof
+“This executes one hundred failures. The recovery total comes from successful provider outcomes, not a predicted success rate. The other cases remain visible: stopped, awaiting an outcome, or escalated to a human.”
 
-Run:
+**Action:** Select **Recovered**, open a receipt.
 
-```bash
-python3 scripts/demo60.py
-```
+“Here is one recovery: the diagnosis, mandate state, authorized action, provider call and postcondition. The idempotency key is in the downloaded receipt.”
 
-Keep the terminal on screen. Point to five facts only:
+**Action:** Click **Verify audit chain**.
 
-1. forged Razorpay-shaped webhook is refused at ingress;
-2. a permitted retry produces exactly one simulated provider call;
-3. B3 abstains on ambiguity with zero provider calls;
-4. an unknown timeout postcondition routes to human review rather than being assumed failed or retried blindly;
-5. modifying historical audit evidence makes verification fail.
+“The browser recomputes the hashes. Editing a decision breaks verification. This is tamper-evident evidence, not immutable storage.”
 
-Say:
+## 1:15–2:10 — Prove the stopping rules
 
-> The headline is the refusal. A denied or abstained action is not merely logged after the fact; it terminates before the provider boundary and records zero provider calls.
+**Screen:** Failure lab.
 
-Do not call the hash chain tamper-proof. Say **tamper-evident evidence chain**.
+**Action:** Choose **Customer cancelled**, click **Run scenario**.
 
-## 1:25–2:05 — Nine policy arms, one frozen ledger
+“The bank error still looks retryable. The mandate is revoked, so the policy stops before the provider. Zero calls.”
 
-Show `outputs/frontier.png` and the arm list:
+**Action:** Choose **AI is uncertain**, run.
 
-`B0, B1, B1.5, RZP, B2.25, B2.5, B2.75, B2, B3`
+“B3 can interpret ambiguous signals, but low confidence means human review. The model gets no payment tools and cannot override consent or limits. This repeatable demo uses deterministic interpretation; the captured optional real-model run is available below.”
 
-Say the caveat before the result:
+**Action:** Choose **Provider timed out**, run.
 
-> `RZP` is a fixed temporal reference arm derived from Razorpay's published **card** retry schedule. It is not Razorpay's current Intelligent UPI Retry Engine and this project has not benchmarked Razorpay production decision logic.
+“This one is different: a call happened, but the outcome is unknown. We do not call that a failed payment or retry blindly. Further automated action waits for human review.”
 
-Then:
+## 2:10–3:05 — Show the Razorpay integration
 
-> On this synthetic ledger, the tested reason-aware arms outperform that fixed temporal reference on the recovery-versus-prohibited-value frontier. That is a finding about these policies on this frozen ledger, not a claim that MandateGuard recovers more than Razorpay.
+**Screen:** Razorpay proof.
 
-Be willing to say that ungated arms can recover more. That is why recovered INR is not the only objective.
+“Here is a separate captured Razorpay Test Mode run. RecoveryTruth read the original order and payments, checked again immediately before the write, and created a Standard Payment Link fallback. That fallback is customer-initiated; it is not an AutoPay retry.”
 
-## 2:05–2:40 — Where the AI is
+“A created link is not recovered money. The saved proof independently verifies the captured payment and binds it to the original case, decision, link, amount and currency.”
 
-Show B3 and `outputs/real_interpreter_evidence.json`.
+**Action:** Point to the already-paid card.
 
-Say:
+“In the second case, the original order was already paid. Payment Links stayed zero to zero: no new collection object was created. These are saved Test Mode artifacts, not a fresh live call from this viewer.”
 
-> The non-B3 policy arms are deterministic on purpose. Cancelled mandates, withdrawn consent and exhausted retry budgets do not become safer because an LLM is placed in the loop. B3 uses a bounded real-model interpreter only for ambiguous failure meaning. The model gets no payment authority. Low confidence means abstain and zero provider calls, and even a hostile interpreter cannot turn a revoked mandate into an allowed debit.
+## 3:05–4:05 — Explain the policy trade-off
 
-The point is restraint, not chatbot surface area.
+**Screen:** Policy comparison.
 
-## 2:40–3:25 — RecoveryTruth / Razorpay Test Mode
+“The product also compares nine policies on exactly the same frozen outcomes. You can recover more by ignoring controls, but that can send prohibited actions. Stronger controls also forgo some legitimate recovery. Both costs are measured.”
 
-When the real Test Mode artifacts have been captured, show three files or terminal outputs:
+“RZP is only a fixed temporal reference derived from Razorpay's published card schedule. It is not Razorpay's current Intelligent UPI Retry Engine, and I have not benchmarked Razorpay's production logic.”
 
-- one Test Mode fallback receipt;
-- one `SAFE_BLOCK_ALREADY_PAID` or `SAFE_BLOCK_IN_FLIGHT` with no Payment Link write;
-- one `RecoveryProof` bound to the original order, mandate, decision evidence, pre-write evidence, Payment Link action and captured payment.
+**Action:** Scroll to the full price sweep; switch pricing model.
 
-Say:
+“The preferred policy changes with the assumed price of a violation or prohibited value. There is no single universal winner. The diagnostic relaxed policies help us understand this frontier; they are not safe production defaults.”
 
-> This is Razorpay Test Mode only; live keys are refused. The concrete recovery action here is a standard customer-initiated Payment Link fallback. It is **not** an AutoPay retry. Immediately before the write, RecoveryTruth re-reads the current Order and Payments. If the payment is already paid, still in flight, conflicting or unknown, it blocks instead of creating a second recovery action.
+## 4:05–4:40 — Architecture and practical fit
 
-Status is **VERIFIED_TEST_MODE_EVIDENCE_CAPTURED**: the sanitized four-artifact bundle in `docs/testmode_evidence/` holds a real Test Mode Payment Link fallback receipt, a captured-payment `RecoveryProof`, an already-paid `SAFE_BLOCK`, and the zero-new-fallback proof. Show those artifacts rather than describing them, and say on camera that Test Mode means real Razorpay Test Mode reads plus a Standard Payment Link fallback — not an AutoPay retry — and that no live key is ever accepted.
+**Screen:** Return to recovery overview; point to the four-step workflow.
 
-## 3:25–4:10 — Refusal Report + sensitivity
+“The boundaries are simple: authenticate, diagnose, authorize, execute, verify. AI interprets; deterministic policy authorizes. The production gap is also explicit: durable state, merchant access control, approved provider execution and validation on real permissioned data.”
 
-Show `outputs/sensitivity.png`, then the refusal evidence/report.
+“Razorpay already offers recovery. My proposed integration is an evidence-backed configuration workflow: inspect what a policy recovers and refuses before rolling it out.”
 
-Say:
+## 4:40–5:00 — Close
 
-> The cost assigned to a prohibited action is an assumption, so I do not hide it behind one headline number. The sensitivity sweep shows where the preferred policy changes. The product is the instrument that exposes that trade-off, including when my stricter policy loses on recovery.
+“MandateGuard demonstrates recovery across a batch, a real Test Mode integration, and failures handled without hiding the cost. Recover failed subscriptions. Prove every action.”
 
-Lead with:
+Leave the source and demo links visible. End before five minutes.
 
-- prohibited value stopped before provider execution;
-- violations;
-- provider calls on denied/abstained cases;
-- legitimate recovery forgone;
-- incremental synthetic recovery.
+## Recording checklist
 
-Do not present synthetic INR as observed merchant revenue.
-
-## 4:10–4:40 — Architecture
-
-Show `outputs/architecture.png` plus RecoveryTruth conceptually:
-
-`Authenticate → Interpret → Deterministic authority → resolve current financial truth → pre-write re-read/write fence → provider action → postcondition verification → evidence`
-
-Say:
-
-> AI may interpret. Policy authorizes. RecoveryTruth checks what is financially true now. The provider executes only after a fresh write-boundary check. Evidence records what happened afterward.
-
-## 4:40–5:00 — Close like a Razorpay recovery engineer
-
-Say:
-
-> If I joined, week one I would plug this harness in front of Intelligent Retry templates so a merchant can see recovered versus refused before they flip a configuration. A failed-debit diagnostic proves why a debit failed. MandateGuard proves a compliant non-debit when the recovery system should not act.
-
-Stop there.
-
-## Claims that are forbidden in the video
-
-Do not say “we recover X% more than Razorpay.” Do not call a Payment Link an AutoPay retry. Do not call synthetic INR production revenue. Do not call the evidence chain tamper-proof. Do not claim a credentialed Test Mode run until its receipt, safe block and RecoveryProof actually exist. Do not describe `RZP` as Razorpay's current UPI retry engine.
+- Rehearse once. Spend time on actions and evidence, not the arm names.
+- Use **Run** only when the header says **Python engine connected**. Static Pages is explicitly a recorded evidence replay.
+- Never call simulation production revenue, a Payment Link an AutoPay retry, or the hash chain tamper-proof.
+- Do not claim a model accuracy improvement from the single captured model artifact.
+- Upload the video with accessible viewing permissions and test it signed out. Use this file as narration, not as a substitute for the video.

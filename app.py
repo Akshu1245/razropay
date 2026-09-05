@@ -96,7 +96,7 @@ def _load_json(path: Path) -> Any:
     if not path.exists():
         return None
     try:
-        return json.loads(path.read_text())
+        return json.loads(path.read_text(encoding="utf-8"))
     except Exception:
         return None
 
@@ -813,8 +813,8 @@ def render_exception_queue(st):
 
     queue = exception_queue(
         ledger,
-        statuses=chosen_status or None,
-        arms=chosen_arm or None,
+        statuses=chosen_status,
+        arms=chosen_arm,
         severities=chosen_sev or None,
         max_provider_calls=0 if only_zero else None,
     )
@@ -866,6 +866,26 @@ def render_exception_queue(st):
         )
 
 
+def render_live_simulator(st):
+    from bailiff.showcase import SCENARIOS, run_scenario
+
+    header("Execution lab", "Run a bounded recovery scenario",
+           "Actual Python execution against the local simulator. No money moves; no customer is contacted.")
+    scope_banner(st)
+    name = st.selectbox("Scenario", list(SCENARIOS), format_func=lambda key: SCENARIOS[key][0])
+    if st.button("Run scenario", type="primary"):
+        result = run_scenario(name)
+        left, middle, right = st.columns(3)
+        left.metric("Ingress", "Verified" if result["ingress"]["accepted"] else "Rejected")
+        middle.metric("Outcome", result["status"])
+        right.metric("Simulated provider calls", result["provider_call_count"])
+        if name == "timeout":
+            st.warning("One call occurred; its outcome is unknown. Human review is required before another action.")
+        st.json(result)
+        st.download_button("Download actual engine evidence", json.dumps(result, indent=2),
+                           file_name=f"mandateguard-{name}.json", mime="application/json")
+
+
 def render_sidebar(st) -> str:
     manifest = load_manifest() or {}
     st.sidebar.markdown(
@@ -877,7 +897,14 @@ def render_sidebar(st) -> str:
     )
     page = st.sidebar.radio(
         "Screen",
-        ["Control Room", "Case Timeline", "Policy Compare", "Failure Lab", "Exception Queue"],
+        [
+            "Control Room",
+            "Case Timeline",
+            "Policy Compare",
+            "Failure Lab",
+            "Exception Queue",
+            "Live Webhook Simulator",
+        ],
         label_visibility="collapsed",
     )
     if manifest:
@@ -922,6 +949,8 @@ def render_main(st):
         render_failure_lab(st)
     elif page == "Exception Queue":
         render_exception_queue(st)
+    elif page == "Live Webhook Simulator":
+        render_live_simulator(st)
 
 
 def main():

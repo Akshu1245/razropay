@@ -15,7 +15,7 @@ class RuleCatalog:
     @classmethod
     def load(cls, path: str | Path | None = None) -> "RuleCatalog":
         target = Path(path) if path else Path(__file__).with_name("rules.json")
-        payload = json.loads(target.read_text())
+        payload = json.loads(target.read_text(encoding="utf-8"))
         return cls(
             version=str(payload["version"]),
             effective_date=str(payload["effective_date"]),

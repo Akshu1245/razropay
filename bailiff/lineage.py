@@ -109,7 +109,7 @@ def _present(row: dict[str, Any], key: str) -> str:
 # reviewer than silently omitting the row, which would leave them unsure
 # whether the field was missing or merely not displayed.
 LINEAGE_SPEC: tuple[tuple[str, str, SourceLabel], ...] = (
-    ("Event ID", "decision_id", SourceLabel.FACT_FROM_FIXTURE),
+    ("Event ID", "event_id", SourceLabel.FACT_FROM_FIXTURE),
     ("Correlation ID", "correlation_id", SourceLabel.FACT_FROM_FIXTURE),
     ("Recovery case ID", "case_id", SourceLabel.FACT_FROM_FIXTURE),
     ("Mandate ID", "mandate_id", SourceLabel.FACT_FROM_FIXTURE),
@@ -126,12 +126,12 @@ LINEAGE_SPEC: tuple[tuple[str, str, SourceLabel], ...] = (
     ("Normalized project reason", "normalized_failure_reason", SourceLabel.PROJECT_POLICY),
     ("Diagnosed reason", "diagnosed_reason", SourceLabel.PROJECT_POLICY),
     ("Policy arm", "arm", SourceLabel.PROJECT_POLICY),
-    ("Policy version", "policy_id", SourceLabel.PROJECT_POLICY),
+    ("Policy version", "policy_version", SourceLabel.PROJECT_POLICY),
     ("Rules provenance", "policy_provenance", SourceLabel.PROJECT_POLICY),
     ("Interpreter mode", "bounded_interpreter_model", SourceLabel.MODEL_INTERPRETATION),
     ("Interpreter influenced decision", "bounded_interpreter_influence", SourceLabel.MODEL_INTERPRETATION),
     ("Interpreter confidence", "confidence", SourceLabel.MODEL_INTERPRETATION),
-    ("Proposed action", "proposed_action", SourceLabel.MODEL_INTERPRETATION),
+    ("Proposed action", "proposed_action", SourceLabel.PROJECT_POLICY),
     ("Authority envelope (final action)", "final_action", SourceLabel.GUARDRAIL_DECISION),
     ("Decision", "decision", SourceLabel.GUARDRAIL_DECISION),
     ("Reason codes", "reason_codes", SourceLabel.GUARDRAIL_DECISION),
@@ -323,7 +323,7 @@ def to_exception_row(row: dict[str, Any]) -> ExceptionRow | None:
         severity=severity,
         status=status,
         case_id=_present(row, "case_id"),
-        event_id=_present(row, "decision_id"),
+        event_id=_present(row, "event_id"),
         arm=_present(row, "arm"),
         reason=code,
         event_age=_present(row, "event_age_status"),
@@ -472,7 +472,7 @@ def provenance_chain(row: dict[str, Any]) -> list[ProvenanceStep]:
                 (
                     ("Proposed action", "proposed_action"),
                     ("Final action", "final_action"),
-                    ("Policy version", "policy_id"),
+                    ("Policy version", "policy_version"),
                 ),
             ),
         ),
@@ -589,7 +589,7 @@ def _interpreter_was_consulted(row: dict[str, Any]) -> bool:
     return bool(
         row.get("bounded_interpreter_model")
         or row.get("bounded_interpreter_influence")
-        or row.get("confidence") is not None
+        or "MODEL_INTERPRETATION" in (row.get("reason_sources") or [])
     )
 
 

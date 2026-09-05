@@ -92,13 +92,13 @@ def build_economic_analysis(
 
 
 def generate_report() -> Path:
-    manifest = json.loads((OUTPUTS / "manifest.json").read_text())
-    aggregates = json.loads((OUTPUTS / "aggregate.json").read_text())
-    anti_gaming = json.loads((OUTPUTS / "anti_gaming.json").read_text())
+    manifest = json.loads((OUTPUTS / "manifest.json").read_text(encoding="utf-8"))
+    aggregates = json.loads((OUTPUTS / "aggregate.json").read_text(encoding="utf-8"))
+    anti_gaming = json.loads((OUTPUTS / "anti_gaming.json").read_text(encoding="utf-8"))
     analysis = build_economic_analysis(manifest, aggregates)
-    (OUTPUTS / "breakeven.json").write_text(json.dumps(analysis, indent=2, sort_keys=True) + "\n")
+    (OUTPUTS / "breakeven.json").write_text(json.dumps(analysis, indent=2, sort_keys=True) + "\n", encoding="utf-8", newline="\n")
     sensitivity = build_sensitivity(manifest, aggregates)
-    (OUTPUTS / "sensitivity.json").write_text(json.dumps(sensitivity, indent=2, sort_keys=True) + "\n")
+    (OUTPUTS / "sensitivity.json").write_text(json.dumps(sensitivity, indent=2, sort_keys=True) + "\n", encoding="utf-8", newline="\n")
 
     lines = [
         "# Generated benchmark report",
@@ -232,7 +232,7 @@ def generate_report() -> Path:
     else:
         lines.append("\nAnti gaming failures: none")
     out = OUTPUTS / "report.md"
-    out.write_text("\n".join(lines) + "\n")
+    out.write_text("\n".join(lines) + "\n", encoding="utf-8", newline="\n")
     return out
 
 

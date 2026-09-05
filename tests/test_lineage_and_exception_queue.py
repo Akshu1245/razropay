@@ -75,7 +75,7 @@ CANONICAL_OUTPUTS = (
 def ledger() -> list[dict]:
     if not LEDGER.exists():
         pytest.skip("evidence ledger not generated; run ./scripts/evaluate.sh")
-    return json.loads(LEDGER.read_text())
+    return json.loads(LEDGER.read_text(encoding="utf-8"))
 
 
 def _hash_canonical() -> dict[str, str]:
@@ -468,7 +468,7 @@ def test_policy_outcomes_are_identical_with_the_view_layer_imported():
 
 def test_the_ui_does_not_regenerate_a_chart():
     """Structural: the app must contain no chart writing call at all."""
-    source = (ROOT / "app.py").read_text()
+    source = (ROOT / "app.py").read_text(encoding="utf-8")
     for forbidden in ("savefig", "make_frontier", "make_sensitivity_chart", "make_architecture"):
         assert forbidden not in source, f"app.py references chart generation: {forbidden}"
 
@@ -476,7 +476,7 @@ def test_the_ui_does_not_regenerate_a_chart():
 def test_the_ui_never_writes_to_disk():
     """No open-for-write, no unlink, no mkdir anywhere in the view layer."""
     for relative in ("app.py", "bailiff/lineage.py"):
-        source = (ROOT / relative).read_text()
+        source = (ROOT / relative).read_text(encoding="utf-8")
         for forbidden in (
             "write_text",
             "write_bytes",
@@ -495,7 +495,7 @@ def test_the_ui_never_writes_to_disk():
 
 def test_the_ui_makes_no_network_call():
     for relative in ("app.py", "bailiff/lineage.py"):
-        source = (ROOT / relative).read_text()
+        source = (ROOT / relative).read_text(encoding="utf-8")
         for forbidden in ("requests.", "urllib.request", "httpx.", "socket.", "openai"):
             assert forbidden not in source, (
                 f"{relative} references network access ({forbidden})"
@@ -523,7 +523,7 @@ def test_the_displayed_arm_order_is_exactly_the_canonical_order():
 
 
 def test_the_exception_queue_is_reachable_as_a_screen():
-    source = (ROOT / "app.py").read_text()
+    source = (ROOT / "app.py").read_text(encoding="utf-8")
     assert "Exception Queue" in source
     assert "render_exception_queue" in source
 

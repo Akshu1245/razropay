@@ -6,7 +6,9 @@ MandateGuard is a replayable policy evaluation laboratory and bounded execution 
 
 > The bounded interpreter interprets. The policy engine decides. The provider adapter executes. The audit chain proves.
 
-The project does not claim that Razorpay lacks recovery, does not claim synthetic results are production revenue, and does not claim live Razorpay API execution. The adapter accepts Razorpay shaped test payloads while the benchmark provider remains a local simulator.
+The benchmark uses Razorpay-shaped test payloads and a local provider simulator. Separate RecoveryTruth code and captured Test Mode artifacts demonstrate a Standard Payment Link fallback and independent capture verification; this is not an AutoPay retry or a production batch.
+
+The primary product is `public/`, served by `api/index.py`. Its fixed demo endpoints execute `bailiff/showcase.py`, which calls the existing engine. Static Pages replays exported results and labels that distinction. Browser receipt verification recomputes SHA-256 hashes. No public demo endpoint loads provider credentials or calls a real model.
 
 ## Runtime flow
 
@@ -52,6 +54,7 @@ The order is part of the evidence contract and must remain unchanged.
 | `B0` | No intervention control | Does not attempt recovery |
 | `B1` | Ungated retry baseline | Retries without reason or guardrail inspection |
 | `B1.5` | Deterministic retry only | Retries only normalized transient reasons |
+| `RZP` | Fixed card-schedule reference | Reason-blind temporal benchmark; not Razorpay's UPI engine |
 | `B2.25` | Timing frontier | Uses timing while relaxing other project gates; diagnostic only |
 | `B2.5` | Timing and attempt frontier | Adds retry gap and attempt budget; diagnostic only |
 | `B2.75` | Timing, attempt, and consent frontier | Adds consent controls; diagnostic only |
@@ -96,7 +99,7 @@ A prohibited action is priced two ways: a flat cost per detected breach, and the
 
 ## Evidence surfaces
 
-The command line path is authoritative for reproducibility. The optional `app.py` Streamlit layer is read only and displays five views over generated output files.
+The command line path is authoritative for reproducibility. The optional `app.py` Streamlit layer has five inspection views and a sixth local simulator screen.
 
 | View | Purpose |
 |---|---|
@@ -105,8 +108,9 @@ The command line path is authoritative for reproducibility. The optional `app.py
 | Policy Compare | Aggregate net value comparison |
 | Failure Lab | Denial, timeout, tamper, and provider call proofs |
 | Exception Queue | Cases needing a human, derived from reason codes already recorded |
+| Live Webhook Simulator | Seven fixed scenarios through the shared local engine; no external provider calls |
 
-The UI does not create a new ledger and is not a payment console. If Streamlit is not installed, the benchmark, demo, report, and release checks remain usable.
+The inspection views read generated outputs. The simulator creates a local scenario ledger and executes the same bounded engine as the primary demo. If Streamlit is not installed, the main dashboard, benchmark, demo, report, and release checks remain usable.
 
 ### The inspection layer is inspection only
 

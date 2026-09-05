@@ -85,8 +85,10 @@ def _int_value(value: object, name: str, default: int | None = None) -> int:
             return default
         raise RazorpayPayloadError(f"missing required numeric field: {name}")
     try:
+        if isinstance(value, bool) or (isinstance(value, float) and not value.is_integer()):
+            raise ValueError("not an integer")
         return int(value)
-    except (TypeError, ValueError) as exc:
+    except (TypeError, ValueError, OverflowError) as exc:
         raise RazorpayPayloadError(f"{name} must be an integer") from exc
 
 
@@ -106,7 +108,12 @@ def _datetime_value(value: object, name: str, default: datetime | None = None) -
     if isinstance(value, datetime):
         result = value
     elif isinstance(value, (int, float)):
-        result = datetime.fromtimestamp(float(value), tz=timezone.utc)
+        try:
+            if isinstance(value, bool):
+                raise ValueError("boolean timestamp")
+            result = datetime.fromtimestamp(float(value), tz=timezone.utc)
+        except (ValueError, OverflowError, OSError) as exc:
+            raise RazorpayPayloadError(f"{name} must be a valid epoch timestamp") from exc
     else:
         text = str(value).replace("Z", "+00:00")
         try:
@@ -163,6 +170,11 @@ def normalize_razorpay_autopay_payload(payload: Mapping[str, Any]) -> RecoveryEv
     payment = _entity(root, "payment")
     notes = _as_mapping(_first(payment.get("notes"), subscription.get("notes"), default={}), "notes")
 
+    if str(payment.get("method", "")).lower() != "upi" or not _bool_value(payment.get("recurring")):
+        raise RazorpayPayloadError("only explicitly recurring UPI payments are in scope")
+    if not _bool_value(notes.get("is_scheduled_autopay")):
+        raise RazorpayPayloadError("explicit scheduled AutoPay context is required")
+
     event_name = str(payload.get("event") or "subscription.pending")
     if event_name not in {"subscription.pending", "subscription.charged", "payment.failed", "subscription.payment_failed"}:
         raise RazorpayPayloadError(f"unsupported Razorpay event for this adapter: {event_name}")
@@ -209,16 +221,16 @@ def normalize_razorpay_autopay_payload(payload: Mapping[str, Any]) -> RecoveryEv
         amount_minor=amount_minor,
         currency=currency,
         failure_code=error_code,
-        mandate_state=str(_first(notes.get("mandate_state"), subscription.get("status"), default="active")),
-        attempt_count=_int_value(_first(notes.get("attempt_count"), subscription.get("paid_count"), default=0), "attempt_count"),
-        pre_debit_state=str(notes.get("pre_debit_state", "valid")),
+        mandate_state=str(_first(notes.get("mandate_state"), subscription.get("status"), default="unknown")),
+        attempt_count=_int_value(notes.get("attempt_count"), "attempt_count"),
+        pre_debit_state=str(notes.get("pre_debit_state", "missing")),
         event_time=created_at,
         failure_payload=provider_signal,
         mcc=str(notes.get("mcc", "0000")),
         consent=ConsentState(
             whatsapp=_bool_value(notes.get("consent_whatsapp")),
             sms=_bool_value(notes.get("consent_sms")),
-            email=_bool_value(notes.get("consent_email"), default=True),
+            email=_bool_value(notes.get("consent_email")),
             opted_out=_bool_value(notes.get("opted_out")),
         ),
         source="razorpay_test_payload",

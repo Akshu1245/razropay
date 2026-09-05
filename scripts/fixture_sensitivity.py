@@ -218,7 +218,7 @@ def write_robustness_markdown(summary: dict[str, object]) -> Path:
     ]
 
     path = ROOT / "ROBUSTNESS.md"
-    path.write_text("\n".join(lines))
+    path.write_text("\n".join(lines), encoding="utf-8", newline="\n")
     print(f"wrote {path}")
     return path
 
@@ -283,7 +283,7 @@ def main() -> int:
 
     OUTPUTS.mkdir(parents=True, exist_ok=True)
     path = OUTPUTS / "fixture_sensitivity.json"
-    path.write_text(json.dumps(summary, indent=2, sort_keys=True) + "\n")
+    path.write_text(json.dumps(summary, indent=2, sort_keys=True) + "\n", encoding="utf-8", newline="\n")
     write_robustness_markdown(summary)
 
     print()

@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """Plot how the recommended arm depends on the price of a prohibited action.
 
 The single most contestable number in this project is what a prohibited
@@ -56,8 +57,8 @@ PLOT_MULTIPLIER_LIMIT = 3.0
 
 
 def main() -> int:
-    manifest = json.loads((OUTPUTS / "manifest.json").read_text())
-    sensitivity = json.loads((OUTPUTS / "sensitivity.json").read_text())
+    manifest = json.loads((OUTPUTS / "manifest.json").read_text(encoding="utf-8"))
+    sensitivity = json.loads((OUTPUTS / "sensitivity.json").read_text(encoding="utf-8"))
     regimes = list(manifest["regimes"])
     arms = list(manifest["arms"])
     full_grid = sensitivity["grids"]["harm_multiplier"]

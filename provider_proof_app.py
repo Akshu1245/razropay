@@ -77,7 +77,7 @@ def render() -> None:
     st.code(
         "\n".join(
             [
-                f"recovery verified     {proof_blob.get('recovery_verified', False)}",
+                f"recovery verified     {summary['recovery_verified']}",
                 f"provider action       {_short(proof.get('provider_action_id'))}",
                 f"captured payment      {_short(proof.get('payment_id'))}",
                 f"amount minor          {proof.get('amount_minor', '—')}",

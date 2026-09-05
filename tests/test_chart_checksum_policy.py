@@ -69,7 +69,7 @@ CHART_GENERATORS = (
 def _manifest() -> dict[str, str]:
     """Parse SHA256SUMS.txt into {relative path: expected sha256}."""
     entries: dict[str, str] = {}
-    for line in (ROOT / "SHA256SUMS.txt").read_text().splitlines():
+    for line in (ROOT / "SHA256SUMS.txt").read_text(encoding="utf-8").splitlines():
         if not line.strip():
             continue
         digest, _, name = line.partition("  ")
@@ -137,7 +137,7 @@ def test_no_verification_script_regenerates_a_chart(script):
     every reviewer on a different Matplotlib will now see `sha256sum -c` fail
     on three files, through no fault of their own.
     """
-    source = (ROOT / script).read_text()
+    source = (ROOT / script).read_text(encoding="utf-8")
     # Only executable lines can regenerate anything. Comments in these scripts
     # legitimately name the generators in order to explain why verification
     # must not call them, and a naive scan would flag that explanation as the
@@ -178,7 +178,7 @@ def test_no_verification_script_regenerates_a_chart(script):
 
 def test_chart_generation_stays_in_the_regeneration_script():
     """Regeneration is a real, supported operation — it just is not verification."""
-    evaluate = (ROOT / "scripts" / "evaluate.sh").read_text()
+    evaluate = (ROOT / "scripts" / "evaluate.sh").read_text(encoding="utf-8")
     invoked = set(re.findall(r"python3?\s+scripts/(make_\w+\.py)", evaluate))
     for generator in CHART_GENERATORS:
         assert generator in invoked, (
@@ -189,7 +189,7 @@ def test_chart_generation_stays_in_the_regeneration_script():
 
 def test_verify_all_enforces_chart_immutability_at_runtime():
     """The promise is enforced by the script itself, not merely asserted here."""
-    source = (ROOT / "scripts" / "verify_all.sh").read_text()
+    source = (ROOT / "scripts" / "verify_all.sh").read_text(encoding="utf-8")
     assert "_CHART_HASHES_BEFORE" in source, (
         "verify_all.sh must capture chart hashes before running"
     )
@@ -203,7 +203,7 @@ def test_verify_all_enforces_chart_immutability_at_runtime():
 
 def test_the_chart_checksum_policy_is_documented_where_a_reviewer_will_look():
     """An undocumented carve-out reads as an excuse invented after the failure."""
-    readme = (ROOT / "README.md").read_text().lower()
+    readme = (ROOT / "README.md").read_text(encoding="utf-8").lower()
     assert "sha256sums.txt" in readme
     assert "not byte reproducible across environments" in readme, (
         "README must state plainly that rendered charts are not reproducible "
@@ -229,8 +229,8 @@ def test_requirements_txt_covers_every_dependency_the_test_suite_imports():
     """
     import tomllib
 
-    requirements = (ROOT / "requirements.txt").read_text().lower()
-    pyproject = tomllib.loads((ROOT / "pyproject.toml").read_text())
+    requirements = (ROOT / "requirements.txt").read_text(encoding="utf-8").lower()
+    pyproject = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))
     test_extras = pyproject["project"]["optional-dependencies"]["test"]
 
     missing = []
@@ -245,7 +245,7 @@ def test_requirements_txt_covers_every_dependency_the_test_suite_imports():
 
 
 def test_the_readme_states_a_runnable_one_command_judge_path():
-    readme = (ROOT / "README.md").read_text()
+    readme = (ROOT / "README.md").read_text(encoding="utf-8")
     assert "pip install -r requirements.txt" in readme
     assert "scripts/demo60.py" in readme
     assert "Python 3.11" in readme, "the README must state the Python version"
@@ -263,7 +263,7 @@ def test_release_check_excludes_a_fresh_venv_from_its_merge_marker_scan():
     the other standard build/cache directories) must be excluded by name — the
     project's own source, tests, docs, and outputs must not be.
     """
-    source = (ROOT / "scripts" / "release_check.sh").read_text()
+    source = (ROOT / "scripts" / "release_check.sh").read_text(encoding="utf-8")
     start = source.index("if grep -RInE")
     end = source.index("; then", start)
     invocation = source[start:end]

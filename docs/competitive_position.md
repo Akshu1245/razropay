@@ -1,255 +1,70 @@
-# Position relative to Razorpay's own recovery product
+# Positioning for Track 03
 
-> Desk research conducted 24 August 2026 against public sources only. Every
-> claim about Razorpay's product below is drawn from Razorpay's published
-> material and is quoted or paraphrased as published. Nothing here rests on
-> internal knowledge, and nothing here asserts a defect in a Razorpay product.
+Desk research checked 5 September 2026. Public documentation only. This is a design assessment, not a competitive performance test or knowledge of the judges' private preferences.
 
-## Razorpay already ships recovery for UPI AutoPay — and an AI agent for it
+## Lead with recovery
 
-This must be said first and plainly, because a judge will know it and a
-submission that talks around it looks either uninformed or evasive.
+The official [AI Revenue Recovery brief](https://razorpay.com/buildathon/) asks for detection, diagnosis, bounded execution and measured batch recovery, with escalation, stopping rules and an audit trail. It also asks for public source, architecture and a five-minute pitch.
 
-At FTX'26 (12 March 2026) Razorpay launched **Agent Studio**, built on
-Anthropic's Claude Agent SDK, with a pre-built **Subscription Recovery** agent
-that "Analyzes failed subscription payments, apply smarter retry logic, and
-trigger targeted customer nudges." The **Agentic Experience Platform** announced
-alongside it includes "active revenue recovery on failed payments" and
-"autonomous guardrails."
+The earlier submission spent too much of its first minute defending a benchmark. That made a recovery project sound like a research instrument. The revised demo leads with a batch, a recovered case and its receipt, then shows why other cases stopped.
 
-So the honest position is not that this space is empty. It is that Razorpay is
-building an AI agent to do exactly this, and the published material for it
-describes capability without describing constraint. As of this research
-(24 August 2026) the Agent Studio page carries no statement about guardrails,
-audit trails, approval workflows or human oversight for any of its seven
-pre-built agents.
+The message is **“Recover failed subscriptions. Prove every action.”**
 
-That is where this project sits: not proposing the agent, proposing the harness
-the agent should be measured and bounded by.
+## Published alternatives
 
-Razorpay's **Intelligent Revenue-Protect** for UPI AutoPay is live and, as
-published, includes:
-
-- an **Intelligent Retry Engine** letting merchants "configure their own retry
-  strategies, deciding when and how payment retries should happen", with the
-  ability to "define retry cadence, choose predefined templates, or create
-  custom templates for retry logic" — described as introduced in beta at
-  FTX 2026;
-- **WhatsApp-led recovery**, sending "branded recovery links on WhatsApp" for
-  registration drop-off, mandate cancellation, and failed debits;
-- three intervention points: registration abandonment, failed debit retry, and
-  mandate cancellation win-back.
-
-The same page quantifies the leaks it targets: roughly 30% registration
-drop-off, 20% subsequent debit failure, and 18% active subscriber cancellation.
-
-**MandateGuard does not compete with this and would lose if it tried.** A
-hackathon project is not going to out-recover a shipped product built by the
-team that owns the rails.
-
-## The finding that makes this concrete
-
-Razorpay publishes its subscription retry model: *"In a T+3 days cycle, we will
-retry the payment thrice. That is, once every day for 3 days, excluding the date
-of the charge."* The subscription then moves to `halted`.
-
-MandateGuard implements exactly that as a benchmark arm, `RZP`, and runs it on
-the same frozen ledger as every other policy. The result:
-
-| Regime | RZP recovered | RZP prohibited value moved | Reason gating (B1.5) recovered | B1.5 prohibited value moved |
-|---|---:|---:|---:|---:|
-| R1 Transient | ₹12,941 | ₹19,030 | ₹20,561 | ₹14,285 |
-| R2 Terminal | ₹5,089 | ₹35,272 | ₹8,818 | ₹5,804 |
-| R3 Ambiguous | ₹6,621 | ₹22,357 | ₹8,864 | ₹7,967 |
-
-**`RZP` is Pareto dominated in all three regimes.** Simply reading the failure
-reason recovers more money while moving substantially less prohibited value — in
-the terminal regime, six times less. No weighting of the two metrics prefers the
-temporal schedule.
-
-Two qualifications, both material, both enforced by tests so they cannot be
-dropped:
-
-1. **That schedule is documented for the card model.** Applying the card
-   model to a scheduled UPI AutoPay ledger is this benchmark's stated
-   assumption. It is not a reproduction, benchmark, or claim about Razorpay's
-   current Intelligent UPI Retry Engine or production UPI behaviour.
-2. **A schedule cannot see a failure reason, and this arm does not try to.**
-   The result is not that Razorpay's card policy is bad at being a card policy.
-   It is that a purely temporal model, moved onto a rail where some failures are
-   terminal, retries mandates that no longer exist.
-
-Read together those two points make one argument: **a scheduled UPI AutoPay
-policy needs its own model.** This project is a way to evaluate what it
-should be.
-
-To be explicit about what the `RZP` arm is and is not: the RZP arm uses
-Razorpay's documented fixed card retry schedule as a **temporal reference
-policy**. It does not reproduce or benchmark Razorpay's current Intelligent
-UPI Retry Engine, and MandateGuard has not been evaluated against Razorpay's
-production decision logic. Razorpay ships Intelligent Revenue-Protect for UPI
-AutoPay, in which merchants configure retry strategies; that production engine
-is not implemented or evaluated here. Any result about `RZP` is a result about
-a fixed temporal schedule on a synthetic ledger, not about Razorpay's
-production recovery.
-
-## What MandateGuard is instead
-
-MandateGuard is not a recovery engine. It is the **evaluation harness and
-bounded runtime that sits underneath one**.
-
-A configurable retry engine turns recovery policy into a merchant-editable
-setting. That is the right product decision and it creates a second-order
-question that the configuration surface itself cannot answer:
-
-> Before this retry configuration is deployed, what will it recover, what
-> legitimate recovery will it refuse, how many prohibited debits will it
-> attempt, and can every refusal be proven after the fact?
-
-Razorpay's published description of Revenue-Protect covers cadence, templates
-and channels. It does not describe a pre-deployment evaluation of a
-configuration against attempt caps, pre-debit notice validity, consent state,
-or mandate state, nor a per-decision evidence artifact. That absence in the
-public material is the space MandateGuard occupies. It is an honest statement
-about what is published, not a claim that the product lacks those controls
-internally.
-
-## The division of labour we are proposing
-
-| Layer | Owner | Question it answers |
+| Source | What is publicly described | Implication for this submission |
 |---|---|---|
-| Recovery execution | Razorpay Revenue-Protect | How do we win the payment back? |
-| Recovery configuration | Merchant, via the retry engine | When and how often do we try? |
-| **Policy evaluation** | **MandateGuard** | **What does that configuration cost before we deploy it?** |
-| **Bounded execution and evidence** | **MandateGuard** | **Did every refusal actually happen before the provider boundary, and can we prove it?** |
+| [Razorpay Intelligent Revenue-Protect](https://razorpay.com/blog/upi-autopay-with-intelligent-revenue-protect/) | UPI AutoPay recovery, configurable retry strategies and customer re-engagement | Generic retry plus messaging is not enough differentiation |
+| [Razorpay Agent Studio](https://razorpay.com/agent-studio/) | Subscription Recovery diagnoses failures, applies retry logic and sends targeted nudges | Do not claim Razorpay lacks recovery or AI |
+| [Stripe Revenue Recovery](https://docs.stripe.com/billing/revenue-recovery) | Smart Retries, configurable schedules and failed-payment communications | Competing on retry automation alone overlooks a mature incumbent category |
+| [Chargebee Dunning](https://www.chargebee.com/docs/payments/2.0/dunning/dunning-v2) | Smart dunning, logged retry attempts and controls that pause attempts and emails | Recovery scheduling and customer-aware stopping are established product capabilities |
+| [Cashfree Subscriptions](https://www.cashfree.com/docs/payments/subscription/faq) | UPI AutoPay subscriptions and retry APIs | India-specific recurring payments are not an uncontested category |
+| [HappyGarg8o's Track 3 repository](https://github.com/HappyGarg8o/ai-revenue-recovery) | A documented tiered recovery workflow, stopping rules checked again before intervention, and auditable dry-run outcomes | Other entrants also care about safe execution; do not portray them all as unconstrained chatbots |
+| [Revenue Resilience AI](https://github.com/srikrishna0603/razorpay-buildathon) | Typed diagnosis, deterministic payment authority, SQLite WAL reservations, concurrency and stale-reservation demonstrations | AI without payment authority is shared architecture, not our unique invention; persistent concurrency handling is a useful strength to assess against our simulator |
 
-## Why the evaluation layer is the defensible half
+The entrant comparison is based on their READMEs and Revenue Resilience AI's decision record, not independently executed assessments. Their claimed recovery amounts are not comparable with our differently generated dataset. No superiority ranking is justified.
 
-Three reasons, in order of strength.
+## Decision on the proposed last-day pivot
 
-**1. Our own benchmark says so.** MandateGuard's fully guarded arms do not win
-on recovery. Reason gating alone (B1.5) recovers more in every shipped regime,
-and under the fixture sweep a fully guarded arm is the recommended policy in
-only 18 of 45 regime observations. If the deliverable were a recovery policy,
-that result would be a failure. Because the deliverable is the instrument that
-produced the result, it is the product working correctly: the harness is
-capable of reporting against the interest of the person who built it, which is
-the only kind of measurement worth having.
+Keep **MandateGuard: Recover failed subscriptions. Prove every action.** The suggested all-purpose Revenue Recovery Intelligence Agent adds bank-pattern discovery, alternate routing and card expiry recovery that this project does not implement. Those claims would widen the demonstration beyond its evidence. The official brief explicitly lists mandate retry sequencing, so the focused scope fits Track 03.
 
-**2. The observable failure mode is over-execution, not under-recovery.** See
-`docs/problem_evidence.md`. The publicly documented complaint themes around
-recurring payments are unexpected and unauthorised deductions and auto-pay
-charges, not merchants reporting that too little was recovered. A layer whose
-headline metric is `protected_value_by_denial_inr` addresses the documented
-direction of failure.
+The supplied review's numerical winning scores, claims of a less-crowded track and predicted superiority are not established by the cited sources. We cannot know the full submission pool or the judges' decision. Our strongest inspectable contribution is the connection between bounded recovery, comparable batch economics and verifiable evidence. Our material limitation is that batch recovery remains simulated, and the captured provider proof is a separate Test Mode example.
 
-**3. Configuration surfaces create an evaluation question.** When retry
-strategy is configurable, a merchant can compare candidate strategies before
-deployment. MandateGuard supplies one explicit way to do that: a frozen
-synthetic ledger, declared harm/recovery metrics, counterfactual policy arms,
-and auditable runtime receipts.
+## What is distinctive here
 
-## How to say this on camera
+- Every policy runs on the same frozen common outcome ledger.
+- The evaluation exposes legitimate recovery forgone alongside prohibited value executed.
+- An independent checker and mutation tests challenge the safety implementation.
+- The AI interface is deliberately bounded, including hostile-interpreter tests.
+- The demo connects batch outcome, case-level calls, postconditions and downloadable audit evidence.
+- A separate captured Test Mode fallback is bound to independently verified payment capture; the already-paid example records no new fallback write.
 
-> Razorpay already ships recovery for UPI AutoPay, including a configurable
-> retry engine in beta. I am not proposing a competitor to it. MandateGuard
-> asks a separate evaluation question: before a retry strategy is deployed,
-> what recovery-versus-prohibited-value trade-off does it produce under a
-> declared test model? The harness measures that on a frozen synthetic ledger
-> and proves every refusal with a receipt. My own benchmark says the strict policy
-> is not always the profitable one, and it reports the exact price at which
-> that flips. That is the product: the measurement, not the policy.
+These are inspectable project properties. They are not claims that competitors or Razorpay lack equivalent internal controls.
 
-## The field is converging on money truth; the moat is the write boundary
+## What prior awards actually suggest
 
-Stronger late-stage Buildathon entries now also reason about conflicting
-sources, stale events and reconciliation — dedup across webhook and REST
-observation of the same logical transition, guards against a stale capture
-event regressing a refunded payment. That development retires any broad
-claim that other entries merely consume stale webhook truth, and this
-project should not make it.
+Razorpay reports that its DrishtiPay product won at RBI's HaRBInger 2023. It addressed payment accessibility for visually impaired users. The announcement describes judging dimensions including demonstration, user experience, security and implementation practicality. This was a **different competition**, not a prior edition of the current AI Buildathon. [Razorpay announcement](https://razorpay.com/newsroom/razorpay-pos-awarded-first-prize-at-rbis-global-hackathon-harbinger-for-drishtipay-a-solution-which-facilitates-ease-to-use-digital-payments-for-visually-impaired/)
 
-The distinction that survives is narrower and provable: **RecoveryTruth
-establishes authoritative provider truth immediately before the
-money-changing write and independently proves the exact postcondition
-afterward.** The pre-write fence re-reads the exact Order and Payments at
-the write boundary and blocks on any change; the postcondition is verified
-by an independent fetch of the exact captured Payment; and the refusal side
-carries its own provider-backed proof — in the recorded already-paid case,
-`docs/testmode_evidence/testmode_safe_block_zero_write.json` shows Payment
-Links stayed `0 -> 0`, so the blocked recovery object provably never
-existed at the provider. Proving both the completed round trip and the
-zero-write refusal is the combination not yet demonstrated elsewhere in
-this field's public evidence.
-
-## Rigor is no longer rare; the combination still is
-
-Late in the field's public window, evaluation-first entries appeared in this
-exact mandate niche: matched-world multi-arm harnesses, hashed frozen
-configs, oracle ceilings, sealed test splits with committed hashes, paired
-bootstrap confidence intervals, and self-published negative findings. One
-strong general entry additionally validated its targeting estimation on a
-large public randomized dataset. The claim "nobody else evaluates rigorously"
-is therefore retired; this project should not make it.
-
-What remains defensible is the combination no public rival holds at once:
-nine policy arms spanning an entire relaxation frontier plus Razorpay's own
-published schedule as a reason-blind reference arm; financial metrics defined
-by whether a provider call happened, immune to the stop-spelling defect class;
-a fixture whose latent harm is drawn independently of the failure reason, so
-reason gating cannot win by construction — enforced by a release gate; swept
-price curves as a reporting requirement rather than a single asserted lift;
-a mutation-tested verification suite (found in no surveyed rival); and
-external grounding on the execution-and-refusal axis — Test Mode execution
-behind a pre-write fence, independently verified postcondition, and the
-recorded `0 -> 0` zero-write refusal. Estimation grounded on external data
-and execution proven against the real provider answer the same objection on
-different axes; only the second exists in this repository, and it should be
-claimed precisely as that.
-
-## Disambiguation from same-named entries
-
-At least one other public Buildathon entry independently chose the name
-"MandateGuard" — an unsurprising collision, since mandate plus guard is the
-obvious compound for a UPI AutoPay guardrail project. If a judge has seen two
-MandateGuards, this one is identified by what only it does: nine policy arms
-benchmarked on one frozen, hash-recorded outcome ledger; denials proven by
-zero provider calls rather than described; a mutation-tested verification
-suite; swept price curves instead of a single asserted uplift number; and a
-README whose figures regenerate from committed `outputs/` rather than being
-typed. Any claim in this repository can be recomputed from a clean checkout
-with `./scripts/verify_all.sh`; that reproducibility, not the name, is the
-identity of this project.
+Our inference: a specific user problem, visible working flow and graceful failure are a better presentation strategy than a long feature list. This is an inference, not a published scoring rubric for Track 3. We found no verified prior-winner list for this same student program and do not invent one.
 
 ## What would weaken this position
 
-Stated so it can be checked rather than discovered:
+- A judge cannot see recovery happen across the batch without reading the research.
+- The UI claims live execution while showing canned labels or fabricated hashes.
+- Recorded Test Mode payment capture is misrepresented as merchant revenue.
+- The AI contribution is asserted rather than measured against deterministic diagnosis.
+- Stronger controls are presented without showing their lost recovery or cost assumptions.
+- The provider example is treated as proof of production AutoPay execution.
+- An equivalent evaluation and evidence workflow is already available to the intended user with lower adoption cost.
 
-- If Revenue-Protect does validate configured retry strategies against attempt
-  caps, pre-debit notice, consent and mandate state before execution, our
-  contribution narrows to the counterfactual evaluation and the evidence chain.
-  Those remain unaddressed in the published material, but the claim is smaller.
-- If the retry engine leaves beta with per-decision audit artefacts, the
-  evidence half of this project is subsumed and only the policy comparison
-  harness survives.
-- The frozen benchmark has never called Razorpay APIs. Every rupee result is a
-  synthetic counterfactual over a synthetic local simulator, and the input
-  adapter is Razorpay shaped rather than Razorpay connected. A separate
-  RecoveryTruth path performs real Razorpay Test Mode reads and a Standard
-  Payment Link fallback when `rzp_test_` keys are supplied; that path is
-  currently VERIFIED_TEST_MODE_EVIDENCE_CAPTURED and refuses live keys.
+## Reference-policy discipline
 
-## Sources
+`RZP` borrows a fixed retry schedule from Razorpay's published **card** subscription documentation. Applying that schedule to this synthetic UPI AutoPay ledger is an explicit assumption. It is not a reproduction of Intelligent UPI Retry or evidence about Razorpay's current production recovery.
 
-- Razorpay, "UPI Autopay with Intelligent Revenue-Protect",
-  https://razorpay.com/blog/upi-autopay-with-intelligent-revenue-protect/
-- Razorpay, "Introducing UPI AutoPay on Razorpay Subscriptions",
-  https://razorpay.com/blog/what-is-upi-autopay-recurring-payments-razorpay-subscriptions/
-- Razorpay, "Payment Retries" (Subscriptions),
-  https://razorpay.com/docs/payments/subscriptions/payment-retries/
-- Razorpay, Agent Studio, https://razorpay.com/agent-studio/
-- Razorpay newsroom, Agent Studio launch at FTX'26, built on Anthropic's Claude
-  Agent SDK, https://newsroom.razorpay.in/
-  (The announcement's own superlative framing is not reproduced here; it is a
-  vendor claim and this document does not adopt it.)
-- Razorpay AI Buildathon track definitions, https://razorpay.com/buildathon/
+Use the [generated frontier](../outputs/frontier.png) and [complete price sweep](../outputs/sensitivity.png) together. Never headline “we beat Razorpay.” The useful question is what the tested policies trade off under the stated synthetic assumptions.
+
+## Recommended demo emphasis
+
+Recovery batch → recovered receipt → revoked mandate → uncertain timeout → captured Test Mode proof → policy trade-offs.
+
+Keep this research as panel backup. It should not consume the opening minute.

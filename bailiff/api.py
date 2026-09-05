@@ -40,7 +40,7 @@ class ExperimentCreate(BaseModel):
     seed: int = 1701
     n: int = Field(default=100, ge=1, le=5000)
     policy_ids: list[str] = Field(
-        default_factory=lambda: ["pid_b0", "pid_b1", "pid_b1_5", "pid_b2_25", "pid_b2_5", "pid_b2_75", "pid_b2", "pid_b3"]
+        default_factory=lambda: [f"pid_{arm.replace('.', '_').lower()}" for arm in CANONICAL_ARM_ORDER]
     )
 
 
@@ -215,7 +215,7 @@ def run_experiment_api(experiment_id: str, request: ExperimentRun) -> dict[str, 
     record = EXPERIMENTS.get(experiment_id)
     if record is None:
         raise HTTPException(status_code=404, detail="experiment not found")
-    if len(request.seeds) < 5:
+    if len(set(request.seeds)) < 5:
         raise HTTPException(status_code=400, detail="at least five seeds are required")
     if request.violation_cost_inr is not None:
         record.violation_cost_inr = request.violation_cost_inr

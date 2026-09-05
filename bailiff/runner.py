@@ -196,6 +196,7 @@ def aggregate_rows(rows: list[dict[str, object]]) -> list[dict[str, object]]:
         "violations",
         "recovered_per_permitted_action_inr",
         "abstention_rate",
+        "human_reviews",
         "human_review_cost_inr",
         "violation_cost_inr",
         "net_value_inr",
@@ -420,7 +421,7 @@ def write_outputs(
     }
     evidence_manifest_bytes = json.dumps(evidence_manifest, indent=2, sort_keys=True).encode()
     (target / "evidence_manifest.json").write_bytes(evidence_manifest_bytes)
-    (target / "anti_gaming.json").write_text(json.dumps({"failures": failures}, indent=2, sort_keys=True) + "\n")
+    (target / "anti_gaming.json").write_text(json.dumps({"failures": failures}, indent=2, sort_keys=True) + "\n", encoding="utf-8", newline="\n")
     artifact_hash_input = {
         "per_seed_sha256": sha256(per_seed_bytes).hexdigest(),
         "aggregate_sha256": sha256(aggregate_bytes).hexdigest(),
@@ -435,7 +436,7 @@ def write_outputs(
         "full_local_path": str((generated / "evidence_ledger_full.json").relative_to(target)),
         "shipped_row_count": len(sample_evidence),
     }
-    (target / "manifest.json").write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n")
+    (target / "manifest.json").write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n", encoding="utf-8", newline="\n")
     return {"rows": rows, "aggregates": aggregates, "manifest": manifest, "failures": failures}
 
 

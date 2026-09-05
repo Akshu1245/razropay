@@ -113,7 +113,7 @@ def test_the_demo_runs_end_to_end_and_states_its_scope(demo):
 
 def test_the_demo_never_prints_a_hardcoded_provider_call_count():
     """Guard the specific dishonesty that occurred: an asserted count."""
-    source = (ROOT / "scripts" / "demo60.py").read_text()
+    source = (ROOT / "scripts" / "demo60.py").read_text(encoding="utf-8")
     assert 'line("provider calls", "1"' not in source
     assert 'line("provider calls", "0"' not in source
 
@@ -130,7 +130,7 @@ def test_the_closing_test_and_mutation_count_matches_reality():
     import subprocess
     import sys as _sys
 
-    source = (ROOT / "scripts" / "demo60.py").read_text()
+    source = (ROOT / "scripts" / "demo60.py").read_text(encoding="utf-8")
     match = re.search(r'"\s*(\d+) tests, (\d+) red team attacks, (\d+)/(\d+) mutations caught"', source)
     assert match, "demo60.py must state its closing counts as a single matchable line"
     claimed_tests, claimed_attacks, claimed_caught, claimed_total = (int(g) for g in match.groups())

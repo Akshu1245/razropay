@@ -19,7 +19,7 @@ ARMS = ["B0", "B1", "B1.5", "RZP", "B2.25", "B2.5", "B2.75", "B2", "B3"]
 
 
 def load(name: str):
-    return json.loads((OUTPUTS / name).read_text())
+    return json.loads((OUTPUTS / name).read_text(encoding="utf-8"))
 
 
 def main() -> int:
@@ -38,7 +38,7 @@ def main() -> int:
 
     evidence_manifest = load("evidence_manifest.json")
     evidence_path = OUTPUTS / "evidence_ledger.json"
-    evidence = json.loads(evidence_path.read_text())
+    evidence = json.loads(evidence_path.read_text(encoding="utf-8"))
     assert evidence_manifest["sampled_seed"] == min(manifest["seeds"])
     assert evidence_manifest["sampled_regime"] == manifest["regimes"][0]
     assert evidence_manifest["sampled_arms"] == ARMS
@@ -121,8 +121,8 @@ def main() -> int:
     assert (OUTPUTS / "frontier.png").stat().st_size > 10_000
     assert (OUTPUTS / "architecture.png").stat().st_size > 10_000
     assert (OUTPUTS / "sensitivity.png").stat().st_size > 10_000
-    findings = (ROOT / "FINDINGS.md").read_text().lower()
-    report = (OUTPUTS / "report.md").read_text().lower()
+    findings = (ROOT / "FINDINGS.md").read_text(encoding="utf-8").lower()
+    report = (OUTPUTS / "report.md").read_text(encoding="utf-8").lower()
     for text in ("abstention", "net value", "break even", "frontier", "harm priced", "realized harm"):
         assert text in report
     assert "falsification criteria" in findings
@@ -146,7 +146,7 @@ def main() -> int:
 
     real_evidence_path = OUTPUTS / "real_interpreter_evidence.json"
     if real_evidence_path.exists():
-        real_evidence = json.loads(real_evidence_path.read_text())
+        real_evidence = json.loads(real_evidence_path.read_text(encoding="utf-8"))
         result = real_evidence["result"]
         assert result["reason_source"] == "MODEL_INTERPRETATION"
         assert result["model_calls"] == 1

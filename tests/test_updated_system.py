@@ -226,4 +226,7 @@ def test_final_benchmark_has_real_forgone_and_protected_metrics():
     assert any(row["protected_value_by_denial_inr"] >= 0 for row in b2_rows)
     aggregate = aggregate_rows(rows)
     assert all(row["seeds"] == 5 for row in aggregate)
+    for summary in aggregate:
+        selected = [row for row in rows if row["regime"] == summary["regime"] and row["arm"] == summary["arm"]]
+        assert summary["human_reviews"]["mean"] == sum(row["human_reviews"] for row in selected) / len(selected)
     assert evidence

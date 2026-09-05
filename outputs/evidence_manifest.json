@@ -1,5 +1,5 @@
 {
-  "full_evidence_local_path": "generated/evidence_ledger_full.json",
+  "full_evidence_local_path": "generated\\evidence_ledger_full.json",
   "full_evidence_sha256": "d6251dd995b80c81aa26058aef3ec35ccdb16313033b5c9d1850580f11f40618",
   "note": "The full ledger is generated for local verification. The shipped evidence ledger is a deterministic one seed and one regime sample.",
   "sampled_arms": [

@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """Plot the recovery/harm frontier for every policy arm.
 
 The chart answers one question: what does an arm's extra recovery cost in
@@ -54,8 +55,8 @@ OUTPUTS = ROOT / "outputs"
 
 
 def main() -> int:
-    manifest = json.loads((OUTPUTS / "manifest.json").read_text())
-    aggregates = json.loads((OUTPUTS / "aggregate.json").read_text())
+    manifest = json.loads((OUTPUTS / "manifest.json").read_text(encoding="utf-8"))
+    aggregates = json.loads((OUTPUTS / "aggregate.json").read_text(encoding="utf-8"))
     arms = list(manifest["arms"])
     regimes = list(manifest["regimes"])
     by_key = {(row["regime"], row["arm"]): row for row in aggregates}

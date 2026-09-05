@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 from __future__ import annotations
 
 # Make `bailiff` importable when this script is run directly
@@ -26,14 +27,14 @@ def mean(aggregate: dict, metric: str) -> float:
 
 
 def main() -> int:
-    manifest = json.loads((OUTPUTS / "manifest.json").read_text())
-    aggregates = json.loads((OUTPUTS / "aggregate.json").read_text())
-    per_seed = json.loads((OUTPUTS / "per_seed.json").read_text())
+    manifest = json.loads((OUTPUTS / "manifest.json").read_text(encoding="utf-8"))
+    aggregates = json.loads((OUTPUTS / "aggregate.json").read_text(encoding="utf-8"))
+    per_seed = json.loads((OUTPUTS / "per_seed.json").read_text(encoding="utf-8"))
     guarded_rows = [row for row in per_seed if row["arm"] in ("B2", "B3")]
     guarded_violation_runs = sum(1 for row in guarded_rows if float(row["violations"]) != 0.0)
     guarded_harm_runs = sum(1 for row in guarded_rows if float(row["realized_harm_inr"]) != 0.0)
-    analysis = json.loads((OUTPUTS / "breakeven.json").read_text()) if (OUTPUTS / "breakeven.json").exists() else build_economic_analysis(manifest, aggregates)
-    sensitivity = json.loads((OUTPUTS / "sensitivity.json").read_text())
+    analysis = json.loads((OUTPUTS / "breakeven.json").read_text(encoding="utf-8")) if (OUTPUTS / "breakeven.json").exists() else build_economic_analysis(manifest, aggregates)
+    sensitivity = json.loads((OUTPUTS / "sensitivity.json").read_text(encoding="utf-8"))
     by_key = {(row["regime"], row["arm"]): row for row in aggregates}
 
     lines = [
@@ -127,7 +128,7 @@ def main() -> int:
         ]
     )
     path = ROOT / "FINDINGS.md"
-    path.write_text("\n".join(lines) + "\n")
+    path.write_text("\n".join(lines) + "\n", encoding="utf-8", newline="\n")
     print(path)
     return 0
 

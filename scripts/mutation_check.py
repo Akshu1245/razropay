@@ -20,6 +20,7 @@ Run:
 
 from __future__ import annotations
 
+import os
 import shutil
 import subprocess
 import sys
@@ -155,12 +156,18 @@ MUTATIONS = [
 
 
 def run_suite(target: Path) -> tuple[bool, str]:
+    if os.name == "nt":
+        env = dict(os.environ)
+        env["PYTHONPATH"] = str(target)
+        env["PYTHONUTF8"] = "1"
+    else:
+        env = {"PATH": "/usr/bin:/bin:/usr/local/bin", "PYTHONPATH": str(target)}
     result = subprocess.run(
         [sys.executable, "-m", "pytest", "tests", "-x", "-q", "--no-header"],
         cwd=target,
         capture_output=True,
         text=True,
-        env={"PATH": "/usr/bin:/bin:/usr/local/bin", "PYTHONPATH": str(target)},
+        env=env,
     )
     combined = (result.stdout + result.stderr).strip()
     tail = combined.splitlines()[-1] if combined else ""
@@ -178,7 +185,7 @@ def copy_tree(destination: Path) -> Path:
         target,
         ignore=shutil.ignore_patterns(
             "generated", ".git", "__pycache__", "*.egg-info", ".pytest_cache",
-            "recovered_minimax_artifacts", "build", "dist",
+            "recovered_minimax_artifacts", "build", "dist", ".venv", "venv", ".hypothesis",
         ),
     )
     return target
@@ -206,12 +213,12 @@ def main() -> int:
         with tempfile.TemporaryDirectory() as tmp:
             target = copy_tree(Path(tmp))
             source = target / mutation.path
-            text = source.read_text()
+            text = source.read_text(encoding="utf-8")
             if mutation.old not in text:
                 unapplied.append(mutation)
                 print(f"  UNAPPLIED  {mutation.name}: anchor text not found in {mutation.path}")
                 continue
-            source.write_text(text.replace(mutation.old, mutation.new, 1))
+            source.write_text(text.replace(mutation.old, mutation.new, 1), encoding="utf-8", newline="\n")
 
             passed, _ = run_suite(target)
             if passed:

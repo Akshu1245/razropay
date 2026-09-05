@@ -1,45 +1,42 @@
-# Deploying the evidence UI
+# Deploy the demo
 
-The deployable artifact is the read-only Streamlit evidence UI over the shipped `outputs/`. It moves no money, calls no provider, stores no secret, and regenerates no benchmark artifact — the same contract `bailiff/lineage.py` enforces and the test suite proves. Deploying it publicly is safe by construction because there is nothing behind it to reach: the container carries only generated evidence and the code to display it.
+The submission has two supported presentation modes. Neither connects the public UI to merchant payments.
 
-Do not describe a deployment of this UI as a payment service, a collections product, or a production dashboard. It is the evidence surface for a deterministic synthetic benchmark.
-
-## Local, no container
+## Python-backed workspace
 
 ```bash
-python3 -m pip install -e '.[ui]'
-streamlit run app.py
+pip install -r requirements.txt
+python -m uvicorn api.index:app --host 127.0.0.1 --port 8765
 ```
 
-## Local, container
+The server serves the UI and the fixed-workload `/api/demo/batch` and `/api/demo/scenario` endpoints. They execute only the local simulator, need no credentials and hold no persistent experiment state.
+
+The separate `bailiff.api:app` is an in-memory experiment/webhook development API. Do not expose it as a production service or mount its optional real-model experiments in a public demo.
+
+## Static Pages
+
+`public/` contains the complete static demo, including generated engine evidence. The supplied Pages workflow uploads that directory.
+
+```bash
+python scripts/build_showcase.py
+python -m http.server 8090 --directory public
+```
+
+Static hosting labels itself **Recorded engine evidence**. This is deliberately different from the **Python engine connected** header on the API host.
+
+After exporting new evidence, refresh the checksum manifest before release. Push the reviewed revision to the linked repository and check the Pages deployment and public URL. A local change does not update a public site.
+
+## Serverless
+
+`vercel.json` routes `/api/*` to the stateless demo entrypoint and serves `public/` for the interface. It must package the project modules and static files. Local API tests verify this entrypoint; a deployed Vercel build still requires its own URL check.
+
+## Existing Streamlit container
 
 ```bash
 docker build -t mandateguard-lab .
 docker run --rm -p 8501:8501 mandateguard-lab
 ```
 
-Open http://localhost:8501. The healthcheck polls Streamlit's `/_stcore/health`.
+The Dockerfile serves Streamlit on port 8501 (or `PORT`). It does not launch a second server on port 8000. Its evidence screens and local simulator need no provider credentials.
 
-## Hugging Face Spaces (free, public URL)
-
-Create a Space with the **Docker** SDK and push this repository to it. Spaces injects `PORT=7860`; the container honours `$PORT`, so no edit is needed. Add this block to the top of the Space's `README.md` (Spaces reads it as front matter; the repository README works unchanged if the block is prepended):
-
-```yaml
----
-title: MandateGuard Policy Lab
-sdk: docker
-app_port: 7860
----
-```
-
-## Streamlit Community Cloud (free, public URL)
-
-Point a new app at this repository, `main` branch, `app.py`. Set the Python dependencies file to `requirements.txt`; Streamlit Cloud installs it and `-e .` brings the package. No secrets are required.
-
-## Anything with a Docker runtime (Cloud Run, Fly.io, a VPS)
-
-The image is self-contained. `PORT` is honoured, no volume is needed, and the container is stateless: killing and restarting it loses nothing because it writes nothing.
-
-## What a deployment does not change
-
-The command line demo, tests, benchmark, and release gates never require the UI or the container. `SHA256SUMS.txt` inside the image is the same manifest as in the repository, so a viewer can verify the served evidence matches the shipped evidence.
+See [production gaps](../MARKET_READY_ARCHITECTURE.md) before considering merchant traffic.

@@ -42,7 +42,7 @@ def parser() -> argparse.ArgumentParser:
 
 
 def _load_receipt(path: Path) -> RecoveryActionReceipt:
-    data = json.loads(path.read_text())
+    data = json.loads(path.read_text(encoding="utf-8"))
     if not isinstance(data, dict):
         raise ValueError("receipt file must contain a JSON object")
     expected = set(RecoveryActionReceipt.__dataclass_fields__)
@@ -104,7 +104,7 @@ def main() -> int:
         receipt_dict = asdict(attempt.receipt)
         output["receipt"] = receipt_dict
         if args.receipt_out is not None:
-            args.receipt_out.write_text(json.dumps(receipt_dict, indent=2, sort_keys=True) + "\n")
+            args.receipt_out.write_text(json.dumps(receipt_dict, indent=2, sort_keys=True) + "\n", encoding="utf-8", newline="\n")
             output["receipt_file"] = str(args.receipt_out)
     print(json.dumps(output, indent=2, sort_keys=True))
     return 0

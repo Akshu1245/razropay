@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any
 
 from .hardening import interpreter_ablation
+from .provider_proof import load_provider_proofs
 
 
 class ClaimStatus(str, Enum):
@@ -200,7 +201,7 @@ def evaluate_claims(root: str | Path) -> list[ClaimResult]:
         )
     else:
         proof_blob = _json(proof_path)
-        held = proof_blob.get("recovery_verified") is True and bool(proof_blob.get("recovery_proof_hash"))
+        held = load_provider_proofs(root).recovery_verified
         proof = proof_blob.get("proof") if isinstance(proof_blob.get("proof"), dict) else {}
         held = held and str(proof.get("provider_action_id") or "").startswith("plink_")
         held = held and str(proof.get("payment_id") or "").startswith("pay_")

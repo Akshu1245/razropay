@@ -157,7 +157,7 @@ def _bailiff_imports(module_name: str) -> set[str]:
     import ast
     from pathlib import Path
 
-    source = (Path(__file__).resolve().parents[1] / "bailiff" / f"{module_name}.py").read_text()
+    source = (Path(__file__).resolve().parents[1] / "bailiff" / f"{module_name}.py").read_text(encoding="utf-8")
     found: set[str] = set()
     for node in ast.walk(ast.parse(source)):
         if isinstance(node, ast.ImportFrom):

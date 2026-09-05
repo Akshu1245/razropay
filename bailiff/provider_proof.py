@@ -5,6 +5,8 @@ import json
 from pathlib import Path
 from typing import Any, Mapping
 
+from .recovery_truth import RecoveryProof
+
 
 EVIDENCE_FILES = {
     "success": "testmode_success_execute.json",
@@ -25,8 +27,20 @@ class ProviderProofBundle:
 
     @property
     def recovery_verified(self) -> bool:
-        proof = self.artifacts.get("recovery_proof", {})
-        return proof.get("recovery_verified") is True and bool(proof.get("recovery_proof_hash"))
+        artifact = self.artifacts.get("recovery_proof", {})
+        receipt = self.artifacts.get("success", {}).get("receipt", {})
+        try:
+            proof = RecoveryProof(**artifact.get("proof", {}))
+            bindings = {"case_id": "case_id", "decision_id": "decision_id",
+                        "decision_evidence_hash": "decision_evidence_hash", "mandate_id": "mandate_id",
+                        "original_order_id": "order_id", "provider_action_id": "payment_link_id",
+                        "amount_minor": "amount_minor", "currency": "currency", "reference_id": "reference_id",
+                        "prewrite_evidence_hash": "prewrite_evidence_hash", "policy_version": "policy_version"}
+            return (artifact.get("recovery_verified") is True
+                    and proof.hash() == artifact.get("recovery_proof_hash")
+                    and all(getattr(proof, key) == receipt.get(value) for key, value in bindings.items()))
+        except (TypeError, ValueError, AttributeError):
+            return False
 
     @property
     def already_paid_zero_write_verified(self) -> bool:
@@ -35,8 +49,8 @@ class ProviderProofBundle:
             row.get("order_status") == "paid"
             and row.get("recoverytruth_result") == "SAFE_BLOCK_ALREADY_PAID"
             and row.get("executed") is False
-            and int(row.get("payment_links_before", -1)) == 0
-            and int(row.get("payment_links_after", -1)) == 0
+            and row.get("payment_links_before") == 0
+            and row.get("payment_links_after") == 0
             and row.get("zero_new_fallback_writes") is True
         )
 

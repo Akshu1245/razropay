@@ -4,6 +4,8 @@ Use the local Python-backed workspace at `http://127.0.0.1:8765`. The header mus
 
 The batch figures are synthetic. The separate Razorpay artifact is Test Mode evidence. A Standard Payment Link fallback is not an AutoPay retry, and a created link is not proof of captured payment.
 
+**Do not open with a recovery number.** The story starts with the merchant decision problem, then shows recovery and the cost of restraint together.
+
 ## 0:00–0:35 — The merchant decision problem
 
 **Screen:** Top of the MandateGuard workspace.

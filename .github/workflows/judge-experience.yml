@@ -2,7 +2,7 @@ name: judge-experience-verification
 
 on:
   push:
-    branches: ["judge-experience-polish"]
+    branches: ["main", "judge-experience-polish"]
   pull_request:
     branches: ["main"]
 

@@ -46,3 +46,11 @@ One non-failing dependency deprecation warning came from Starlette's AnyIO alias
 The target is `https://github.com/Akshu1245/razropay`. Public visibility and the Pages deployment must be confirmed separately; local test success does not prove public availability. The owner will record/upload the five-minute video and submit the application.
 
 No guarantee of winning, production readiness, regulatory certification, production AI accuracy or merchant recovery is made. See `MARKET_READY_ARCHITECTURE.md` for the production boundary. The earlier Linux verification is historical context only: `docs/OFFLINE_VERIFICATION_BASELINE.md`.
+
+## Evidence-clarity follow-up, 5 September 2026
+
+After the merged judge experience, clean local checkout `a3cbc47` passed `scripts/test.sh` (308 passed, one dependency warning, independent checker positive controls), `scripts/demo.sh`, and `scripts/evaluate.sh`. Regenerated benchmark outputs and FINDINGS.md matched the committed artifacts byte-for-byte. No engine or benchmark changes were introduced in this follow-up.
+
+The extended browser acceptance script passed against the revised UI: desktop execution, three cases, all six summary cards, offline-interpreter comparison, late-response case switching, receipt verification/tamper detection, exports, failure handling, 390-pixel mobile flow, and truthful static replay. The final mobile spacing was checked again after tightening the summary to two columns. Later edits were presentation, workflow triggers, this record and checksums.
+
+The B2/B3 comparison explicitly uses the offline interpreter stub. It is not a live-model accuracy or production uplift claim. Public visibility and deployment remain deferred by the owner. The canonical video script contains approximately 540 spoken words plus screen actions.

@@ -270,7 +270,9 @@ dialog::backdrop{background:rgba(12,33,28,.54)}
 @media(max-width:480px){
   .hero-actions{display:grid}.hero-actions .button{width:100%}
   h1{font-size:34px}
-  .stats{grid-template-columns:1fr}
+  .stats{grid-template-columns:1fr 1fr}
+  .stat-card{padding:14px;min-width:0}
+  .stat-value{font-size:25px}
   .provenance-line{flex-direction:column;gap:4px}
   .case-verdict{grid-template-columns:1fr auto}
   .advanced-panel>summary{padding:16px}

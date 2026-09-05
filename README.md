@@ -1,41 +1,57 @@
 # MandateGuard
 
-**Recover deliberately. Stop when authority ends. Escalate uncertainty. Leave evidence.**
+**Recover failed scheduled UPI AutoPay payments. Prove every action.**
 
-Track 03 — AI Revenue Recovery · Razorpay AI Buildathon
+Razorpay AI Buildathon · Track 03 — AI Revenue Recovery
 
 MandateGuard helps merchants recover failed scheduled UPI AutoPay payments, with explicit controls for when to retry, when to stop, and when to ask a human—with evidence for every decision.
 
-The core judge flow is deliberately narrow: an eligible recoverable failure, a revoked mandate that stops with zero provider calls, and a provider timeout whose unknown outcome goes to human review before another automated action.
+> **AI interprets unclear failure information; deterministic controls decide whether an action is allowed.**
 
-**The batch results are synthetic, not merchant revenue.** A separate captured Razorpay Test Mode example demonstrates a customer-initiated Standard Payment Link fallback and independently verified payment capture. A Payment Link is not an AutoPay retry, and creating a link is not proof of captured payment.
+The submission is intentionally focused. It does not try to replace Razorpay's existing recovery products. It demonstrates a bounded recovery layer that makes one of three decisions—**retry, stop, or escalate**—and leaves inspectable evidence for each one.
 
-## Try the product
+**The batch results are synthetic, not merchant revenue.** Razorpay Test Mode evidence is shown separately. A Standard Payment Link fallback is not an AutoPay retry, and creating a link is not proof of captured payment.
 
-Python 3.11 or newer:
+## Judge it in three minutes
+
+Python 3.11+:
 
 ```bash
 pip install -r requirements.txt
 python -m uvicorn api.index:app --host 127.0.0.1 --port 8765
 ```
 
-Open the recovery workspace at `http://127.0.0.1:8765`. No credentials are needed.
+Open `http://127.0.0.1:8765` and confirm the header says **Python engine connected**.
 
-1. Click **Run recovery demonstration** — execute the fixed 100-case batch plus the three decisive scenarios through the shared engine.
-2. Read **Retry is permitted**, **Stop before the provider**, and **Ask a human before another action**.
-3. Open a decision receipt and use **Verify audit chain + tamper check**.
-4. Review the batch summary, including **recoverable value forgone** beside recovery.
-5. Read the separate Razorpay Test Mode proof and expand **Advanced policy evaluation** only when you want the nine-arm benchmark and full price sweep.
+1. Click **Run recovery demonstration**.
+2. Inspect the three cases:
+   - **Retry is permitted** — eligible recovery, one bounded provider action, verified postcondition.
+   - **Stop before the provider** — revoked mandate, zero provider calls.
+   - **Ask a human before another action** — one attempted provider call, unknown postcondition, no blind repeat.
+3. Open a decision receipt and run **Verify audit chain + tamper check**.
+4. Read recovery beside **recoverable value forgone** and safety outcomes.
+5. Inspect the separate Razorpay Test Mode proof.
+6. Expand **Advanced policy evaluation** only for the nine-policy benchmark and complete price sweep.
 
-The intended Pages URL `https://akshu1245.github.io/razropay/` serves **recorded engine evidence** only after Pages is enabled and successfully deployed. Static hosting replays generated results; it does not execute Python. The local/serverless API executes the same showcase engine on demand.
+On Windows, `run_showcase.bat` launches the same judge-facing application.
 
-Terminal fallback:
+Terminal-only fallback:
 
 ```bash
 python scripts/demo60.py
 ```
 
-On Windows, use `run_demo.bat` or `run_showcase.bat`. For the deeper inspection interface, install `pip install -e '.[ui]'` and run `streamlit run app.py`. The separate captured-provider viewer is `streamlit run provider_proof_app.py`.
+## What the system proves
+
+| Question | Inspectable answer |
+|---|---|
+| Can it recover? | A fixed 100-case synthetic batch records recovery only after simulated provider execution and postcondition evidence. |
+| Can it stop safely? | Denied and abstained paths prove `provider_calls = 0`. |
+| What if a write times out? | `UNKNOWN_POSTCONDITION` routes to human review before another automated action. |
+| Can AI move money? | No. The interpreter has no provider tools and cannot widen deterministic authority. |
+| Can the evidence be checked? | Receipts carry hashes, call IDs, idempotency data, postconditions and an audit chain; browser tamper tests recompute it. |
+| Is any provider evidence real? | A separate saved Razorpay Test Mode fallback is bound to independently verified captured-payment evidence. |
+| Are trade-offs hidden? | No. Recovery, protected value, realized harm and legitimate recovery forgone are reported separately, with a full price sweep. |
 
 ## Measured recovery
 
@@ -57,65 +73,94 @@ The final evaluation covers **54,000 policy decisions** across **20 seeds**, **3
 
 ![Recovery against prohibited value executed](outputs/frontier.png)
 
-**There is no universal winning policy.** Reason-only retry can recover more while executing prohibited value. The guarded workflow can forgo legitimate recovery. The configured harm and violation costs are project assumptions; read the complete price sweep beside the results.
+**There is no universal winning policy.** Reason-only retry can recover more while executing prohibited value. Full guardrails can forgo legitimate recovery. The preferred arm changes with the assumed cost of an unsafe action, so the complete price curve is part of the evidence rather than an appendix we hide.
 
 ![Preferred policy across the full price sweep](outputs/sensitivity.png)
 
-## How it works
+## Architecture in one screen
 
 ```text
-Scheduled failure → authenticate → normalize → diagnose → deterministic authorization
-                                                        ├─ stop / human review → receipt
-                                                        └─ local provider → postcondition → receipt
-
-Separate Test Mode fallback:
-Expiring authority → current order/payments → fresh write fence → Payment Link
-                                                              → verify capture → RecoveryProof
+Scheduled AutoPay failure
+        |
+        v
+authenticate raw event -> normalize -> diagnose
+        |                            |
+        |                      ambiguous only
+        |                            v
+        |                    bounded interpreter
+        |                      label + confidence
+        |                            |
+        +----------------------------+
+                     |
+                     v
+        deterministic authority + guardrails
+             |                  |
+        deny/abstain          allow
+             |                  |
+       zero provider calls       v
+             |           idempotent provider action
+             |                  |
+             +-------> postcondition / human review
+                                |
+                                v
+                    tamper-evident decision receipt
 ```
 
-**AI interprets unclear failure information; deterministic controls decide whether an action is allowed.**
+The authority layer checks mandate state, consent, retry budget, timing, pre-debit notice, action class, amount ceiling and authority expiry before the provider boundary. Raw webhook bytes are authenticated with HMAC-SHA256 before normalization. Duplicate, stale and out-of-order deliveries are handled explicitly; `tests/test_webhook_ingress.py` attacks this boundary 42 ways.
 
-Known failures use deterministic rules. B3 consults a bounded interpreter only for ambiguity. Its interface returns a label and confidence; it has no provider tools and cannot authorize money movement. The default interpreter is an offline deterministic implementation. `outputs/real_interpreter_evidence.json` demonstrates an optional integration path; it does not establish model accuracy or production uplift.
+## Why this is differentiated
 
-The runtime checks mandate state, consent, retry budget, timing, pre-debit notice and amount authority. External rules retain provenance in `bailiff/rules.json`. Unpinned requirements are reported requirements or project policy, not claims of regulatory certification.
+Razorpay already ships recovery products. MandateGuard is a narrow recovery prototype, not a recovery engine deployed on production merchants.
 
-Raw webhook bytes are authenticated with HMAC-SHA256 before normalization. Duplicate and stale deliveries are ignored. `tests/test_webhook_ingress.py` attacks this boundary 42 ways. An unknown provider timeout requires human review before further automated action. Audit chains are tamper-evident, not immutable.
+The contribution is not “an LLM that retries payments.” Mature recovery products already exist, and other agents can also keep payment authority deterministic. MandateGuard concentrates on the **trust layer around recovery policy**:
 
-## Why this fits Razorpay
+- every policy runs on the same frozen common-outcome ledger;
+- unsafe non-actions are first-class results with zero-call evidence;
+- unknown provider outcomes are not mislabeled as failures and retried blindly;
+- all nine policies expose recovery *and* the cost of restraint;
+- an independent checker and mutation tests challenge the safety implementation;
+- the bounded interpreter is adversarially tested and cannot authorize execution;
+- saved Razorpay Test Mode evidence is separated from the synthetic benchmark;
+- Payment Link capture is independently verified rather than inferred from link creation.
 
-Razorpay already ships recovery products. MandateGuard is a narrow recovery prototype, not a recovery engine deployed on production merchants. It does not claim that Razorpay lacks recovery or that this prototype outperforms production systems.
-
-The proposed integration point is an evidence-backed recovery configuration workflow: compare candidate policies on the same outcomes, execute only within permission, and show why each action or refusal occurred. `docs/competitive_position.md` separates published capabilities from the proposed contribution.
+`docs/competitive_position.md` records the public competitive research and the conditions that would weaken this position.
 
 ## Policy and metric contract
 
-Canonical order: **B0, B1, B1.5, RZP, B2.25, B2.5, B2.75, B2, B3**.
+Canonical policy order: **B0, B1, B1.5, RZP, B2.25, B2.5, B2.75, B2, B3**.
 
-| Policies | Purpose |
+| Policies | Role |
 |---|---|
 | B0 | No-intervention control |
 | B1 / B1.5 | Ungated retry / deterministic reason-only retry |
 | RZP | Fixed temporal reference derived from a published **card** schedule |
-| B2.25 / B2.5 / B2.75 | Diagnostic relaxations; not safe production defaults |
-| B2 / B3 | Full guardrails / same guardrails with bounded interpretation |
+| B2.25 / B2.5 / B2.75 | Diagnostic frontier relaxations; not safe production defaults |
+| B2 / B3 | Full deterministic guardrails / same guardrails with bounded interpretation |
 
 **RZP does not reproduce Razorpay's current Intelligent UPI Retry Engine.** Applying a card schedule to this synthetic AutoPay ledger is an explicit benchmark assumption.
 
-| Metric | Definition |
+| Metric | Meaning |
 |---|---|
 | `incremental_recovered_inr` | Simulated recovery above no intervention |
 | `legitimate_recovery_forgone_inr` | Latent recoverable value on cases with no provider action |
-| `protected_value_by_denial_inr` | Prohibited value associated with actions that were not sent |
+| `protected_value_by_denial_inr` | Prohibited value associated with actions not sent |
 | `realized_harm_inr` | Prohibited value on actions that reached the simulator |
 
-Money attribution depends on provider execution, not the symbolic name of a stop. Every arm consumes the same frozen common outcome ledger. Compliance exposure is drawn independently of the normalized reason. These are declared synthetic assumptions, explored in `ROBUSTNESS.md`, not estimated customer behavior.
+Financial attribution depends on actual provider execution, not the symbolic name of a final action.
 
-## Reproduce and verify
+## Reproduce the evidence
+
+Required submission path:
 
 ```bash
 bash scripts/test.sh
 bash scripts/demo.sh
 bash scripts/evaluate.sh
+```
+
+Full verification:
+
+```bash
 python scripts/build_showcase.py
 python scripts/recoverytruth_check.py
 python scripts/security_regression_check.py
@@ -125,19 +170,29 @@ python scripts/mutation_check.py
 bash scripts/verify_all.sh
 ```
 
-`evaluate.sh` regenerates the final benchmark, charts and findings. `build_showcase.py` exports the UI evidence and generates the numeric README section. After intentional regeneration, refresh `SHA256SUMS.txt` using `scripts/make_checksum_manifest.py`. Verification does not regenerate the showcase.
+`evaluate.sh` regenerates benchmark data, charts and findings. `build_showcase.py` exports browser evidence and regenerates only the numeric README block above. `SHA256SUMS.txt` binds the shipped release files.
 
-`SHA256SUMS.txt` covers archive contents. Rendered chart PNGs are **not byte reproducible across environments** because fonts, FreeType and Matplotlib can differ. Their checksums verify the shipped bytes; verification preserves those PNGs. Regeneration is a separate step.
+Rendered chart PNGs are **not byte reproducible across environments** because Matplotlib, FreeType and font fallback can change rendered bytes. The manifest verifies the shipped PNG bytes; verification preserves them. Chart regeneration is a separate generation step and semantic JSON/report evidence remains reproducible.
 
-See `docs/JUDGE_RUNBOOK.md` for the fastest verification path, `FINAL_VERIFICATION.md` for observed verification evidence, `SUBMISSION_PACK.md` for submission copy, and `VIDEO_SCRIPT.md` for the canonical five-minute recording.
+## Evidence map
 
-## Limits that matter
+| Start here | Purpose |
+|---|---|
+| [`SUBMISSION_READINESS.md`](SUBMISSION_READINESS.md) | Canonical final submission report and verification matrix |
+| [`docs/JUDGE_RUNBOOK.md`](docs/JUDGE_RUNBOOK.md) | Fastest judge/reviewer path |
+| [`ARCHITECTURE.md`](ARCHITECTURE.md) | Authority, execution and evidence boundaries |
+| [`RECOVERYTRUTH.md`](RECOVERYTRUTH.md) | Razorpay Test Mode execution proof boundary |
+| [`outputs/report.md`](outputs/report.md) | Generated benchmark appendix |
+| [`ROBUSTNESS.md`](ROBUSTNESS.md) | Fixture-assumption sensitivity |
+| [`VIDEO_SCRIPT.md`](VIDEO_SCRIPT.md) | Canonical five-minute pitch |
+| [`docs/panel_qa.md`](docs/panel_qa.md) | Short answers for technical follow-up |
 
-- Batch recovery is simulated. The Test Mode capture is one provider example, not batch merchant validation.
-- No production AutoPay retry API integration, scheduler, multi-tenant authorization, durable queue, or distributed exactly-once guarantee is claimed.
-- The local webhook gate and middleware have process-local state. They require durable event storage before deployment for merchant traffic.
-- Fresh provider reads narrow the race before a write; they cannot make separate provider operations atomic. Cross-process reconciliation is not a global transaction.
-- The Standard Payment Link fallback requires the existing expiring authority contract; no unrestricted messaging is included.
-- The real-model artifact proves an integration path. Its improvement over deterministic diagnosis has not been measured on a held-out real failure dataset.
+## Production boundary
 
-[Architecture](ARCHITECTURE.md) · [Judge runbook](docs/JUDGE_RUNBOOK.md) · [Production gaps](MARKET_READY_ARCHITECTURE.md) · [Provider evidence runbook](docs/TEST_MODE_EVIDENCE_RUNBOOK.md)
+This is a submission-grade prototype, not a merchant-production payment service.
+
+Production merchant traffic still requires durable event/state/idempotency storage, transactional worker claims, merchant authentication and tenant isolation, managed secrets, approved provider capabilities, durable scheduling and cancellation, cross-process reconciliation, evidence retention/access controls, and validation on permissioned real failure data. The local simulator and process-local middleware do not claim distributed exactly-once execution.
+
+The optional real-model artifact proves an integration path; it does not establish production model accuracy or measured recovery uplift.
+
+**MandateGuard: recover deliberately. Stop when authority ends. Escalate uncertainty. Leave evidence.**

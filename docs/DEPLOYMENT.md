@@ -1,42 +1,71 @@
-# Deploy the demo
+# Deployment
 
-The submission has two supported presentation modes. Neither connects the public UI to merchant payments.
+The submission has one canonical interactive application: **FastAPI + `public/`** via `api/index.py`.
 
-## Python-backed workspace
+No public demo mode connects to merchant payments or provider credentials.
+
+## Local judge run
 
 ```bash
 pip install -r requirements.txt
 python -m uvicorn api.index:app --host 127.0.0.1 --port 8765
 ```
 
-The server serves the UI and the fixed-workload `/api/demo/batch` and `/api/demo/scenario` endpoints. They execute only the local simulator, need no credentials and hold no persistent experiment state.
+Open `http://127.0.0.1:8765`.
 
-The separate `bailiff.api:app` is an in-memory experiment/webhook development API. Do not expose it as a production service or mount its optional real-model experiments in a public demo.
+The header says **Python engine connected** and the bounded `/api/demo/*` endpoints execute the local simulator.
 
-## Static Pages
+## Docker — canonical portable deployment
 
-`public/` contains the complete static demo, including generated engine evidence. The supplied Pages workflow uploads that directory.
+```bash
+docker build -t mandateguard .
+docker run --rm -p 8765:8765 mandateguard
+```
+
+The image launches the same `api.index:app` and `public/` interface used by the judge flow. It needs no credentials. `MANDATEGUARD_OFFLINE=1` is set in the image.
+
+Health check:
+
+```text
+GET /api/health
+```
+
+Expected mode: `local_simulator`.
+
+## Vercel/serverless
+
+`vercel.json` routes `/api/*` to `api/index.py` and serves `public/` for the interface.
+
+A Vercel deployment must be checked independently after deployment; a valid configuration file or local test does not prove a public URL is reachable.
+
+## Static recorded-evidence replay
+
+For hosts that can only serve static files:
 
 ```bash
 python scripts/build_showcase.py
 python -m http.server 8090 --directory public
 ```
 
-Static hosting labels itself **Recorded engine evidence**. This is deliberately different from the **Python engine connected** header on the API host.
+Static mode is intentionally labelled **Recorded engine evidence**. It replays `public/evidence.json`; it does not execute Python.
 
-After exporting new evidence, refresh the checksum manifest before release. Push the reviewed revision to the linked repository and check the Pages deployment and public URL. A local change does not update a public site.
+This mode is useful as a portable fallback, but the Python-backed application is the canonical interactive submission.
 
-## Serverless
+## Release discipline
 
-`vercel.json` routes `/api/*` to the stateless demo entrypoint and serves `public/` for the interface. It must package the project modules and static files. Local API tests verify this entrypoint; a deployed Vercel build still requires its own URL check.
-
-## Existing Streamlit container
+Before publishing a new final revision:
 
 ```bash
-docker build -t mandateguard-lab .
-docker run --rm -p 8501:8501 mandateguard-lab
+./scripts/test.sh
+./scripts/demo.sh
+./scripts/evaluate.sh
+./scripts/verify_all.sh
+python scripts/build_showcase.py
+python scripts/make_checksum_manifest.py > /tmp/SHA256SUMS.candidate
 ```
 
-The Dockerfile serves Streamlit on port 8501 (or `PORT`). It does not launch a second server on port 8000. Its evidence screens and local simulator need no provider credentials.
+Compare the candidate with `SHA256SUMS.txt` after intentional generation. CI independently checks the final tree and browser flow.
 
-See [production gaps](../MARKET_READY_ARCHITECTURE.md) before considering merchant traffic.
+## Production boundary
+
+This deployment is a hackathon/demo deployment. Merchant traffic still requires durable state/idempotency, tenant isolation, managed secrets, approved provider capabilities, scheduling/cancellation, cross-process reconciliation, evidence-retention controls and production validation. See `ARCHITECTURE.md`.

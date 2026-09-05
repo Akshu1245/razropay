@@ -1,149 +1,225 @@
-# MandateGuard Policy Lab Architecture
+# MandateGuard Architecture
 
 ## Purpose
 
-MandateGuard is a replayable policy evaluation laboratory and bounded execution runtime for scheduled UPI AutoPay debit failures. It compares nine policies on one frozen synthetic ledger, executes only through a deterministic authority gate, and records why each action was allowed, denied, abstained, or routed to human review.
+MandateGuard is a bounded recovery decision system for failed scheduled UPI AutoPay payments. It combines a reproducible nine-policy evaluation harness with a deterministic execution authority and case-level evidence.
 
-> The bounded interpreter interprets. The policy engine decides. The provider adapter executes. The audit chain proves.
+The judge-facing product is `public/`, served by `api/index.py`. The API invokes `bailiff/showcase.py`, which uses the shared recovery engine. Static hosting may replay `public/evidence.json`, but it is explicitly labelled **Recorded engine evidence**.
 
-The benchmark uses Razorpay-shaped test payloads and a local provider simulator. Separate RecoveryTruth code and captured Test Mode artifacts demonstrate a Standard Payment Link fallback and independent capture verification; this is not an AutoPay retry or a production batch.
+> **AI interprets. Policy authorizes. Provider executes. Evidence proves.**
 
-The primary product is `public/`, served by `api/index.py`. Its fixed demo endpoints execute `bailiff/showcase.py`, which calls the existing engine. Static Pages replays exported results and labels that distinction. Browser receipt verification recomputes SHA-256 hashes. No public demo endpoint loads provider credentials or calls a real model.
+The synthetic benchmark and the saved Razorpay Test Mode proof are separate evidence domains. The Test Mode fallback is a Standard Payment Link example, not a production AutoPay retry.
 
 ## Runtime flow
 
 ```text
-Razorpay shaped scheduled AutoPay payload
-                 |
-                 v
-Payload adapter preserves raw provider signal and payload hash
-                 |
-                 v
-Project taxonomy and canonical RecoveryEvent
-                 |
-                 v
-Policy arm proposes an action or stop
-                 |
-                 v
-B3 bounded interpreter only for ambiguous cases
-                 |
-                 v
-Deterministic authority and guardrail engine
-          |                         |
-       deny or abstain              allow
-          |                         |
-          v                         v
-Hash chained receipt          Idempotency gate
-Zero provider calls                 |
-                                    v
-                            Local replay provider
-                                    |
-                                    v
-                         Postcondition and audit receipt
-                                    |
-                                    v
-                         Frozen ledger metrics and report
+Raw scheduled AutoPay failure
+          |
+          v
+HMAC authentication / replay-order checks
+          |
+          v
+Razorpay-shaped adapter -> canonical RecoveryEvent
+          |
+          v
+deterministic diagnosis ── ambiguous/conflicting ──> bounded interpreter
+          |                                      label + confidence only
+          +--------------------------+---------------------+
+                                     |
+                                     v
+                         deterministic authority envelope
+                                     |
+                                     v
+                              guardrail engine
+                         /                         \
+                deny / abstain                   allow
+                   |                               |
+          zero provider calls                      v
+                   |                       idempotency gate
+                   |                               |
+                   |                               v
+                   |                        provider action
+                   |                               |
+                   +----------------------> postcondition
+                                                   |
+                                      known success/failure or
+                                      UNKNOWN_POSTCONDITION
+                                                   |
+                                                   v
+                                     decision + audit receipt
 ```
 
-## Policy arms
+## Canonical policy arms
 
-The order is part of the evidence contract and must remain unchanged.
+The evidence contract keeps this order unchanged:
 
-| Arm | Role | Distinguishing behavior |
-|---|---|---|
-| `B0` | No intervention control | Does not attempt recovery |
-| `B1` | Ungated retry baseline | Retries without reason or guardrail inspection |
-| `B1.5` | Deterministic retry only | Retries only normalized transient reasons |
-| `RZP` | Fixed card-schedule reference | Reason-blind temporal benchmark; not Razorpay's UPI engine |
-| `B2.25` | Timing frontier | Uses timing while relaxing other project gates; diagnostic only |
-| `B2.5` | Timing and attempt frontier | Adds retry gap and attempt budget; diagnostic only |
-| `B2.75` | Timing, attempt, and consent frontier | Adds consent controls; diagnostic only |
-| `B2` | Deterministic guarded policy | Applies the complete deterministic guardrail set |
-| `B3` | Bounded interpreter policy | Interprets ambiguous raw signals, then uses the same full guardrail engine |
+**B0, B1, B1.5, RZP, B2.25, B2.5, B2.75, B2, B3**
 
-The frontier arms are diagnostic counterfactuals. They are not safe production defaults. `B2` and `B3` retain the full authority and safety boundary.
-
-## Authority boundary
-
-Each case receives an authority envelope containing the identities, allowed actions, amount ceiling, attempts remaining, consent snapshot, and expiry for that case. A child envelope can only narrow the parent envelope. It cannot add actions, raise the amount, restore attempts, extend expiry, or change mandate, scheduled execution, or recovery case identity.
-
-The bounded interpreter receives no provider credentials and no provider tools. Its output is a reason and confidence or a bounded proposal. The deterministic engine still decides. Malformed, unavailable, conflicting, or low confidence interpretation becomes `ABSTAIN`, routes to human review, and creates zero provider calls.
-
-## Guardrails before execution
-
-The guardrail engine evaluates consent, action allowlist, terminal state, mandate state, authority expiry, channel consent, pre debit validity, attempt cap, amount ceiling, proposed execution window, lead time, amount review, and action class before the provider boundary.
-
-| Evidence case | Required result |
+| Arm | Purpose |
 |---|---|
-| Opted out contact | Deny before provider |
-| Exhausted retry budget | Deny before provider |
-| Expired, revoked, cancelled, or paused mandate | Deny before provider |
-| Out of window or invalid pre debit state | Deny before provider |
-| Ambiguous low confidence interpretation | Abstain before provider |
-| Allowed retry | One provider call and one postcondition |
-| Exact replay | Reuse the original result without a second call |
-| Unknown timeout postcondition | Human review before another action |
-| Tampered historical audit event | Chain verification fails |
+| `B0` | no-intervention control |
+| `B1` | ungated retry baseline |
+| `B1.5` | deterministic transient-reason retry |
+| `RZP` | fixed temporal reference from a published card schedule |
+| `B2.25` | timing frontier diagnostic |
+| `B2.5` | timing + attempt frontier diagnostic |
+| `B2.75` | timing + attempt + consent frontier diagnostic |
+| `B2` | complete deterministic guardrail profile |
+| `B3` | B2 guardrails plus bounded interpretation for ambiguity |
 
-## Benchmark contract
+The frontier arms are diagnostic counterfactuals, not safe production defaults. `RZP` is not Razorpay's current Intelligent UPI Retry Engine.
 
-Every arm receives the same generated event set and the same common outcome ledger. The latent recoverable value and harmful value are hidden from policy decisions and used only for scoring. The final protocol records twenty fixed seeds and freezes the dataset hash before running the arms.
+## Deterministic authority boundary
 
-Latent harm is generated from compliance exposure drawn independently of the normalized failure reason. This is load bearing rather than incidental: if harm were a pure function of the reason code, an arm gating on the reason code alone would capture all harm avoidance by construction and no stronger control could ever be shown to be worth its cost. The release gate rejects a fixture that is degenerate in this respect.
+Each recovery case carries an authority envelope that binds:
 
-The report includes incremental recovered INR, legitimate recovery forgone, protected value by denial, realized harm, prohibited execution rate, violations, recovery per permitted action, contacts, provider calls, abstention, human review cost, interpreter cost, net value under both pricings, and seed spread. No one metric is treated as a universal winner metric.
+- recovery case identity;
+- mandate/scheduled execution identity;
+- allowed action classes;
+- amount ceiling;
+- attempts remaining;
+- consent snapshot;
+- authority expiry.
 
-Every financial metric is defined by whether a provider call actually happened, never by the symbolic name of the final action, because the ungated baseline path and the guardrail path spell a stop differently and a metric keyed on that symbol is not comparable across arms.
+Authority can only attenuate. A derived authority cannot add actions, raise the amount, replenish attempts, extend expiry, restore a mandate or change case identity.
 
-A prohibited action is priced two ways: a flat cost per detected breach, and the money the action actually moved times a configured multiplier. `bailiff/sensitivity.py` sweeps both prices and generates the crossover at which the fully guarded arms overtake reason gating alone, so the economic claim is reported as a threshold rather than as a verdict.
+Before execution, the guardrail engine checks consent, opt-out state, mandate state, terminal state, retry budget, retry gap, pre-debit notice state, execution window, amount ceiling/review, authority expiry and action class.
 
-## Evidence surfaces
+### Required decision semantics
 
-The command line path is authoritative for reproducibility. The optional `app.py` Streamlit layer has five inspection views and a sixth local simulator screen.
-
-| View | Purpose |
+| Situation | Required result |
 |---|---|
-| Control Room | Regime totals and economic and safety metrics |
-| Case Timeline | One case across all nine arms, its receipts, its source lineage, and the ordered action provenance chain |
-| Policy Compare | Aggregate net value comparison |
-| Failure Lab | Denial, timeout, tamper, and provider call proofs |
-| Exception Queue | Cases needing a human, derived from reason codes already recorded |
-| Live Webhook Simulator | Seven fixed scenarios through the shared local engine; no external provider calls |
+| eligible recoverable failure | one permitted provider action + postcondition |
+| revoked/cancelled/paused/expired mandate | deny before provider |
+| opted-out contact/action | deny before provider |
+| exhausted retry budget | deny before provider |
+| invalid timing/pre-debit state | deny before provider |
+| ambiguous low-confidence interpretation | abstain before provider |
+| exact replay | reuse original result; no second call |
+| provider timeout with unknown postcondition | human review before another automated action |
+| edited historical receipt | hash-chain verification fails |
 
-The inspection views read generated outputs. The simulator creates a local scenario ledger and executes the same bounded engine as the primary demo. If Streamlit is not installed, the main dashboard, benchmark, demo, report, and release checks remain usable.
+## AI boundary
 
-### The inspection layer is inspection only
+The interpreter exists only to normalize ambiguous or conflicting failure information. It receives no payment/provider tools and cannot authorize execution.
 
-`bailiff/lineage.py` holds the whole of the lineage, exception queue, and action provenance logic as pure functions over evidence that already exists. It computes no benchmark metric, opens no ledger, calls no provider, writes no file, and opens no socket. `app.py` renders what those functions return.
+Its output is bounded to a normalized reason/confidence or abstention. The same deterministic authority and guardrail engine still decides whether any action is permitted.
 
-That separation is enforced rather than asserted. `tests/test_lineage_and_exception_queue.py` replaces every public method on the provider simulator with a trap and rebuilds the queue, hashes every canonical output before and after a full render pass, and blocks `socket.connect`, `socket.create_connection` and `socket.getaddrinfo` while the view layer runs. It also scans `app.py` and `bailiff/lineage.py` for write and network operations, so a later edit that introduces one fails the suite rather than shipping quietly.
+Unavailability, malformed output, conflict or low confidence becomes `ABSTAIN`, which routes to human review with zero provider calls.
 
-Two display rules follow from the runtime's own invariants. A field the canonical evidence does not carry renders as `not present in fixture`; it is never inferred, defaulted, or borrowed from a neighbouring record. And a denied or abstained row always shows `provider_calls = 0` — if a non executing row ever reported a call, the queue surfaces it as an invariant contradiction instead of rendering it tidily.
+The default final evaluation uses a deterministic offline interpreter for reproducibility. Optional real-model evidence demonstrates integration only; it is not a production accuracy or recovery-uplift result.
 
-### Design inspiration and its boundary
+## Provider and idempotency boundary
 
-Rillet's public Aura and MCP material was used as design inspiration for contextual data access, reviewable workflow actions, permission boundaries, and auditability. MandateGuard does not integrate with Rillet. It applies those ideas narrowly to scheduled AutoPay recovery policy evaluation.
+Provider execution is downstream of deterministic authorization.
 
-There is no Rillet dependency, credential, endpoint, or runtime reference anywhere in this repository, and no Rillet name appears in the product, the UI, the policy arm list, the API, or the benchmark.
+A permitted action records:
 
-## Run sequence
+- idempotency key;
+- provider call identifier;
+- request/decision binding;
+- provider result;
+- postcondition;
+- audit receipt.
+
+Financial metrics depend on whether a provider call actually happened.
+
+A timeout after a write is not converted into a convenient “failed” state. `UNKNOWN_POSTCONDITION` blocks another automated action and requires reconciliation/human review.
+
+## Evidence model
+
+Decision receipts form a SHA-256 hash chain. The browser recomputes the chain and intentionally edits an earlier decision to prove verification then fails.
+
+This provides tamper evidence, not immutable storage.
+
+Denied/abstained paths must prove `provider_calls = 0`. A contradictory record is an invariant failure, not a display problem.
+
+Webhook evidence preserves raw provider signal and payload hash. Authentication occurs on raw bytes before normalization. Duplicate, stale, forged and out-of-order deliveries are tested.
+
+## Evaluation contract
+
+Every policy receives the same generated cases and the same common-outcome ledger. Latent recoverable value and prohibited/harmful value are hidden from policy decisions and used only for scoring.
+
+The final protocol uses:
+
+- 20 fixed seeds;
+- 3 regimes;
+- 100 cases per seed/regime;
+- 9 canonical arms;
+- 54,000 policy decisions.
+
+The report keeps distinct:
+
+- incremental recovered INR;
+- legitimate recovery forgone;
+- protected value by denial;
+- realized harm;
+- prohibited execution rate;
+- violations;
+- provider calls;
+- abstentions/human review;
+- net value under multiple harm-price assumptions.
+
+Compliance exposure is generated independently of normalized failure reason so reason gating cannot trivially explain all safety value. `ROBUSTNESS.md` sweeps fixture assumptions, while `outputs/sensitivity.json` sweeps harm/violation prices.
+
+A recommended arm is never presented without its price curve.
+
+## Razorpay Test Mode boundary
+
+RecoveryTruth is separate from the synthetic benchmark.
+
+It records a bounded Razorpay Test Mode Standard Payment Link fallback and independently verifies captured-payment evidence. Link creation alone is not counted as recovery. An already-paid case records a safe block with zero new fallback write.
+
+Saved sanitized artifacts live in `docs/testmode_evidence/`.
+
+## Canonical surfaces
+
+| Surface | Role |
+|---|---|
+| `public/` + `api/index.py` | primary judge-facing product |
+| `SUBMISSION_READINESS.md` | canonical final report |
+| `outputs/report.md` | generated benchmark appendix |
+| `RECOVERYTRUTH.md` | provider-proof boundary |
+| `ROBUSTNESS.md` | assumption sensitivity |
+| `docs/JUDGE_RUNBOOK.md` | reviewer fast path |
+| `docs/panel_qa.md` | technical follow-up |
+| `app.py` / `provider_proof_app.py` | optional secondary Streamlit evidence viewers |
+
+The Streamlit files are secondary inspection tools only. They are not the canonical product entry point.
+
+## Deployment contract
+
+The canonical container runs the same FastAPI + `public/` application used by the judge flow:
 
 ```bash
-./scripts/test.sh
-./scripts/demo.sh
-./scripts/evaluate.sh
-./scripts/release_check.sh
-python3 -m pip install streamlit
-streamlit run app.py
+docker build -t mandateguard .
+docker run --rm -p 8765:8765 mandateguard
 ```
 
-The optional real interpreter mode is separate from the final deterministic benchmark:
+Local source run:
 
 ```bash
-python3 -m pip install -e '.[test,interpreter]'
-python3 -m bailiff.demo --real-interpreter
+pip install -r requirements.txt
+python -m uvicorn api.index:app --host 127.0.0.1 --port 8765
 ```
 
-## Deliberate limitations
+Serverless routing is described by `vercel.json`. Static replay can be served directly from `public/`, but must remain labelled recorded evidence.
 
-The benchmark uses synthetic events and a local provider simulator. The Razorpay shaped adapter preserves provider fields but does not call Razorpay. The project taxonomy is not presented as an official universal NPCI taxonomy. Rules that lack a pinned primary source remain labelled as configured project rules. No production customer is contacted and no real money is moved.
+## Production boundary
+
+The submission is not a merchant-production payment service.
+
+Production deployment requires:
+
+- durable event/state/idempotency storage;
+- transactional worker claims and crash recovery;
+- merchant authentication and tenant isolation;
+- managed secrets and approved provider capabilities;
+- durable retry scheduling/cancellation;
+- cross-process reconciliation for provider races;
+- evidence retention, anchoring and access controls;
+- production observability/rate limiting;
+- permissioned real-failure labels and economic validation;
+- model calibration, cost and latency validation if a live interpreter is used.
+
+Fresh provider reads reduce but do not eliminate write/read races. Process-local locks are not distributed exactly-once execution. The project taxonomy and unpinned rules remain project policy unless backed by recorded external provenance.

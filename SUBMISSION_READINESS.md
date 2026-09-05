@@ -1,43 +1,279 @@
-# Submission readiness
+# MandateGuard — Final Submission Report
 
-Status for the judge-experience revision on 5 September 2026.
+**Razorpay AI Buildathon · Track 03 — AI Revenue Recovery**
 
-## Implemented in this revision
+**Submission thesis:** recover failed scheduled UPI AutoPay payments only when authority is clear; stop when authority ends; escalate uncertain provider outcomes; leave evidence for every decision.
 
-- Rebuilt the primary `public/` experience around one **Run recovery demonstration** action instead of four competing top-level screens.
-- Put the three decisive cases directly in the judge path: eligible recovery, revoked mandate with zero provider calls, and provider timeout with unknown outcome routed to human review.
-- Added a readable five-step case timeline: failure → diagnosis → control checks → action → outcome.
-- Put simulated revenue recovered, payments recovered, stopped cases, human review and recoverable value forgone in one batch summary.
-- Kept technical receipts, browser audit verification, exports and tamper detection available on demand.
-- Moved opt-out, missing notice, ambiguous interpretation and forged webhook into a secondary boundary panel.
-- Moved all nine canonical policy arms and the complete price sweep into an expandable advanced evaluation section without removing any evidence.
-- Kept the Razorpay Test Mode proof visibly separate from the synthetic batch.
-- Aligned the submission copy, judge runbook and canonical five-minute video script with the final product story.
+This document is the single human-readable submission report. Raw benchmark evidence remains machine-generated under `outputs/`; provider proof remains under `docs/testmode_evidence/`.
 
-## Engineering boundary unchanged
+## 1. Executive verdict
 
-This revision does not change the recovery engine, canonical policy arms, frozen benchmark protocol, guardrails, provider simulator, RecoveryTruth execution logic, or financial metric definitions. The judge-facing web application continues to call the shared `bailiff/showcase.py` engine endpoints when Python is connected and truthfully labels static hosting as recorded evidence replay.
+MandateGuard is submission-ready from an engineering and evidence perspective once the exact final commit passes the repository CI gates.
 
-The required claim remains:
+It satisfies the Track 03 product shape with an inspectable end-to-end flow:
 
-> AI interprets unclear failure information; deterministic controls decide whether an action is allowed.
+**detect failure → diagnose → bounded intervention → stop/escalate when required → measure batch recovery → preserve an audit trail.**
 
-The bounded interpreter still has no provider tools and cannot authorize money movement.
+The main demonstration is deliberately narrow enough to remember:
 
-## Verification and follow-up status
+| Case | Decision | Provider evidence |
+|---|---|---|
+| Eligible recoverable failure | Retry | one permitted call + recovered postcondition |
+| Revoked mandate | Stop | **zero provider calls** |
+| Provider timeout | Human review | one attempted call + unknown postcondition; no blind repeat |
 
-The merged judge-experience revision `28bc8e35606057a9ea47efaf5010c1f689c763f3` passed [clean-checkout CI](https://github.com/Akshu1245/razropay/actions/runs/33944266970): 308 tests and all 14 mutation checks. The [browser verification run](https://github.com/Akshu1245/razropay/actions/runs/33943893074) passed required test, demo and evaluation scripts, desktop/mobile flows, downloads and receipt tamper checks; its tested source tree was identical to that merge.
+The product promise is:
 
-The follow-up adds the missing awaiting-outcome count, an explicit B2/B3 offline-interpreter comparison, an accurate interpretation-score label, and a fix for changing the selected boundary case while an earlier response is pending. The extended browser acceptance script verifies that delayed responses cannot overwrite another case. Local follow-up verification passed: 308 tests, the independent checker, required demo and full evaluation scripts, and the extended desktop/mobile/static browser acceptance flow. Regenerated benchmark outputs and findings were byte-identical to the committed artifacts. The final mobile spacing change was checked again at 390 pixels. Browser verification now also runs on pushes to main; inspect the latest GitHub run for the remote result.
+> **MandateGuard helps merchants recover failed scheduled UPI AutoPay payments, with explicit controls for when to retry, when to stop, and when to ask a human—with evidence for every decision.**
 
-## Publication and owner actions
+The AI boundary is:
 
-Code is in the Akshu1245/razropay repository. At the latest check on 5 September 2026 it remained private, and GitHub Pages was not enabled. Public access and deployment are deferred at the owner's request. Local verification does not establish a public demo.
+> **AI interprets unclear failure information; deterministic controls decide whether an action is allowed.**
 
-The owner still needs to record and upload the five-minute video, confirm judge access to the repository/demo, and submit the application. Repository visibility must not be changed without owner approval.
+## 2. Track 03 fit
 
-## Production limits remain
+The official Razorpay Buildathon Track 03 brief asks teams not merely to identify revenue risk, but to show measured money recovered across a batch with compliant escalation, stopping rules and an audit trail.
 
-Batch recovery is synthetic. The saved provider proof is Razorpay Test Mode, not a production AutoPay batch. Production merchant traffic would still require durable state and scheduling, merchant authentication and tenant isolation, secret management, approved provider capabilities, cross-process reconciliation, evidence retention controls, and validation on permissioned real failures. See `MARKET_READY_ARCHITECTURE.md`.
+| Track expectation | MandateGuard evidence |
+|---|---|
+| Detect revenue at risk | Razorpay-shaped scheduled AutoPay failure payloads normalized into canonical recovery events |
+| Diagnose | deterministic taxonomy; B3 bounded interpretation only for ambiguous/conflicting signals |
+| Choose intervention | nine explicit policy arms on one common outcome ledger |
+| Execute bounded recovery | deterministic authority envelope + guardrail engine before provider boundary |
+| Stop correctly | revoked/expired/opted-out/exhausted/invalid cases deny before provider |
+| Escalate uncertainty | low-confidence interpretation and unknown provider postcondition route to human review |
+| Measure recovery across a batch | 100-case interactive batch and 54,000-decision final evaluation |
+| Leave audit trail | decision receipts, provider-call IDs, idempotency evidence, postconditions and hash-chain verification |
 
-No guarantee of selection, production readiness, regulatory certification, production AI accuracy, or superiority over untested systems is supported.
+Official brief: https://razorpay.com/buildathon/
+
+## 3. What a judge can see, not just read
+
+Run:
+
+```bash
+pip install -r requirements.txt
+python -m uvicorn api.index:app --host 127.0.0.1 --port 8765
+```
+
+Then open `http://127.0.0.1:8765`.
+
+The primary button runs the fixed batch and the three decisive scenarios through the shared Python engine. The UI exposes:
+
+- simulated INR recovered;
+- payments recovered;
+- stopped cases;
+- human-review cases;
+- awaiting/unknown outcomes;
+- legitimate recovery forgone;
+- case-level failure → diagnosis → controls → action → outcome;
+- provider call count and receipt;
+- browser-side audit-chain verification and a deliberate tamper test;
+- all nine policy arms and the complete harm/violation price sweep;
+- separate read-only Razorpay Test Mode evidence.
+
+Static `public/` hosting is also supported for evidence replay, but it labels itself **Recorded engine evidence** and never pretends to execute Python.
+
+## 4. Measured evidence
+
+### Interactive batch
+
+The shipped showcase uses 100 synthetic cases, seed 1701, transient regime, guarded B3.
+
+| Metric | Result |
+|---|---:|
+| Simulated recovered INR | 7,944 |
+| Simulated provider calls | 18 |
+| Human-review cases | 6 |
+| Protected value by denial, synthetic INR | 26,856 |
+| Legitimate recovery forgone, synthetic INR | 29,054 |
+| Realized harm, synthetic INR | 0 |
+
+These values are synthetic counterfactual benchmark outcomes, **not merchant revenue**.
+
+### Final evaluation
+
+The frozen evaluation covers **54,000 policy decisions**:
+
+- 20 fixed seeds
+- 3 failure regimes
+- 100 cases per seed/regime
+- 9 canonical policies
+
+The same generated events and common outcomes are reused across policy arms. Recovery, protected value, realized harm and legitimate recovery forgone remain distinct. Financial attribution depends on actual provider execution.
+
+The generated evidence is in:
+
+- `outputs/report.md`
+- `outputs/aggregate.json`
+- `outputs/sensitivity.json`
+- `outputs/evidence_manifest.json`
+- `FINDINGS.md`
+- `ROBUSTNESS.md`
+
+### No hidden “winner”
+
+The benchmark intentionally preserves an inconvenient result: at low assumed harm prices, reason-only recovery can be economically preferred. As the cost of prohibited execution rises, guarded arms cross over. The complete price sweep is shown because a recommendation without its price curve would be misleading.
+
+## 5. Engineering guarantees
+
+### Authority before execution
+
+The interpreter cannot authorize money movement. Deterministic controls enforce:
+
+- action allowlist;
+- case/mandate identity;
+- mandate state;
+- consent and opt-out state;
+- retry attempt budget;
+- timing/retry gap;
+- pre-debit notice state;
+- amount ceiling;
+- authority expiry;
+- action class.
+
+A child authority can narrow but never widen its parent authority.
+
+### Zero-call denials
+
+Denied or abstained paths are not represented as “safe” merely because the UI says so. Their evidence requires `provider_calls = 0`.
+
+### Idempotency and replay
+
+Permitted actions carry idempotency/call identifiers and postconditions. Exact replay reuses the original result instead of issuing a second provider action.
+
+### Unknown means unknown
+
+A timeout after a provider write is not treated as a normal failure. The system records an unknown postcondition and routes the case to human review before another automated action.
+
+### Webhook boundary
+
+Raw webhook bytes are HMAC-SHA256 authenticated before normalization. Duplicate, stale, forged and out-of-order deliveries are explicitly tested. `tests/test_webhook_ingress.py` attacks this boundary 42 ways.
+
+### Tamper-evident evidence
+
+Receipts use a hash chain. The browser recomputes the chain from shipped data and verifies that editing a decision breaks verification. This is **tamper-evident**, not immutable storage.
+
+## 6. AI contribution and boundary
+
+Most payment-safety facts should not require an LLM. A revoked mandate, expired authority, exhausted retry budget or amount violation is deterministic.
+
+B3 uses a bounded interpreter only when raw failure information is ambiguous or conflicting. The interface returns a normalized reason/confidence or abstains. It receives no provider credentials and no provider tools.
+
+A malicious, unavailable or overconfident interpreter cannot:
+
+- restore a revoked mandate;
+- increase the amount ceiling;
+- replenish retry attempts;
+- extend authority expiry;
+- bypass consent;
+- call the provider directly.
+
+The default final benchmark uses a deterministic offline interpreter so runs are reproducible. `outputs/real_interpreter_evidence.json` demonstrates an optional real-model integration path; it does not establish production accuracy or recovery uplift.
+
+## 7. Razorpay Test Mode proof
+
+The provider proof is intentionally separate from the synthetic batch.
+
+RecoveryTruth records a Razorpay **Test Mode** Standard Payment Link fallback and then independently verifies the captured payment. Creating a Payment Link is not counted as recovered money. Razorpay's Payment Link API populates payment details only after a payment is successfully captured, which is why the proof binds to captured-payment evidence rather than link creation alone.
+
+Razorpay documentation reference: https://razorpay.com/docs/api/payments/payment-links/fetch-id-standard/
+
+The already-paid safety case records no new fallback object.
+
+Artifacts:
+
+- `docs/testmode_evidence/testmode_success_execute.json`
+- `docs/testmode_evidence/testmode_recovery_proof.json`
+- `docs/testmode_evidence/testmode_safe_block.json`
+- `docs/testmode_evidence/testmode_safe_block_zero_write.json`
+
+The Test Mode proof is not a production AutoPay retry and is not mixed into the synthetic benchmark totals.
+
+## 8. Competitive position
+
+Razorpay already ships recovery products. MandateGuard is a narrow recovery prototype, not a recovery engine deployed on production merchants.
+
+Public competitor research shows that retry automation, customer outreach and even “LLM proposes / deterministic system authorizes” are not unique by themselves. The strongest inspectable differentiation here is the combination of:
+
+1. common-outcome policy evaluation rather than incomparable headline recovery numbers;
+2. zero-call evidence for refusals;
+3. explicit unknown-write handling before another action;
+4. mutation-tested safety checks;
+5. tamper-evident case receipts;
+6. full price sensitivity instead of a cherry-picked winner;
+7. separate captured Razorpay Test Mode proof.
+
+Detailed sources and caveats live in `docs/competitive_position.md`.
+
+## 9. What broke and how it was fixed
+
+This project deliberately preserves the engineering failures that made the final system stronger.
+
+| What broke | Why it mattered | Fix |
+|---|---|---|
+| Original judge UX exposed too many research surfaces first | judges had to understand the benchmark before seeing the product | rebuilt around one primary action and three memorable cases |
+| Static hosting probed `/api/health` and logged a 404 | a “working” replay still produced a browser console error | added an explicit static health marker while keeping live API mode distinct |
+| Browser fault injection aborted a request | the test created its own console network error and then blamed the product | changed the injected failure to malformed JSON so product error handling is tested without artificial console noise |
+| Checksum manifest ordering drifted | release integrity failed even though engine tests passed | regenerated the manifest with the repository's canonical generator |
+| “Non-mutating” deep verification regenerated shipped outputs | the verifier invalidated the files it later attempted to checksum | moved deep verification into an isolated scratch copy and checksummed the real checkout afterward |
+| A slower boundary-case response could overwrite a newly selected case | asynchronous UI state could show evidence for the wrong selection | added request-selection protection and browser acceptance coverage |
+| Mobile summary cards became too vertically long | the judge path lost density on 390px screens | tightened the mobile summary to a verified two-column layout |
+
+These are not hidden as “CI noise”; they are exactly the kind of failure modes the final verification now guards against.
+
+## 10. Verification matrix
+
+The release gate for the final submission requires:
+
+| Gate | Expected result |
+|---|---|
+| Unit/property/adversarial suite | 308 tests pass |
+| Independent checker positive controls | pass |
+| RecoveryTruth acceptance | pass |
+| Security regression acceptance | pass |
+| Offline demo | pass |
+| Mutation testing | 14/14 seeded defects caught |
+| Fixture-assumption sweep | complete |
+| Release/checksum integrity | pass |
+| JavaScript syntax | pass |
+| Desktop browser acceptance | pass |
+| 390px mobile acceptance | pass |
+| Live Python mode | pass |
+| Static recorded-evidence mode | pass |
+| Receipt/tamper verification | pass |
+| Batch/receipt exports | pass |
+| Docker judge-app smoke test | pass |
+
+The exact final commit must pass CI before merge. `SHA256SUMS.txt` binds the shipped file set.
+
+## 11. Production boundary
+
+The prototype is intentionally not represented as production-ready.
+
+Merchant traffic would require:
+
+- durable event, state and idempotency storage;
+- transactional claims/recovery across worker crashes;
+- merchant authentication and tenant isolation;
+- managed secret storage;
+- approved provider capabilities for the intended recovery action;
+- durable scheduling and cancellation;
+- reconciliation for cross-process/provider races;
+- external evidence retention/access controls;
+- permissioned real-failure data for model and economic validation;
+- production observability, rate limiting and operational controls.
+
+Fresh provider reads narrow races but cannot make separate provider operations atomic. The local middleware/state model is process-local and does not claim distributed exactly-once execution.
+
+## 12. Final submission checklist
+
+Engineering work is complete only when the exact final commit is green. Application delivery then requires:
+
+- [ ] repository is public and accessible in a signed-out browser;
+- [ ] final demo URL is accessible in a signed-out browser;
+- [ ] five-minute video is recorded from the verified build and uploaded;
+- [ ] application fields use the canonical wording from this report;
+- [ ] repository URL, demo URL and video URL are re-opened once before submission.
+
+No guarantee of selection is claimed. The goal of this repository is stronger: every important product claim should be inspectable, reproducible, and falsifiable.

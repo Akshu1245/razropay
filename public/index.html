@@ -3,69 +3,166 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="description" content="MandateGuard: a bounded recovery workflow for failed UPI AutoPay subscriptions, with batch evaluation and verifiable receipts.">
-<meta name="theme-color" content="#142c32">
-<title>MandateGuard · Recovery workspace</title>
+<meta name="description" content="MandateGuard helps merchants recover failed scheduled UPI AutoPay payments with explicit controls and evidence for every decision.">
+<meta name="theme-color" content="#153c35">
+<title>MandateGuard · Scheduled UPI AutoPay recovery</title>
 <link rel="icon" type="image/svg+xml" href="./logo.svg">
 <link rel="stylesheet" href="./style.css">
 </head>
 <body>
 <a class="skip" href="#main">Skip to content</a>
-<aside class="sidebar">
-  <a class="brand" href="#recovery" aria-label="MandateGuard home"><img class="brand-logo" src="./logo.svg" width="42" height="42" alt=""><span>MandateGuard<small>RECOVERY WORKSPACE</small></span></a>
-  <div class="workspace"><span class="avatar">S</span><div>Subscription business<small>Demo workspace</small></div><span class="workspace-dot"></span></div>
-  <p class="nav-label">WORKSPACE</p>
-  <nav aria-label="Main navigation">
-    <button class="nav-item active" data-page="recovery"><span aria-hidden="true">▦</span>Recovery overview<span class="nav-arrow">↗</span></button>
-    <button class="nav-item" data-page="lab"><span aria-hidden="true">⌁</span>Failure lab</button>
-    <button class="nav-item" data-page="policies"><span aria-hidden="true">◫</span>Policy comparison</button>
-    <button class="nav-item" data-page="proof"><span aria-hidden="true">◇</span>Razorpay proof</button>
+<header class="app-header">
+  <a class="brand" href="#top" aria-label="MandateGuard home">
+    <img src="./logo.svg" width="42" height="42" alt="">
+    <span><strong>MandateGuard</strong><small>Scheduled UPI AutoPay recovery</small></span>
+  </a>
+  <nav class="top-nav" aria-label="Primary navigation">
+    <a href="#demonstration">Demonstration</a>
+    <a href="#evidence">Evidence</a>
+    <a href="#evaluation">Evaluation</a>
   </nav>
-  <div class="sidebar-note"><span class="tiny-icon">↳</span><strong>Permission before payment.</strong><p>AI interprets. Policy authorizes.<br> Every action leaves a receipt.</p></div>
-  <div class="sidebar-bottom"><span class="tag dark">TRACK 03</span><p>Razorpay AI Buildathon</p><a href="https://github.com/Akshu1245/razropay" target="_blank" rel="noopener">Explore the source <span>↗</span></a></div>
-</aside>
-<div class="shell">
-<header class="topbar"><div><span class="crumb">Workspace</span><span class="slash">/</span><span id="page-name">Recovery overview</span></div><div class="top-right"><span class="mode" id="mode">Loading evidence</span><span class="avatar light">MG</span></div></header>
+  <span class="mode-chip" id="mode" aria-live="polite">Loading evidence</span>
+</header>
+
 <main id="main">
-<div id="load-error" class="notice error" role="alert" hidden></div>
-<section id="page-recovery" class="page">
-  <div class="heading-row"><div><p class="eyebrow">EVERY FAILED PAYMENT DESERVES THE RIGHT NEXT STEP</p><h1>Recover revenue.<br> <span>Keep the customer's trust.</span></h1><p class="intro">A bounded recovery workflow for scheduled UPI AutoPay failures.<br> See what recovered, what stopped, and the evidence behind every decision.</p></div><div class="heading-action"><button class="button primary" id="run-batch"><span aria-hidden="true">▶</span> Run recovery batch</button><p>100 cases · local simulator · no credentials</p></div></div>
-  <div class="scope"><span class="scope-dot"></span><strong>Synthetic evaluation</strong><span>All batch amounts are simulated INR, not merchant revenue. No money moves or customers are contacted.</span></div>
-  <div class="stats" id="stats"><div class="stat"><span>Loading batch evidence…</span></div></div>
-  <div class="overview-grid">
-    <article class="card journey"><div class="card-heading"><div><p class="eyebrow">THE RECOVERY LOOP</p><h2>From failure to a verified outcome</h2></div><span class="tag">B3 · GUARDED WORKFLOW</span></div><div class="steps"><div><span class="step-num">01</span><h3>Detect</h3><p>Receive the scheduled<br> debit failure</p></div><div><span class="step-num">02</span><h3>Diagnose</h3><p>Read the reason;<br> interpret ambiguity</p></div><div><span class="step-num">03</span><h3>Authorize</h3><p>Check mandate, consent,<br> notice and retry limits</p></div><div><span class="step-num">04</span><h3>Verify</h3><p>Record the provider<br> outcome and receipt</p></div></div><div class="card-foot">Deterministic interpreter in this demo. The optional real model has no payment tools.<button class="text-button" data-go="lab">Test a failure ↗</button></div></article>
-    <article class="card outcome-card"><p class="eyebrow">BATCH DISPOSITION</p><h2>Every case accounted for</h2><div class="distribution" id="distribution"></div><div id="outcome-list"></div></article>
+<section class="hero" id="top">
+  <div class="hero-copy">
+    <p class="eyebrow">RAZORPAY AI BUILDATHON · TRACK 03</p>
+    <h1>Recover failed scheduled UPI AutoPay payments <span>without guessing what to do next.</span></h1>
+    <p class="hero-lead">MandateGuard helps merchants recover failed scheduled UPI AutoPay payments, with explicit controls for when to retry, when to stop, and when to ask a human—with evidence for every decision.</p>
+    <div class="hero-actions">
+      <button class="button primary large" id="run-demo">Run recovery demonstration</button>
+      <a class="button secondary large" href="#cases">See the three decision cases</a>
+    </div>
+    <div class="scope-note"><span class="status-dot"></span><strong>Synthetic batch evaluation</strong><span>Batch INR is simulated. No customer is contacted and no real AutoPay debit is executed.</span></div>
   </div>
-  <article class="card queue"><div class="card-heading"><div><h2>Recovery queue <span class="count" id="queue-count">100</span></h2><p>Inspect a case to follow the decision all the way to its receipt.</p></div><button class="button secondary" id="export-batch">↓ Export batch evidence</button></div>
-  <div class="filters"><div class="filter-buttons" role="group" aria-label="Filter cases"><button class="filter active" data-status="all">All cases</button><button class="filter" data-status="Recovered">Recovered</button><button class="filter" data-status="Human review">Human review</button><button class="filter" data-status="Stopped">Stopped</button><button class="filter" data-status="Awaiting outcome">Awaiting outcome</button></div><label class="search"><span aria-hidden="true">⌕</span><input type="search" id="case-search" aria-label="Search case or reason" placeholder="Search case or reason"></label></div>
-  <div class="table-scroll"><table><thead><tr><th scope="col">Recovery case</th><th scope="col">Failure reason</th><th scope="col">Amount</th><th scope="col">Outcome</th><th scope="col">Provider calls</th><th scope="col">Evidence</th></tr></thead><tbody id="queue-body"></tbody></table></div>
-  <div class="queue-footer"><span id="page-info"></span><div><button class="button compact secondary" id="prev">← Previous</button><button class="button compact secondary" id="next">Next →</button></div></div>
-  </article>
-  <div class="below-note"><span id="batch-source"></span><span>Full evaluation: <b id="evaluation-size">—</b></span></div>
+  <aside class="hero-panel" aria-label="How MandateGuard decides">
+    <p class="eyebrow">THE DECISION CONTRACT</p>
+    <ol class="promise-list">
+      <li><span>1</span><div><strong>What failed?</strong><small>Normalize the scheduled debit failure.</small></div></li>
+      <li><span>2</span><div><strong>What should happen next?</strong><small>Interpret the failure and propose a bounded next step.</small></div></li>
+      <li><span>3</span><div><strong>Why is it allowed?</strong><small>Deterministic controls check mandate, consent, notice and retry limits.</small></div></li>
+      <li><span>4</span><div><strong>What actually happened?</strong><small>Provider-call evidence and postcondition decide the financial metric.</small></div></li>
+      <li><span>5</span><div><strong>Where is the evidence?</strong><small>Every case carries an inspectable audit receipt.</small></div></li>
+    </ol>
+  </aside>
 </section>
-<section id="page-lab" class="page" hidden>
-  <p class="eyebrow">TRY THE BOUNDARIES</p><h1>Good recovery knows<br> <span>when to stop.</span></h1><p class="intro">One permitted recovery. Six ways a workflow must handle failure.<br> These results come from the Python engine, including real HMAC computation over fixture bytes.</p>
-  <div class="scope"><span class="scope-dot"></span><strong>Local simulator</strong><span>Published fixture secret · deterministic interpreter · no Razorpay API calls</span></div>
-  <div class="lab-grid"><article class="card scenarios"><h2>Choose a scenario</h2><div id="scenario-list"></div></article><article class="card lab-result"><div class="card-heading"><div><p class="eyebrow" id="scenario-mode">ENGINE EVIDENCE</p><h2 id="scenario-title">Recover a failed debit</h2></div><button id="run-scenario" class="button primary">Run scenario ↗</button></div><p id="scenario-description"></p><div id="scenario-result"></div><button id="export-scenario" class="button secondary">↓ Download actual receipt</button></article></div>
-  <article class="card principle"><h2>The AI boundary is deliberate.</h2><p>The model can return a failure label and confidence. It cannot change consent, raise a limit, or call the provider. Uncertain interpretations route to a human. An unresolved provider timeout is also held for human review.</p><details><summary>Inspect captured optional real-model evidence</summary><pre id="model-evidence"></pre></details></article>
-</section>
-<section id="page-policies" class="page" hidden>
-  <p class="eyebrow">MEASURE THE TRADE-OFF</p><h1>More recovery isn't<br> <span>the only measure.</span></h1><p class="intro">Nine policies, the same frozen outcomes. Compare simulated recovery,<br> prohibited value executed, and legitimate recovery forgone.</p>
-  <div class="scope"><span class="scope-dot"></span><strong>Benchmark, not production</strong><span>RZP is a card-schedule reference. It does not model Razorpay's Intelligent UPI Retry Engine.</span></div>
-  <article class="card"><div class="card-heading"><div><h2>Recovery and harm</h2><p>Means per 100-case batch across 20 seeds. Green is recovery; red is prohibited value executed.</p></div><label>Failure mix<select id="regime"><option value="R1_TRANSIENT">Mostly transient</option><option value="R2_TERMINAL">Mostly terminal</option><option value="R3_AMBIGUOUS">Ambiguous signals</option></select></label></div><div id="policy-bars"></div></article>
-  <article class="card sensitivity-card"><div class="card-heading"><div><p class="eyebrow">NO UNIVERSAL WINNER</p><h2>What does a prohibited action cost?</h2><p>This sweep reprices the same outcomes. The preferred policy changes with your assumption.</p></div><label>Pricing model<select id="price-model"><option value="harm_multiplier_curve">Harm multiplier</option><option value="violation_cost_curve">Flat cost per violation</option></select></label></div><div id="price-curve"></div><div class="notice">B2.25, B2.5 and B2.75 deliberately relax controls for diagnosis. They are not safe production defaults. B1.5 reads failure reasons but does not enforce the full guardrails.</div></article>
-  <article class="card"><h2>The cost of restraint</h2><div class="table-scroll"><table><thead><tr><th>Policy</th><th>Recovered INR</th><th>Legitimate recovery forgone</th><th>Prohibited value executed</th><th>Violations</th></tr></thead><tbody id="policy-table"></tbody></table></div></article>
-</section>
-<section id="page-proof" class="page" hidden>
-  <p class="eyebrow">CLOSE THE LOOP</p><h1>A created link isn't<br> <span>recovered money.</span></h1><p class="intro">RecoveryTruth checks the latest order and payments before a fallback,<br> then verifies the captured payment independently.</p>
-  <div class="scope"><span class="scope-dot"></span><strong>Captured Razorpay Test Mode evidence</strong><span>Read-only artifacts, not a fresh provider run. A Standard Payment Link fallback is not an AutoPay retry.</span></div>
-  <div id="proof-cards" class="proof-grid"></div>
-  <article class="card"><h2>What the receipt binds together</h2><div class="binding"><span>Original order</span><b>→</b><span>Decision authority</span><b>→</b><span>Fresh write check</span><b>→</b><span>Payment Link</span><b>→</b><span>Captured payment</span></div><p class="muted">Live keys are refused. No customer message is sent by this viewer. The hash detects changes against the saved receipt; it is not a provider signature or an immutable external anchor.</p><details><summary>View captured proof and full SHA-256</summary><pre id="proof-json"></pre></details><button id="export-proof" class="button secondary">↓ Download captured evidence bundle</button></article>
-</section>
-<footer><span class="footer-brand"><img src="./logo.svg" width="26" height="26" alt=""> <b>MandateGuard</b></span><span>Recover deliberately. Leave evidence.</span><a href="https://razorpay.com/buildathon/" target="_blank" rel="noopener">Track 03 · AI Revenue Recovery ↗</a></footer>
-</main>
+
+<div id="load-error" class="notice error" role="alert" hidden></div>
+<div id="run-state" class="run-state" role="status" aria-live="polite">
+  <span class="run-state-dot"></span><strong>Ready.</strong><span>Recorded evidence will be shown immediately; localhost can execute the same Python engine on demand.</span>
 </div>
-<dialog id="receipt-dialog" aria-labelledby="receipt-title"><div class="dialog-header"><div><p class="eyebrow">DECISION RECEIPT</p><h2 id="receipt-title"></h2></div><button class="close" id="close-dialog" aria-label="Close receipt">×</button></div><div id="receipt-content"></div><div class="dialog-actions"><button class="button secondary" id="export-receipt">↓ Export receipt</button><button class="button primary" id="verify-receipt">Verify audit chain</button></div><p id="verify-result" role="status"></p></dialog>
+
+<section class="section" id="demonstration">
+  <div class="section-heading">
+    <div><p class="eyebrow">ONE BATCH · ONE FROZEN LEDGER</p><h2>The recovery result and the cost of restraint, side by side.</h2></div>
+    <button class="button secondary" id="export-batch">Download batch evidence</button>
+  </div>
+  <div class="stats" id="stats"><div class="stat-card"><span>Loading batch evidence…</span></div></div>
+  <div class="provenance-line"><span id="batch-source">Loading provenance…</span><span id="evaluation-size">—</span></div>
+</section>
+
+<section class="section" id="cases">
+  <div class="section-heading case-heading">
+    <div><p class="eyebrow">THE THREE CASES JUDGES SHOULD REMEMBER</p><h2>Retry, stop, or ask a human—each with actual engine evidence.</h2></div>
+    <p class="section-copy">The same decision boundary is visible in all three: failure → diagnosis → control checks → action → outcome.</p>
+  </div>
+  <div class="case-grid">
+    <article class="decision-card" id="case-recover"><div class="skeleton">Loading recoverable case…</div></article>
+    <article class="decision-card" id="case-revoked"><div class="skeleton">Loading revoked-mandate case…</div></article>
+    <article class="decision-card" id="case-timeout"><div class="skeleton">Loading timeout case…</div></article>
+  </div>
+
+  <details class="advanced-panel boundary-panel">
+    <summary><span><strong>More boundary checks</strong><small>Opt-out, missing notice, ambiguous interpretation and forged webhook.</small></span><span aria-hidden="true">+</span></summary>
+    <div class="advanced-body boundary-grid">
+      <div class="boundary-list" id="boundary-list"></div>
+      <div class="boundary-result">
+        <div class="section-heading compact-heading"><div><p class="eyebrow" id="boundary-mode">RECORDED ENGINE EVIDENCE</p><h3 id="boundary-title">Boundary check</h3></div><button class="button primary" id="run-boundary">Run boundary check</button></div>
+        <p id="boundary-description" class="muted"></p>
+        <div id="boundary-output"></div>
+        <button class="button secondary" id="export-boundary">Download boundary evidence</button>
+      </div>
+    </div>
+  </details>
+</section>
+
+<section class="section split-section" id="evidence">
+  <div class="ai-card">
+    <p class="eyebrow">AI BOUNDARY</p>
+    <h2>AI interprets unclear failure information; deterministic controls decide whether an action is allowed.</h2>
+    <p>In B3, the interpreter can return a label and confidence. It has no provider tools and cannot restore a revoked mandate, raise a limit, or bypass a control. Low-confidence interpretation becomes human review before any provider action.</p>
+    <div class="boundary-facts">
+      <span><b>No payment tools</b> for the interpreter</span>
+      <span><b>Same downstream controls</b> as the guarded deterministic arm</span>
+      <span><b>Abstention is allowed</b> when interpretation is uncertain</span>
+    </div>
+    <details><summary>Inspect captured optional real-model evidence</summary><pre id="model-evidence"></pre></details>
+  </div>
+  <div class="provider-card">
+    <p class="eyebrow">SEPARATE PROVIDER PROOF</p>
+    <h2>Razorpay Test Mode evidence is kept separate from the synthetic batch.</h2>
+    <p>A saved Standard Payment Link fallback proves a provider integration path. A created link is not recovered money; the captured-payment proof is verified separately. The already-paid case proves zero new fallback writes.</p>
+    <div id="proof-cards" class="proof-cards"></div>
+    <details><summary>View captured Test Mode artifacts</summary><pre id="proof-json"></pre></details>
+    <button id="export-proof" class="button secondary">Download captured Test Mode bundle</button>
+  </div>
+</section>
+
+<section class="section">
+  <details class="advanced-panel receipts-panel" open>
+    <summary><span><strong>Inspect all 100 decision receipts</strong><small>Search, filter, export and verify a receipt without reading the raw benchmark files.</small></span><span aria-hidden="true">+</span></summary>
+    <div class="advanced-body">
+      <div class="queue-toolbar">
+        <div class="filter-buttons" role="group" aria-label="Filter cases">
+          <button class="filter active" data-status="all" aria-pressed="true">All</button>
+          <button class="filter" data-status="Recovered" aria-pressed="false">Recovered</button>
+          <button class="filter" data-status="Stopped" aria-pressed="false">Stopped</button>
+          <button class="filter" data-status="Human review" aria-pressed="false">Human review</button>
+          <button class="filter" data-status="Awaiting outcome" aria-pressed="false">Awaiting outcome</button>
+        </div>
+        <label class="search"><span class="sr-only">Search case or reason</span><input type="search" id="case-search" placeholder="Search case or reason"></label>
+      </div>
+      <div class="table-scroll"><table><thead><tr><th scope="col">Case</th><th scope="col">Failure</th><th scope="col">Amount</th><th scope="col">Outcome</th><th scope="col">Provider calls</th><th scope="col">Evidence</th></tr></thead><tbody id="queue-body"></tbody></table></div>
+      <div class="queue-footer"><span id="page-info"></span><div><button class="button compact secondary" id="prev">Previous</button><button class="button compact secondary" id="next">Next</button></div></div>
+    </div>
+  </details>
+</section>
+
+<section class="section" id="evaluation">
+  <details class="advanced-panel evaluation-panel">
+    <summary><span><strong>Advanced policy evaluation</strong><small>All nine canonical arms, the shared frozen ledger and the complete swept price curve remain intact.</small></span><span aria-hidden="true">+</span></summary>
+    <div class="advanced-body">
+      <div class="evaluation-intro">
+        <div><p class="eyebrow">PLAIN-LANGUAGE FIRST</p><h2>More recovery can also mean more prohibited execution. Stronger controls can also forgo legitimate recovery.</h2><p>There is no universal winning policy. The charts below expose the trade-off before showing the policy codes.</p></div>
+        <div class="notice">Never read a single recommended arm in isolation. The full price sweep beside it shows when that recommendation changes.</div>
+      </div>
+      <div class="control-row">
+        <label>Failure mix<select id="regime"><option value="R1_TRANSIENT">Mostly transient</option><option value="R2_TERMINAL">Mostly terminal</option><option value="R3_AMBIGUOUS">Ambiguous signals</option></select></label>
+        <label>Pricing model<select id="price-model"><option value="harm_multiplier_curve">Harm multiplier</option><option value="violation_cost_curve">Flat cost per violation</option></select></label>
+      </div>
+      <div class="evaluation-card"><div class="section-heading compact-heading"><div><h3>Recovery vs prohibited value executed</h3><p class="muted">Means per 100-case batch across 20 seeds. Teal is simulated recovery; red is realized prohibited value.</p></div></div><div id="policy-bars"></div></div>
+      <div class="evaluation-card"><div class="section-heading compact-heading"><div><h3>Complete price sweep</h3><p class="muted">The preferred arm changes as the assumed cost changes.</p></div></div><div id="price-curve"></div></div>
+      <div class="evaluation-card"><h3>All nine canonical arms</h3><div class="table-scroll"><table><thead><tr><th>Policy</th><th>Plain-language role</th><th>Recovered INR</th><th>Recoverable value forgone</th><th>Prohibited value executed</th><th>Violations</th></tr></thead><tbody id="policy-table"></tbody></table></div></div>
+      <p class="muted">B2.25, B2.5 and B2.75 deliberately relax controls for diagnosis and are not safe production defaults. RZP is a fixed reference derived from a published card schedule; it is not Razorpay's current Intelligent UPI Retry Engine.</p>
+    </div>
+  </details>
+</section>
+
+<section class="section closing-card">
+  <div><p class="eyebrow">SUBMISSION PROMISE</p><h2>Recover deliberately. Stop when authority ends. Escalate uncertainty. Leave evidence.</h2><p>The production gaps remain explicit: durable state, merchant authentication and tenant isolation, approved provider execution, cross-process reconciliation, and validation on permissioned merchant failures.</p></div>
+  <a class="button secondary" href="https://github.com/Akshu1245/razropay" target="_blank" rel="noopener">Open source repository</a>
+</section>
+</main>
+
+<footer class="footer"><span><img src="./logo.svg" width="26" height="26" alt=""><b>MandateGuard</b></span><span>Track 03 · AI Revenue Recovery</span><span>Batch figures are synthetic; provider proof is Razorpay Test Mode.</span></footer>
+
+<dialog id="receipt-dialog" aria-labelledby="receipt-title">
+  <div class="dialog-header"><div><p class="eyebrow">DECISION RECEIPT</p><h2 id="receipt-title"></h2></div><button class="icon-button" id="close-dialog" aria-label="Close receipt">×</button></div>
+  <div id="receipt-content"></div>
+  <div class="dialog-actions"><button class="button secondary" id="export-receipt">Download receipt</button><button class="button primary" id="verify-receipt">Verify audit chain + tamper check</button></div>
+  <p id="verify-result" class="verify-result" role="status" aria-live="polite"></p>
+</dialog>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
 <script src="./app.js" defer></script>
 </body>

@@ -217,7 +217,7 @@ def test_different_action_after_terminal_case_is_not_replayed():
     assert provider.call_count == 1
 
 
-def test_final_benchmark_has_real_forgone_and_protected_metrics():
+def test_final_benchmark_has_real_forgone_and_protected_metrics(tmp_path, monkeypatch):
     rows, evidence, hashes = run_experiment(seeds=(1701, 2029, 3313, 4157, 5011), n_per_seed=12)
     assert len(hashes) == 15
     assert all(arm in {row["arm"] for row in rows} for arm in ARM_ORDER)
@@ -230,3 +230,19 @@ def test_final_benchmark_has_real_forgone_and_protected_metrics():
         selected = [row for row in rows if row["regime"] == summary["regime"] and row["arm"] == summary["arm"]]
         assert summary["human_reviews"]["mean"] == sum(row["human_reviews"] for row in selected) / len(selected)
     assert evidence
+    # The judge summary must derive numbers from its input, never a pasted result.
+    import json
+    from bailiff import report
+
+    for name in ("manifest.json", "aggregate.json", "anti_gaming.json"):
+        (tmp_path / name).write_bytes((report.OUTPUTS / name).read_bytes())
+    source = json.loads((tmp_path / "aggregate.json").read_text(encoding="utf-8"))
+    selected = next(row for row in source if row["arm"] == "B3" and row["regime"] == "R1_TRANSIENT")
+    selected["incremental_recovered_inr"]["mean"] = 1234.56
+    (tmp_path / "aggregate.json").write_text(json.dumps(source), encoding="utf-8")
+    monkeypatch.setattr(report, "OUTPUTS", tmp_path)
+    rendered = report.generate_report().read_text(encoding="utf-8")
+    summary = rendered.split("## Full policy results")[0]
+    assert "| R1_TRANSIENT | ₹1,234.56 |" in summary
+    assert "offline deterministic interpreter stub" in summary
+    assert "![Complete price sweep](sensitivity.png)" in summary
